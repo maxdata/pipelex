@@ -8,7 +8,7 @@
 
 ## Fixed
 
-- Fixed the structuring_method behavior in the `PipeLLM` pipe.
+- Fixed the `structuring_method` behavior in the `PipeLLM` pipe: Putting it to `preliminairy_text`, it will always generate text before generating the structure -> Reliability increased by a lot.
 
 ### Changed
 
