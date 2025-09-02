@@ -124,9 +124,9 @@ uv pip install pipelex
 
 The package supports the following additional features:
 
-- `anthropic`: Anthropic/Claude support+
+- `anthropic`: Anthropic/Claude support
 - `google`: Google models (Vertex) support
-- `mistralai`: Mistral AI support√
+- `mistralai`: Mistral AI support
 - `bedrock`: AWS Bedrock support
 - `fal`: Image generation with Black Forest Labs "FAL" service
 
