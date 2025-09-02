@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## [v0.9.0] - 2025-09-02
+
+### Refacto
+
+- Changed the pipeline file extension from `.toml` to `.plx`: Updated the LibraryManager in consequence.
+
+## Fixed
+
+- Fixed the structuring_method behavior in the `PipeLLM` pipe.
 
 ### Changed
 
