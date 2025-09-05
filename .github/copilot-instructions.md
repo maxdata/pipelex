@@ -554,7 +554,7 @@ from pipelex.hub import get_pipeline_tracker, get_report_delegate
 from pipelex.pipelex import Pipelex
 from pipelex.pipeline.execute import execute_pipeline
 
-from pipelex_libraries.pipelines.examples.extract_gantt.gantt import GanttChart
+from pipelex.libraries.pipelines.examples.extract_gantt.gantt import GanttChart
 
 SAMPLE_NAME = "extract_gantt"
 IMAGE_URL = "assets/gantt/gantt_tree_house.png"
@@ -807,7 +807,7 @@ from pipelex import log, pretty_print
 from pipelex.core.stuffs.stuff_factory import StuffBlueprint, StuffFactory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.hub import get_report_delegate
-from pipelex_libraries.pipelines.base_library.retrieve import RetrievedExcerpt
+from pipelex.libraries.pipelines.base_library.retrieve import RetrievedExcerpt
 from pipelex.config_pipelex import get_config
 
 from pipelex.core.pipe import PipeAbstract, update_job_metadata_for_pipe
