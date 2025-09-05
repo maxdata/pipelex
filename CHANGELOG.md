@@ -3,7 +3,7 @@
 ## [v0.9.1] - 2025-09-05
 
 ### Fixed
-- Fixed all inconsistencies in the documentation.
+- Fixed many inconsistencies in the documentation.
 
 ## [v0.9.0] - 2025-09-02
 
