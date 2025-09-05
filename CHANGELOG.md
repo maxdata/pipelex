@@ -9,7 +9,7 @@
 ### Added
 
 - Added agent rule for copilot
-- Added a rule to forbiden structuring basic text concepts
+- Added a rule to forbidden structuring basic text concepts
 
 ## [v0.9.1] - 2025-09-05
 
