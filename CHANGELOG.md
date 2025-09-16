@@ -5,6 +5,8 @@
 ### Added
 
 - Added `FuncRegistryUtils` to register functions in a pipelex folder that have a specific signature.
+- Added `mistral-medium` and `mistral-medium-2508` to the LLM deck.
+- Added handle for `gemini-2.5-flash` to the LLM deck.
 
 ## [v0.9.5] - 2025-09-12
 
