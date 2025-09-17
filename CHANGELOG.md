@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.10.0] - 2025-09-17
 
 ### Highlight: New Inference Backend Configuration System
 
