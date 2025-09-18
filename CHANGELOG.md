@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.10.2] - 2025-09-18
 
 ### Added
 
@@ -11,14 +11,14 @@
 
 ### Changed
 
-- ⚠️ Breaking change: Renamed `ocr_handle` to `ocr_model` in `PipeOcrBlueprint`
+- ⚠️ Breaking change: Renamed `ocr_handle` to `ocr_model` in `PipeOcr` blueprint, so you'll need to update your PLX code accordingly
 - OCR system now uses InferenceModelSpec with unified model handles
 - Renamed `get_llm_deck()` to `get_model_deck()` and updated parameter names from `llm_handle` to `model_handle`
 - Simplified OCR worker factory using plugin SDK matching
 - Enhanced plugin system compatibility with InferenceModelSpec
 - Improved error messages throughout system
 - Updated .env.example file with slightly modified key names (more standard).
-- Improved management of placeholder environment variables for unit tests.
+- Improved management of placeholder environment variables for unit tests
 
 ### Removed
 
