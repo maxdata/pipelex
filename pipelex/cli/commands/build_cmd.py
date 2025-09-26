@@ -5,11 +5,11 @@ from typing import Annotated, Optional
 import typer
 
 from pipelex import pretty_print
-from pipelex.core.interpreter import PipelexInterpreter
 from pipelex.hub import get_report_delegate
 from pipelex.libraries.pipelines.builder.builder import PipelexBundleSpec
 from pipelex.pipelex import Pipelex
 from pipelex.pipeline.execute import execute_pipeline
+from pipelex.tools.plx.plx_utils import make_plx_content
 
 build_app = typer.Typer(help="Build artifacts like pipelines", no_args_is_help=True)
 
@@ -46,7 +46,7 @@ def build_pipe_cmd(
         )
         pretty_print(pipe_output, title="Pipe Output")
         pipelex_bundle_spec = pipe_output.working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
-        plx_content = PipelexInterpreter.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
+        plx_content = make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
 
         # Save to file unless explicitly disabled with empty string
         if output_path and output_path != "":

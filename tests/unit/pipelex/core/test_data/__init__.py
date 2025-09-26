@@ -26,7 +26,7 @@ class InterpreterTestCases:
     """Test cases for PipelexInterpreter with PLX content and expected blueprints."""
 
     # Aggregate all valid test cases from organized modules
-    VALID_TEST_CASES: ClassVar[List[Tuple[str, str, PipelexBundleBlueprint]]] = [
+    VALID_TEST_CASES: ClassVar[List[Tuple[str, str, PipelexBundleBlueprint]]] = [  # test_name,plx_content,blueprint
         # Domain tests
         *DOMAIN_TEST_CASES,
         # Concept tests
