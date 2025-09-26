@@ -13,7 +13,7 @@ definition = "Domain with OCR pipe"
 type = "PipeOcr"
 definition = "Extract text from document"
 output = "Page"
-ocr_model = "pypdfium2-extract-text"
+ocr = "base_ocr_pypdfium2"
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
@@ -22,8 +22,8 @@ ocr_model = "pypdfium2-extract-text"
             "extract_text": PipeOcrBlueprint(
                 type="PipeOcr",
                 definition="Extract text from document",
-                output=NativeConceptEnum.PAGE.value,
-                ocr_model="pypdfium2-extract-text",
+                output=NativeConceptEnum.PAGE,
+                ocr="base_ocr_pypdfium2",
             ),
         },
     ),

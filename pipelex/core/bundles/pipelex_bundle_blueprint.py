@@ -33,8 +33,6 @@ PipeBlueprintUnion = Annotated[
 
 
 class PipelexBundleBlueprint(BaseModel):
-    """Complete blueprint of a pipelex bundle PLX definition."""
-
     model_config = ConfigDict(extra="forbid")
 
     domain: str
@@ -43,7 +41,7 @@ class PipelexBundleBlueprint(BaseModel):
     system_prompt_to_structure: Optional[str] = None
     prompt_template_to_structure: Optional[str] = None
 
-    concept: Optional[Dict[str, ConceptBlueprint | str]] = Field(default_factory=dict)
+    concept: Optional[Dict[str, Union[ConceptBlueprint, str]]] = Field(default_factory=dict)
 
     pipe: Optional[Dict[str, PipeBlueprintUnion]] = Field(default_factory=dict)
 

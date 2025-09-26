@@ -20,13 +20,14 @@ from openai.types.chat import (
 )
 
 from pipelex.cogt.exceptions import PromptImageFormatError
-from pipelex.cogt.image.prompt_image import PromptImage, PromptImageBytes, PromptImagePath, PromptImageUrl
+from pipelex.cogt.image.prompt_image import PromptImage, PromptImageBase64, PromptImagePath, PromptImageUrl
 from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.cogt.model_backends.backend import InferenceBackend
 from pipelex.cogt.ocr.ocr_output import ExtractedImageFromPage, OcrOutput, Page
 from pipelex.cogt.usage.token_category import NbTokensByCategoryDict, TokenCategory
 from pipelex.plugins.openai.openai_factory import OpenAIFactory
-from pipelex.tools.misc.base_64_utils import encode_to_base64, load_binary_as_base64
+from pipelex.tools.misc.base_64_utils import load_binary_as_base64
+from pipelex.tools.misc.filetype_utils import detect_file_type_from_base64, detect_file_type_from_path
 
 
 class MistralFactory:
@@ -71,12 +72,12 @@ class MistralFactory:
             return ImageURLChunk(image_url=prompt_image.url)
         elif isinstance(prompt_image, PromptImagePath):
             image_bytes = load_binary_as_base64(prompt_image.file_path).decode("utf-8")
-            # TODO: use actual image type
-            return ImageURLChunk(image_url=f"data:image/png;base64,{image_bytes}")
-        elif isinstance(prompt_image, PromptImageBytes):
-            image_bytes = encode_to_base64(prompt_image.base_64).decode("utf-8")
-            # TODO: use actual image type
-            return ImageURLChunk(image_url=f"data:image/png;base64,{image_bytes}")
+            file_type = detect_file_type_from_path(prompt_image.file_path)
+            return ImageURLChunk(image_url=f"data:{file_type.mime};base64,{image_bytes}")
+        elif isinstance(prompt_image, PromptImageBase64):
+            image_bytes = prompt_image.base_64.decode("utf-8")
+            file_type = detect_file_type_from_base64(prompt_image.base_64)
+            return ImageURLChunk(image_url=f"data:{file_type.mime};base64,{image_bytes}")
         else:
             raise PromptImageFormatError(f"prompt_image of type {type(prompt_image)} is not supported")
 

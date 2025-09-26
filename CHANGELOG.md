@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased
+
+### Highlights
+
+- **New pipe builder** pipeline to generate Pipes based on a brief in natural language: use the cli `pipelex build pipe "Your task"` to build the pipe.
+- **Full refactoring of OCR and Image Generation** to use the same patterns as `LLM` workers and pipes.
+
+### Added
+
+ - Added a badge on the `README.md` to display the number of tests.
+ - Added new placeholder utility module with `make_placeholder_value()` and `value_is_placeholder()` functions
+ - Added comprehensive test suite for placeholder functionality
+ - Added new test cases for environment variable functions
+ - Added new documentation for `PipeFunc` on how to register functions.
+
+### Changed 
+ - Renamed `llm_deck` terminology to `model_deck` throughout codebase and documentation
+ - Renamed `get_llm_deck_paths()` method to `get_model_deck_paths()`
+ - Renamed `is_gha_testing` property to `is_ci_testing` in RuntimeManager
+ - Updated environment variable handling to use new placeholder utility functions
+ - Refactored `all_env_vars_are_set()` function to only accept a list of keys, single string support now uses `is_env_var_set()`
+ - Modified `any_env_var_is_placeholder()` to use new placeholder detection logic
+ - Updated test environment setup to use dynamic placeholder generation instead of hardcoded values
+ - Restructured test classes and methods in environment tests
+
+### Fixed
+ - Fixed logic error in `any_env_var_is_placeholder()` function - now correctly returns False when no placeholders are found
+
+### Removed
+ - Removed `ENV_DUMMY_PLACEHOLDER_VALUE` constant
+ - Removed `get_rooted_path()` and `get_env_rooted_path()` utility functions
+ - Removed hardcoded placeholder dictionary in test setup
+
 ## [v0.10.2] - 2025-09-18
 
 ### Added
@@ -157,9 +190,18 @@ For complete details, see the [Inference Backend Configuration](pages/configurat
 
 - Fixed the `structuring_method` behavior in the `PipeLLM` pipe: Putting it to `preliminary_text`, the `PipeLLM` will always generate text before generating the structure -> Reliability increased by a lot.
 
+### Fixed
+
+- Fixed a bug in the `needed_inputs` method of the `PipeSequence` pipe.
+
 ### Changed
 
+- `dry_run_pipe` now returns a `DryRunOutput` object instead of a `str` with additional information.
 - Updated `cocode` dependency from version `v0.0.10` to `v0.0.15`.
+
+### Added
+
+- Added the `FuncRegistryUtils` class to register functions in the library.
 
 ## [v0.8.1] - 2025-08-27
 

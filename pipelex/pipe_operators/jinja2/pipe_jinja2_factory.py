@@ -4,8 +4,8 @@ from typing_extensions import override
 
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.pipes.pipe_factory import PipeFactoryProtocol
-from pipelex.core.pipes.pipe_input_spec import PipeInputSpec
-from pipelex.core.pipes.pipe_input_spec_factory import PipeInputSpecFactory
+from pipelex.core.pipes.pipe_input import PipeInputSpec
+from pipelex.core.pipes.pipe_input_factory import PipeInputSpecFactory
 from pipelex.exceptions import PipeDefinitionError
 from pipelex.hub import get_concept_provider
 from pipelex.pipe_operators.jinja2.pipe_jinja2 import PipeJinja2
@@ -37,7 +37,7 @@ class PipeJinja2Factory(PipeFactoryProtocol[PipeJinja2Blueprint, PipeJinja2]):
 
         output_domain_and_code = ConceptFactory.make_domain_and_concept_code_from_concept_string_or_concept_code(
             domain=domain,
-            concept_string_or_concept_code=blueprint.output_concept_string_or_concept_code,
+            concept_string_or_code=blueprint.output,
             concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
         )
         return PipeJinja2(

@@ -9,6 +9,7 @@ from pipelex.pipe_controllers.sub_pipe_blueprint import SubPipeBlueprint
 
 class PipeParallelBlueprint(PipeBlueprint):
     type: Literal["PipeParallel"] = "PipeParallel"
+    category: Literal["PipeController"] = "PipeController"
     parallels: List[SubPipeBlueprint]
     add_each_output: bool = True
     combined_output: Optional[str] = None
@@ -16,5 +17,5 @@ class PipeParallelBlueprint(PipeBlueprint):
     @field_validator("combined_output", mode="before")
     def validate_combined_output(cls, combined_output: str) -> str:
         if combined_output:
-            ConceptBlueprint.validate_concept_string_or_concept_code(concept_string_or_concept_code=combined_output)
+            ConceptBlueprint.validate_concept_string_or_concept_code(concept_string_or_code=combined_output)
         return combined_output

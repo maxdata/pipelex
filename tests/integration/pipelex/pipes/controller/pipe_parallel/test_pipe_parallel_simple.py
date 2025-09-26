@@ -1,5 +1,3 @@
-"""Simple integration test for PipeParallel controller."""
-
 from typing import cast
 
 import pytest
@@ -9,7 +7,7 @@ from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.concepts.concept_native import NATIVE_CONCEPTS_DATA, NativeConceptEnum
 from pipelex.core.domains.domain import SpecialDomain
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_input_spec_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.core.stuffs.stuff_content import TextContent
@@ -31,8 +29,8 @@ class TestPipeParallelSimple:
         # Create PipeParallel instance - pipes are loaded from PLX files
         pipe_parallel_blueprint = PipeParallelBlueprint(
             definition="Parallel text analysis pipeline",
-            inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE.value}.{NativeConceptEnum.TEXT.value}")},
-            output=f"{SpecialDomain.NATIVE.value}.{NativeConceptEnum.TEXT.value}",
+            inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
+            output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             parallels=[
                 SubPipeBlueprint(pipe="analyze_sentiment", result="sentiment_result"),
                 SubPipeBlueprint(pipe="count_words", result="word_count_result"),
@@ -108,7 +106,7 @@ class TestPipeParallelSimple:
         # Should return one of: positive, negative, neutral
         if pipe_run_mode != PipeRunMode.DRY:
             assert sentiment_result.content.text.lower() in ["positive", "negative", "neutral"]
-        assert f"{sentiment_result.concept.domain}.{sentiment_result.concept.code}" == f"{SpecialDomain.NATIVE.value}.{NativeConceptEnum.TEXT.value}"
+        assert f"{sentiment_result.concept.domain}.{sentiment_result.concept.code}" == f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}"
 
         # Verify word count result
         word_count_result = final_working_memory.get_stuff("word_count_result")
@@ -147,8 +145,8 @@ class TestPipeParallelSimple:
         # Create PipeParallel instance
         pipe_parallel_blueprint = PipeParallelBlueprint(
             definition="Parallel text analysis pipeline for short text",
-            inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE.value}.{NativeConceptEnum.TEXT.value}")},
-            output=f"{SpecialDomain.NATIVE.value}.{NativeConceptEnum.TEXT.value}",
+            inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
+            output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             parallels=[
                 SubPipeBlueprint(pipe="analyze_sentiment", result="sentiment_result"),
                 SubPipeBlueprint(pipe="count_words", result="word_count_result"),
@@ -163,7 +161,6 @@ class TestPipeParallelSimple:
             pipe_code="parallel_text_analyzer",
             blueprint=pipe_parallel_blueprint,
         )
-
         # Create test data - shorter text
         input_text_stuff = StuffFactory.make_stuff(
             concept=ConceptFactory.make_native_concept(native_concept_data=NATIVE_CONCEPTS_DATA[NativeConceptEnum.TEXT]),
