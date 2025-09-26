@@ -232,7 +232,7 @@ def _create_ordered_inline_table(data: Mapping[str, Any]) -> Any:
     inline_table_obj = inline_table()
 
     # Define the preferred order for concept structure fields
-    field_order = ["type", "definition", "required", "choices", "item_type", "key_type", "value_type"]
+    field_order = ["type", "definition", "required"]
 
     # Add fields in preferred order first
     for field in field_order:
@@ -289,6 +289,7 @@ def dict_to_toml(data: Mapping[str, Any]) -> str:
 
                     # Handle the structure field specially
                     for field_key, field_value in item_value.items():
+                        # THIS IS CUSTOM CODE FOR THE CONCEPT STRUCUTRE FIELD. It should be generic
                         if field_key == "structure" and isinstance(field_value, Mapping):
                             # Structure should be its own table [section.item.structure]
                             structure_table = table()

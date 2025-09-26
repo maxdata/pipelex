@@ -3,11 +3,9 @@ from typing import Any, Dict, Optional, Type
 from pydantic import BaseModel
 from typing_extensions import override
 
-from pipelex import log
 from pipelex.cogt.exceptions import LLMAssignmentError
-from pipelex.cogt.imgg.imgg_handle import ImggHandle
-from pipelex.cogt.imgg.imgg_job_components import ImggJobConfig, ImggJobParams
-from pipelex.cogt.imgg.imgg_prompt import ImggPrompt
+from pipelex.cogt.img_gen.img_gen_job_components import ImgGenJobConfig, ImgGenJobParams
+from pipelex.cogt.img_gen.img_gen_prompt import ImgGenPrompt
 from pipelex.cogt.llm.llm_job_components import LLMJobParams
 from pipelex.cogt.llm.llm_prompt import LLMPrompt
 from pipelex.cogt.llm.llm_prompt_factory_abstract import LLMPromptFactoryAbstract
@@ -31,7 +29,6 @@ class LLMAssignmentFactory(BaseModel):
         llm_setting: Optional[LLMSetting] = None,
         **prompt_arguments: Any,
     ) -> "LLMAssignment":
-        log.verbose(f"Making LLMAssignment with prompt arguments: {prompt_arguments}, using {self.llm_prompt_factory.desc}")
         llm_prompt = await self.llm_prompt_factory.make_llm_prompt_from_args(**prompt_arguments)
         return LLMAssignment(
             job_metadata=job_metadata or self.job_metadata,
@@ -79,7 +76,6 @@ class LLMAssignment(BaseModel):
 
     @property
     def llm_handle(self) -> str:
-        log.dev(f"Using llm_setting {self.llm_setting}")
         return self.llm_setting.llm_handle
 
     @property
@@ -121,12 +117,12 @@ class TextThenObjectAssignment(BaseModel):
     llm_assignment_factory_to_object: LLMAssignmentFactory
 
 
-class ImggAssignment(BaseModel):
+class ImgGenAssignment(BaseModel):
     job_metadata: JobMetadata
-    imgg_handle: ImggHandle
-    imgg_prompt: ImggPrompt
-    imgg_job_params: ImggJobParams
-    imgg_job_config: ImggJobConfig
+    img_gen_handle: str
+    img_gen_prompt: ImgGenPrompt
+    img_gen_job_params: ImgGenJobParams
+    img_gen_job_config: ImgGenJobConfig
     nb_images: int
 
 

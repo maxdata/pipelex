@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Union, cast
+from typing import Dict, List, Literal, Optional, Set, Union, cast
 
 import shortuuid
 from pydantic import field_validator, model_validator
@@ -7,13 +7,14 @@ from typing_extensions import Self, override
 from pipelex import log
 from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.concepts.concept_factory import ConceptFactory
-from pipelex.core.concepts.concept_native import NATIVE_CONCEPTS_DATA, NativeConceptEnum
+from pipelex.core.concepts.concept_native import NATIVE_CONCEPTS_DATA, NativeConceptEnum, NativeConceptManager
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.pipes.pipe_input_spec import PipeInputSpec
-from pipelex.core.pipes.pipe_input_spec_blueprint import InputRequirementBlueprint
-from pipelex.core.pipes.pipe_input_spec_factory import PipeInputSpecFactory
+from pipelex.core.pipes.pipe_input import PipeInputSpec
+from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.pipe_input_factory import PipeInputSpecFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
 from pipelex.core.pipes.pipe_run_params import PipeRunParams
+from pipelex.core.pipes.specific_pipe import SpecificPipe
 from pipelex.exceptions import (
     DryRunError,
     PipeConditionError,
@@ -35,6 +36,7 @@ from pipelex.tools.typing.validation_utils import has_exactly_one_among_attribut
 
 
 class PipeCondition(PipeController):
+    type: Literal["PipeCondition"] = "PipeCondition"
     expression_template: Optional[str] = None
     expression: Optional[str] = None
     # TODO: rething this pipe_map.
@@ -51,20 +53,31 @@ class PipeCondition(PipeController):
         Validate the output for the pipe condition.
         The output of the pipe condition should match the output of all the conditional pipes, and the default pipe.
         """
+        # This pipe CONTINUE enables to leave a PipeCondition and continue the sequence.
+        # This system though has to be rethink. It might not be the best solution
         for pipe_condition_pipe_map in self.pipe_map:
-            pipe = get_required_pipe(pipe_code=pipe_condition_pipe_map.pipe_code)
-            if self.output.concept_string != pipe.output.concept_string:
-                raise PipeConditionError(
-                    f"The output concept code '{self.output.concept_string}' of the pipe '{self.code}' is "
-                    f"not matching the output concept code '{pipe.output.concept_string}' of the pipe '{pipe_condition_pipe_map.pipe_code}'"
-                )
+            if not SpecificPipe.is_continue(pipe_condition_pipe_map.pipe_code):
+                pipe = get_required_pipe(pipe_code=pipe_condition_pipe_map.pipe_code)
+                if self.output.concept_string not in (
+                    pipe.output.concept_string,
+                    NativeConceptManager.get_native_concept_string(NativeConceptEnum.DYNAMIC),
+                ):
+                    msg = (
+                        f"The output concept code '{self.output.concept_string}' of the pipe '{self.code}' is "
+                        f"not matching the output concept code '{pipe.output.concept_string}' of the pipe '{pipe_condition_pipe_map.pipe_code}'"
+                    )
+                    raise PipeConditionError(msg)
         if self.default_pipe_code:
             default_pipe = get_required_pipe(pipe_code=self.default_pipe_code)
-            if self.output.concept_string != default_pipe.output.concept_string:
-                raise PipeConditionError(
+            if self.output.concept_string not in (
+                default_pipe.output.concept_string,
+                NativeConceptManager.get_native_concept_string(NativeConceptEnum.DYNAMIC),
+            ):
+                msg = (
                     f"The output concept code '{self.output.concept_string}' of the pipe '{self.code}' is "
                     f"not matching the output concept code '{default_pipe.output.concept_string}' of the default pipe '{self.default_pipe_code}'"
                 )
+                raise PipeConditionError(msg)
 
     @field_validator("pipe_map")
     @classmethod
@@ -134,14 +147,17 @@ class PipeCondition(PipeController):
         return self
 
     @override
-    def needed_inputs(self) -> PipeInputSpec:
-        """
-        Calculate the inputs needed by this PipeCondition.
+    def needed_inputs(self, visited_pipes: Optional[Set[str]] = None) -> PipeInputSpec:
+        if visited_pipes is None:
+            visited_pipes = set()
 
-        The inputs are:
-        1. Inputs needed by the condition expression/expression_template
-        2. Inputs needed by ALL possible target pipes (since we don't know which will be chosen)
-        """
+        # If we've already visited this pipe, stop recursion
+        if self.code in visited_pipes:
+            return PipeInputSpecFactory.make_empty()
+
+        # Add this pipe to visited set for recursive calls
+        visited_pipes_with_current = visited_pipes | {self.code}
+
         needed_inputs = PipeInputSpecFactory.make_empty()
 
         # 1. Add the variables from the expression/expression_template
@@ -164,9 +180,13 @@ class PipeCondition(PipeController):
 
         # 2. Add the inputs needed by all possible target pipes
         for pipe_condition_pipe_map in self.pipe_map:
-            pipe = get_required_pipe(pipe_code=pipe_condition_pipe_map.pipe_code)
-            for input_name, requirement in pipe.needed_inputs().items:
-                needed_inputs.add_requirement(variable_name=input_name, concept=requirement.concept)
+            if not SpecificPipe.is_continue(pipe_condition_pipe_map.pipe_code):
+                pipe = get_required_pipe(pipe_code=pipe_condition_pipe_map.pipe_code)
+                # Use the centralized recursion detection
+                pipe_needed_inputs = pipe.needed_inputs(visited_pipes_with_current)
+
+                for input_name, requirement in pipe_needed_inputs.items:
+                    needed_inputs.add_requirement(variable_name=input_name, concept=requirement.concept)
 
         return needed_inputs
 
@@ -233,7 +253,11 @@ class PipeCondition(PipeController):
 
     @override
     def pipe_dependencies(self) -> Set[str]:
-        pipe_codes = [pipe_condition_pipe_map.pipe_code for pipe_condition_pipe_map in self.pipe_map]
+        pipe_codes = [
+            pipe_condition_pipe_map.pipe_code
+            for pipe_condition_pipe_map in self.pipe_map
+            if not SpecificPipe.is_continue(pipe_condition_pipe_map.pipe_code)
+        ]
         if self.default_pipe_code:
             pipe_codes.append(self.default_pipe_code)
         return set(pipe_codes)
@@ -269,7 +293,7 @@ class PipeCondition(PipeController):
         # TODO: use jinja2 directly without going though a pipe
         pipe_jinja2 = PipeJinja2Factory.make_from_blueprint(
             domain=self.domain,
-            pipe_code="adhoc_for_pipe_condition",
+            pipe_code="evaluation_for_pipe_condition",
             blueprint=pipe_jinja2_blueprint,
         )
         jinja2_job_metadata = job_metadata.copy_with_update(
@@ -320,6 +344,9 @@ class PipeCondition(PipeController):
             error_msg += f"\n\nExpression: {self.applied_expression_template}"
             error_msg += f"\n\nPipe map: {self.pipe_map}"
             raise PipeConditionError(error_msg)
+
+        if SpecificPipe.is_continue(chosen_pipe_code):
+            return PipeOutput(working_memory=working_memory)
 
         condition_details = self._make_pipe_condition_details(
             evaluated_expression=evaluated_expression,

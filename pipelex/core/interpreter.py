@@ -11,7 +11,7 @@ from pipelex.core.exceptions import (
     PipelexConfigurationError,
     PipelexUnknownPipeError,
 )
-from pipelex.core.pipes.pipe_input_spec_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.pipe_controllers.batch.pipe_batch_blueprint import PipeBatchBlueprint
 from pipelex.pipe_controllers.condition.pipe_condition_blueprint import (
     PipeConditionBlueprint,
@@ -311,7 +311,7 @@ class PipelexInterpreter(BaseModel):
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
         # Add output after inputs (or immediately if no inputs)
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
 
         # Add optional fields
         if pipe.nb_output is not None:
@@ -343,8 +343,8 @@ class PipelexInterpreter(BaseModel):
         # Add inputs if they exist
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
-        lines.append(f'ocr_model = "{pipe.ocr_model}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
+        lines.append(f'ocr = "{pipe.ocr}"')
 
         return "\n".join(lines)
 
@@ -360,7 +360,7 @@ class PipelexInterpreter(BaseModel):
         # Add inputs if they exist
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
         lines.append(f'function_name = "{PipelexInterpreter.escape_plx_string(pipe.function_name)}"')
 
         return "\n".join(lines)
@@ -377,25 +377,13 @@ class PipelexInterpreter(BaseModel):
         # Add inputs if they exist
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
 
         # Add optional fields
         if pipe.img_gen_prompt:
             lines.append(f'img_gen_prompt = "{PipelexInterpreter.escape_plx_string(pipe.img_gen_prompt)}"')
-        if pipe.imgg_handle:
-            lines.append(f'imgg_handle = "{PipelexInterpreter.escape_plx_string(pipe.imgg_handle)}"')
         if pipe.aspect_ratio:
             lines.append(f'aspect_ratio = "{pipe.aspect_ratio}"')
-        if pipe.quality:
-            lines.append(f'quality = "{pipe.quality}"')
-        if pipe.nb_steps:
-            lines.append(f"nb_steps = {pipe.nb_steps}")
-        if pipe.guidance_scale:
-            lines.append(f"guidance_scale = {pipe.guidance_scale}")
-        if pipe.is_moderated is not None:
-            lines.append(f"is_moderated = {str(pipe.is_moderated).lower()}")
-        if pipe.safety_tolerance:
-            lines.append(f'safety_tolerance = "{pipe.safety_tolerance}"')
         if pipe.is_raw is not None:
             lines.append(f"is_raw = {str(pipe.is_raw).lower()}")
         if pipe.seed:
@@ -417,7 +405,7 @@ class PipelexInterpreter(BaseModel):
         # Add inputs if they exist
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
 
         # Add jinja2 template
         if pipe.jinja2:
@@ -439,7 +427,7 @@ class PipelexInterpreter(BaseModel):
         # Add inputs if they exist
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
 
         # Add pipe_map
         if pipe.pipe_map:
@@ -473,7 +461,7 @@ class PipelexInterpreter(BaseModel):
         # Add inputs if they exist
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
 
         # Add parallels array
         if pipe.parallels:
@@ -503,7 +491,7 @@ class PipelexInterpreter(BaseModel):
         # Add inputs if they exist
         PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
-        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output_concept_string_or_concept_code)}"')
+        lines.append(f'output = "{PipelexInterpreter.escape_plx_string(pipe.output)}"')
         lines.append(f'branch_pipe_code = "{pipe.branch_pipe_code}"')
 
         # Add optional fields
@@ -639,7 +627,7 @@ class PipelexInterpreter(BaseModel):
             result["inputs"] = PipelexInterpreter.serialize_inputs(pipe.inputs)
 
         # Then output
-        result["output"] = pipe.output_concept_string_or_concept_code
+        result["output"] = pipe.output
 
         # Add optional fields in expected order based on test cases
         if pipe.nb_output is not None:
@@ -691,7 +679,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
         }
 
         PipelexInterpreter.add_common_pipe_fields(result, pipe)
@@ -703,7 +691,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
             "function_name": pipe.function_name,
         }
 
@@ -716,7 +704,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
         }
 
         PipelexInterpreter.add_common_pipe_fields(result, pipe)
@@ -724,20 +712,8 @@ class PipelexInterpreter(BaseModel):
         # Add optional fields only if they have values
         if pipe.img_gen_prompt:
             result["img_gen_prompt"] = pipe.img_gen_prompt
-        if pipe.imgg_handle:
-            result["imgg_handle"] = pipe.imgg_handle
         if pipe.aspect_ratio:
             result["aspect_ratio"] = pipe.aspect_ratio
-        if pipe.quality:
-            result["quality"] = pipe.quality
-        if pipe.nb_steps:
-            result["nb_steps"] = pipe.nb_steps
-        if pipe.guidance_scale:
-            result["guidance_scale"] = pipe.guidance_scale
-        if pipe.is_moderated is not None:
-            result["is_moderated"] = pipe.is_moderated
-        if pipe.safety_tolerance:
-            result["safety_tolerance"] = pipe.safety_tolerance
         if pipe.is_raw is not None:
             result["is_raw"] = pipe.is_raw
         if pipe.seed:
@@ -759,10 +735,10 @@ class PipelexInterpreter(BaseModel):
         PipelexInterpreter.add_common_pipe_fields(result, pipe)
 
         # Add output
-        result["output"] = pipe.output_concept_string_or_concept_code
+        result["output"] = pipe.output
 
         # Add required fields
-        result["ocr_model"] = pipe.ocr_model
+        result["ocr"] = pipe.ocr
 
         # Add optional fields
         if pipe.page_images:
@@ -788,7 +764,7 @@ class PipelexInterpreter(BaseModel):
         PipelexInterpreter.add_common_pipe_fields(result, pipe)
 
         # Add output
-        result["output"] = pipe.output_concept_string_or_concept_code
+        result["output"] = pipe.output
 
         # Add steps
         if pipe.steps:
@@ -802,7 +778,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
         }
 
         PipelexInterpreter.add_common_pipe_fields(result, pipe)
@@ -814,9 +790,7 @@ class PipelexInterpreter(BaseModel):
             result["jinja2"] = pipe.jinja2
         if pipe.prompting_style:
             result["prompting_style"] = pipe.prompting_style
-        # Only include template_category if it's not the default value
-        if pipe.template_category and pipe.template_category.value != "llm_prompt":
-            result["template_category"] = pipe.template_category
+        result["template_category"] = pipe.template_category
 
         return result
 
@@ -864,7 +838,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
         }
 
         PipelexInterpreter.add_common_pipe_fields(result, pipe)
@@ -888,7 +862,7 @@ class PipelexInterpreter(BaseModel):
             PipelexInterpreter.add_inputs_to_lines_if_exist(lines, pipe.inputs)
 
         # Add output after inputs
-        lines.append(f'output = "{pipe.output_concept_string_or_concept_code}"')
+        lines.append(f'output = "{pipe.output}"')
 
         # Add steps array with proper spacing
         if pipe.steps:
@@ -906,7 +880,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
             "pipe_map": pipe.pipe_map,
         }
 
@@ -930,7 +904,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
         }
 
         PipelexInterpreter.add_common_pipe_fields(result, pipe)
@@ -950,7 +924,7 @@ class PipelexInterpreter(BaseModel):
         result: Dict[str, Any] = {
             "type": pipe.type,
             "definition": pipe.definition,
-            "output": pipe.output_concept_string_or_concept_code,
+            "output": pipe.output,
             "branch_pipe_code": pipe.branch_pipe_code,
         }
 

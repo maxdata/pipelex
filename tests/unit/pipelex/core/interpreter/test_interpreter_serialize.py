@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from pipelex.core.concepts.concept_blueprint import ConceptBlueprint, ConceptStructureBlueprint, ConceptStructureBlueprintFieldType
 from pipelex.core.interpreter import PipelexInterpreter
-from pipelex.core.pipes.pipe_input_spec_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.pipe_controllers.sequence.pipe_sequence_blueprint import PipeSequenceBlueprint
 from pipelex.pipe_controllers.sub_pipe_blueprint import SubPipeBlueprint
 from pipelex.pipe_operators.llm.pipe_llm_blueprint import PipeLLMBlueprint
@@ -287,10 +287,10 @@ class TestSerializePipeBlueprints:
 
     def test_serialize_ocr_pipe_basic(self):
         """Test serializing basic PipeOcr blueprint."""
-        pipe = PipeOcrBlueprint(type="PipeOcr", definition="Extract text from PDF", output="Page", ocr_model="pypdfium2-extract-text")
+        pipe = PipeOcrBlueprint(type="PipeOcr", definition="Extract text from PDF", output="Page", ocr="base_ocr_pypdfium2")
         result = PipelexInterpreter.serialize_ocr_pipe(pipe, "test_domain")
 
-        expected = {"type": "PipeOcr", "definition": "Extract text from PDF", "output": "Page", "ocr_model": "pypdfium2-extract-text"}
+        expected = {"type": "PipeOcr", "definition": "Extract text from PDF", "output": "Page", "ocr": "base_ocr_pypdfium2"}
         assert result == expected
 
     def test_serialize_sequence_pipe_basic(self):

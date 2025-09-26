@@ -14,10 +14,9 @@ from openai.types.completion_usage import CompletionUsage
 
 from pipelex import log
 from pipelex.cogt.exceptions import CogtError, LLMPromptParameterError
-from pipelex.cogt.image.prompt_image import PromptImage, PromptImageBytes, PromptImagePath, PromptImageUrl
+from pipelex.cogt.image.prompt_image import PromptImage, PromptImageBase64, PromptImagePath, PromptImageUrl
 from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.cogt.model_backends.backend import InferenceBackend
-from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
 from pipelex.cogt.usage.token_category import NbTokensByCategoryDict, TokenCategory
 from pipelex.plugins.plugin_sdk_registry import Plugin
 from pipelex.tools.misc.base_64_utils import load_binary_as_base64
@@ -74,7 +73,6 @@ class OpenAIFactory:
     def make_simple_messages(
         cls,
         llm_job: LLMJob,
-        inference_model: InferenceModelSpec,
     ) -> List[ChatCompletionMessageParam]:
         """
         Makes a list of messages with a system message (if provided) and followed by a user message.
@@ -82,7 +80,7 @@ class OpenAIFactory:
         llm_prompt = llm_job.llm_prompt
         messages: List[ChatCompletionMessageParam] = []
         user_contents: List[ChatCompletionContentPartParam] = []
-        if inference_model.is_system_prompt_supported and (system_content := llm_prompt.system_text):
+        if system_content := llm_prompt.system_text:
             messages.append(ChatCompletionSystemMessageParam(role="system", content=system_content))
         # TODO: confirm that we can prompt without user_contents, for instance if we have only images,
         # otherwise consider using a default user_content
@@ -103,13 +101,13 @@ class OpenAIFactory:
         if isinstance(prompt_image, PromptImageUrl):
             url = prompt_image.url
             openai_image_url = ImageURL(url=url, detail="high")
-        elif isinstance(prompt_image, PromptImageBytes):
+        elif isinstance(prompt_image, PromptImageBase64):
             # TODO: manage image type
             url_with_bytes: str = f"data:image/jpeg;base64,{prompt_image.base_64.decode('utf-8')}"
             openai_image_url = ImageURL(url=url_with_bytes, detail="high")
         elif isinstance(prompt_image, PromptImagePath):
             image_bytes = load_binary_as_base64(path=prompt_image.file_path)
-            return cls.make_openai_image_url(PromptImageBytes(base_64=image_bytes))
+            return cls.make_openai_image_url(PromptImageBase64(base_64=image_bytes))
         else:
             raise LLMPromptParameterError(f"prompt_image of type {type(prompt_image)} is not supported")
         return openai_image_url

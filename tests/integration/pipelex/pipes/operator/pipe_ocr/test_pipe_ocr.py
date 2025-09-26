@@ -7,7 +7,7 @@ from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_input_spec_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.core.stuffs.stuff_content import PageContent
@@ -42,20 +42,20 @@ class TestPipeOCR:
     @pytest.mark.parametrize("image_url", PipeOcrTestCases.PIPE_OCR_IMAGE_TEST_CASES)
     async def test_pipe_ocr_image(
         self,
-        ocr_handle_from_image: str,
+        ocr_choice_for_image: str,
         pipe_run_mode: PipeRunMode,
         image_url: str,
         setup: Any,
     ):
         pipe_ocr_blueprint = PipeOcrBlueprint(
             definition="OCR test for image processing",
-            inputs={"page_scan": InputRequirementBlueprint(concept=NativeConceptEnum.IMAGE.value)},
-            output=NativeConceptEnum.TEXT_AND_IMAGES.value,
+            inputs={"page_scan": InputRequirementBlueprint(concept=NativeConceptEnum.IMAGE)},
+            output=NativeConceptEnum.TEXT_AND_IMAGES,
             page_images=True,
             page_image_captions=False,
             page_views=True,
             page_views_dpi=72,
-            ocr_model=ocr_handle_from_image,
+            ocr=ocr_choice_for_image,
         )
 
         pipe_job = PipeJobFactory.make_pipe_job(
@@ -79,15 +79,15 @@ class TestPipeOCR:
     @pytest.mark.parametrize("pdf_url", PipeOcrTestCases.PIPE_OCR_PDF_TEST_CASES)
     async def test_pipe_ocr_pdf(
         self,
-        ocr_handle: str,
+        ocr_choice_for_pdf: str,
         pipe_run_mode: PipeRunMode,
         pdf_url: str,
     ):
         pipe_ocr_blueprint = PipeOcrBlueprint(
             definition="OCR test for PDF processing",
-            inputs={PIPE_OCR_INPUT_NAME: InputRequirementBlueprint(concept=NativeConceptEnum.PDF.value)},
-            output=NativeConceptEnum.TEXT_AND_IMAGES.value,
-            ocr_model=ocr_handle,
+            inputs={PIPE_OCR_INPUT_NAME: InputRequirementBlueprint(concept=NativeConceptEnum.PDF)},
+            output=NativeConceptEnum.TEXT_AND_IMAGES,
+            ocr=ocr_choice_for_pdf,
             page_images=True,
             page_image_captions=False,
             page_views=True,

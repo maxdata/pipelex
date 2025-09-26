@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from kajson.kajson_manager import KajsonManager
 from pydantic import BaseModel
@@ -8,12 +8,11 @@ from pipelex.core.concepts.concept_blueprint import (
     ConceptBlueprint,
     ConceptStructureBlueprint,
     ConceptStructureBlueprintFieldType,
-    ConceptStructureBlueprintType,
 )
-from pipelex.core.concepts.concept_native import NativeConceptEnumData, is_native_concept
+from pipelex.core.concepts.concept_native import NativeConceptEnumData, NativeConceptManager
+from pipelex.core.concepts.structure_generator import StructureGenerator
 from pipelex.core.domains.domain import SpecialDomain
 from pipelex.core.stuffs.stuff_content import TextContent
-from pipelex.create.structured_output_generator import StructureGenerator
 from pipelex.exceptions import ConceptFactoryError, StructureClassError
 
 
@@ -26,7 +25,7 @@ class DomainAndConceptCode(BaseModel):
 
 class ConceptFactory:
     @classmethod
-    def normalize_structure_blueprint(cls, structure_dict: Dict[str, ConceptStructureBlueprintType]) -> Dict[str, ConceptStructureBlueprint]:
+    def normalize_structure_blueprint(cls, structure_dict: Dict[str, Union[str, ConceptStructureBlueprint]]) -> Dict[str, ConceptStructureBlueprint]:
         """Convert a mixed structure dictionary to a proper ConceptStructureBlueprint dictionary.
 
         Args:
@@ -85,33 +84,29 @@ class ConceptFactory:
 
     @classmethod
     def make_domain_and_concept_code_from_concept_string_or_concept_code(
-        cls, domain: str, concept_string_or_concept_code: str, concept_codes_from_the_same_domain: Optional[List[str]] = None
+        cls, domain: str, concept_string_or_code: str, concept_codes_from_the_same_domain: Optional[List[str]] = None
     ) -> DomainAndConceptCode:
-        # At this point, the concept_string_or_concept_code is already validated
-        if "." in concept_string_or_concept_code:
+        # At this point, the concept_string_or_code is already validated
+        if "." in concept_string_or_code:
             # Is a concept string.
-            parts = concept_string_or_concept_code.rsplit(".")
+            parts = concept_string_or_code.rsplit(".")
             return DomainAndConceptCode(domain=parts[0], concept_code=parts[1])
         else:
-            if is_native_concept(concept_string_or_concept_code=concept_string_or_concept_code):
-                return DomainAndConceptCode(domain=SpecialDomain.NATIVE, concept_code=concept_string_or_concept_code)
+            if NativeConceptManager.is_native_concept(concept_string_or_code=concept_string_or_code):
+                return DomainAndConceptCode(domain=SpecialDomain.NATIVE, concept_code=concept_string_or_code)
 
             elif (
-                concept_codes_from_the_same_domain and concept_string_or_concept_code in concept_codes_from_the_same_domain
+                concept_codes_from_the_same_domain and concept_string_or_code in concept_codes_from_the_same_domain
             ):  # Is a concept code from the same domain
-                return DomainAndConceptCode(domain=domain, concept_code=concept_string_or_concept_code)
+                return DomainAndConceptCode(domain=domain, concept_code=concept_string_or_code)
             else:
-                return DomainAndConceptCode(domain=SpecialDomain.IMPLICIT.value, concept_code=concept_string_or_concept_code)
+                return DomainAndConceptCode(domain=SpecialDomain.IMPLICIT, concept_code=concept_string_or_code)
 
     @classmethod
     def make_refine(cls, refine: str) -> str:
-        if ConceptBlueprint.is_native_concept_string_or_concept_code(concept_string_or_concept_code=refine):
-            if "." in refine:
-                return refine
-            else:
-                return f"{SpecialDomain.NATIVE}.{refine}"
-        else:
-            raise ConceptFactoryError(f"Refine '{refine}' is not a native concept")
+        if NativeConceptManager.is_native_concept(concept_string_or_code=refine):
+            return NativeConceptManager.get_native_concept_string(concept_string_or_code=refine)
+        raise ConceptFactoryError(f"Refine '{refine}' is not a native concept")
 
     @classmethod
     def make_refines(cls, blueprint: ConceptBlueprint) -> Optional[str]:
@@ -186,7 +181,7 @@ class ConceptFactory:
 
         domain_and_concept_code = cls.make_domain_and_concept_code_from_concept_string_or_concept_code(
             domain=domain,
-            concept_string_or_concept_code=concept_code,
+            concept_string_or_code=concept_code,
             concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
         )
 

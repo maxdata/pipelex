@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, cast
 
 from pydantic import Field, RootModel, ValidationError
 from typing_extensions import Self
@@ -14,7 +14,6 @@ from pipelex.cogt.model_backends.backend import InferenceBackend
 from pipelex.cogt.model_backends.backend_factory import InferenceBackendBlueprint, InferenceBackendFactory
 from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
 from pipelex.cogt.model_backends.model_spec_factory import InferenceModelSpecBlueprint, InferenceModelSpecFactory
-from pipelex.cogt.model_backends.prompting_target import PromptingTarget
 from pipelex.config import get_config
 from pipelex.tools.misc.dict_utils import apply_to_strings_recursive
 from pipelex.tools.misc.toml_utils import load_toml_from_path
@@ -47,7 +46,7 @@ class InferenceBackendLibrary(RootModel[InferenceBackendLibraryRoot]):
             inference_backend_blueprint_dict_raw = backend_dict.copy()
             if not inference_backend_blueprint_dict_raw.get("enabled", True):
                 continue
-            if runtime_manager.is_gha_testing and backend_name == "vertexai":
+            if runtime_manager.is_ci_testing and backend_name == "vertexai":
                 continue
             try:
                 inference_backend_blueprint_dict = apply_to_strings_recursive(inference_backend_blueprint_dict_raw, substitute_vars)
@@ -62,7 +61,10 @@ class InferenceBackendLibrary(RootModel[InferenceBackendLibraryRoot]):
                 raise InferenceBackendCredentialsError(
                     error_type=InferenceBackendCredentialsErrorType.VAR_NOT_FOUND,
                     backend_name=backend_name,
-                    message=f"Variable substitution failed due to a variable not found error in file '{backends_library_path}':\n{var_not_found_exc}",
+                    message=(
+                        f"Variable substitution failed due to a variable not found error in file '{backends_library_path}':\n"
+                        f"{var_not_found_exc}\nRun mode: '{runtime_manager.run_mode}'"
+                    ),
                     key_name=var_not_found_exc.var_name,
                 ) from var_not_found_exc
             except UnknownVarPrefixError as unknown_var_prefix_exc:
@@ -92,18 +94,24 @@ class InferenceBackendLibrary(RootModel[InferenceBackendLibraryRoot]):
                     raise InferenceModelSpecError(f"Variable substitution failed in file '{path_to_model_specs_toml}': {exc}") from exc
             except (FileNotFoundError, InferenceModelSpecError) as exc:
                 raise InferenceBackendLibraryError(f"Failed to load inference model specs from file '{path_to_model_specs_toml}': {exc}") from exc
-            default_sdk: Optional[str] = model_specs_dict.pop("default_sdk", None)
-            default_prompting_target: Optional[PromptingTarget] = model_specs_dict.pop("default_prompting_target", None)
+            defaults_dict: Dict[str, Any] = model_specs_dict.pop("defaults", {})
             backend_model_specs: Dict[str, InferenceModelSpec] = {}
-            for model_spec_name, model_spec_dict in model_specs_dict.items():
+            for model_spec_name, value in model_specs_dict.items():
+                if not isinstance(value, dict):
+                    raise InferenceModelSpecError(
+                        f"Model spec '{model_spec_name}' for backend '{backend_name}' at path '{path_to_model_specs_toml}' is not a dictionary"
+                    )
+                model_spec_dict: Dict[str, Any] = cast(Dict[str, Any], value)
                 try:
-                    model_spec_blueprint = InferenceModelSpecBlueprint.model_validate(model_spec_dict)
+                    # Start from the defaults
+                    model_spec_blueprint_dict = defaults_dict.copy()
+                    # Override with the attributes from the model spec dict
+                    model_spec_blueprint_dict.update(model_spec_dict)
+                    model_spec_blueprint = InferenceModelSpecBlueprint.model_validate(model_spec_blueprint_dict)
                     model_spec = InferenceModelSpecFactory.make_inference_model_spec(
                         backend_name=backend_name,
                         name=model_spec_name,
                         blueprint=model_spec_blueprint,
-                        default_prompting_target=default_prompting_target,
-                        fallback_sdk=default_sdk,
                     )
                     backend_model_specs[model_spec_name] = model_spec
                 except (InferenceModelSpecError, ValidationError) as exc:

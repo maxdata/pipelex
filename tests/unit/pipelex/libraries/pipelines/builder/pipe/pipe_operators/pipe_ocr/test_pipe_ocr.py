@@ -1,0 +1,22 @@
+import pytest
+
+from pipelex.libraries.pipelines.builder.pipe.pipe_ocr_spec import PipeOcrSpec
+from pipelex.pipe_operators.ocr.pipe_ocr_blueprint import PipeOcrBlueprint
+
+from .test_data import PipeOcrTestCases
+
+
+class TestPipeOcrBlueprintConversion:
+    @pytest.mark.parametrize(
+        "test_name,pipe_spec,domain,expected_blueprint",
+        PipeOcrTestCases.TEST_CASES,
+    )
+    def test_pipe_ocr_spec_to_blueprint(
+        self,
+        test_name: str,
+        pipe_spec: PipeOcrSpec,
+        domain: str,
+        expected_blueprint: PipeOcrBlueprint,
+    ):
+        result = pipe_spec.to_blueprint()
+        assert result == expected_blueprint

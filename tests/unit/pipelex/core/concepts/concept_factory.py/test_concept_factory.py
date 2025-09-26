@@ -1,6 +1,4 @@
-"""Tests for ConceptFactory methods."""
-
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import pytest
 
@@ -9,7 +7,6 @@ from pipelex.core.concepts.concept_blueprint import (
     ConceptBlueprint,
     ConceptStructureBlueprint,
     ConceptStructureBlueprintFieldType,
-    ConceptStructureBlueprintType,
 )
 from pipelex.core.concepts.concept_factory import ConceptFactory
 
@@ -35,7 +32,7 @@ class TestConceptFactory:
 
     def test_normalize_structure_blueprint(self):
         """Test that mixed structure blueprints are properly normalized."""
-        mixed_structure_blueprint: Dict[str, ConceptStructureBlueprintType] = {
+        mixed_structure_blueprint: Dict[str, Union[str, ConceptStructureBlueprint]] = {
             "name": "The name of the person",
             "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
@@ -53,7 +50,7 @@ class TestConceptFactory:
 
         assert ConceptFactory.normalize_structure_blueprint(mixed_structure_blueprint) == expected_structure
 
-        mixed_structure_blueprint2: Dict[str, ConceptStructureBlueprintType] = {
+        mixed_structure_blueprint2: Dict[str, Union[str, ConceptStructureBlueprint]] = {
             "name": ConceptStructureBlueprint(definition="The name of the person", type=ConceptStructureBlueprintFieldType.TEXT, required=True),
             "age": ConceptStructureBlueprint(definition="The age of the person", type=ConceptStructureBlueprintFieldType.NUMBER, required=True),
             "active": ConceptStructureBlueprint(
@@ -72,20 +69,20 @@ class TestConceptFactory:
         assert ConceptFactory.normalize_structure_blueprint(mixed_structure_blueprint2) == expected_structure2
 
     @pytest.mark.parametrize(
-        "domain,concept_string_or_concept_code,concept_codes_from_the_same_domain,expected_result",
+        "domain,concept_string_or_code,concept_codes_from_the_same_domain,expected_result",
         TestCases.MAKE_DOMAIN_AND_CONCEPT_CODE_TEST_CASES,
     )
     def test_make_domain_and_concept_code_from_concept_string_or_concept_code(
         self,
         domain: str,
-        concept_string_or_concept_code: str,
+        concept_string_or_code: str,
         concept_codes_from_the_same_domain: Optional[List[str]],
         expected_result: List[str],
     ):
         """Test make_domain_and_concept_code_from_concept_string_or_concept_code method with various inputs."""
         result = ConceptFactory.make_domain_and_concept_code_from_concept_string_or_concept_code(
             domain=domain,
-            concept_string_or_concept_code=concept_string_or_concept_code,
+            concept_string_or_code=concept_string_or_code,
             concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
         )
         assert result == expected_result

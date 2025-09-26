@@ -2,7 +2,6 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from pipelex.cogt.exceptions import InferenceModelSpecError
 from pipelex.cogt.model_backends.model_constraints import ModelConstraints
 from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
 from pipelex.cogt.model_backends.model_type import ModelType
@@ -13,7 +12,7 @@ from pipelex.tools.config.config_model import ConfigModel
 
 class InferenceModelSpecBlueprint(ConfigModel):
     enabled: bool = True
-    sdk: Optional[str] = None
+    sdk: str
     model_type: ModelType = Field(default=ModelType.LLM, strict=False)
     model_id: str
     inputs: List[str] = Field(default_factory=list)
@@ -46,17 +45,11 @@ class InferenceModelSpecFactory(BaseModel):
         backend_name: str,
         name: str,
         blueprint: InferenceModelSpecBlueprint,
-        default_prompting_target: Optional[PromptingTarget],
-        fallback_sdk: Optional[str],
     ) -> InferenceModelSpec:
-        sdk = blueprint.sdk or fallback_sdk
-        if not sdk:
-            raise InferenceModelSpecError("No sdk choice provided")
-        prompting_target = blueprint.prompting_target or default_prompting_target
         return InferenceModelSpec(
             backend_name=backend_name,
             name=name,
-            sdk=sdk,
+            sdk=blueprint.sdk,
             model_type=blueprint.model_type,
             model_id=blueprint.model_id,
             inputs=blueprint.inputs,
@@ -64,6 +57,6 @@ class InferenceModelSpecFactory(BaseModel):
             costs=blueprint.costs,
             max_tokens=blueprint.max_tokens,
             max_prompt_images=blueprint.max_prompt_images,
-            prompting_target=prompting_target,
+            prompting_target=blueprint.prompting_target,
             constraints=blueprint.constraints,
         )
