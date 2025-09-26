@@ -73,8 +73,8 @@ class PipeSpec(StructuredContent):
         return value
 
     @field_validator("output", mode="before")
-    def validate_concept_string_or_concept_code(cls, output: str) -> str:
-        ConceptBlueprint.validate_concept_string_or_concept_code(concept_string_or_code=output)
+    def validate_concept_string_or_code(cls, output: str) -> str:
+        ConceptBlueprint.validate_concept_string_or_code(concept_string_or_code=output)
         return output
 
     @classmethod

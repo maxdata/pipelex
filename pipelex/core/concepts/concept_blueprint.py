@@ -139,7 +139,7 @@ class ConceptBlueprint(BaseModel):
             )
 
     @classmethod
-    def validate_concept_string_or_concept_code(cls, concept_string_or_code: str) -> None:
+    def validate_concept_string_or_code(cls, concept_string_or_code: str) -> None:
         if concept_string_or_code.count(".") > 1:
             raise ConceptStringOrConceptCodeError(
                 f"concept_string_or_code '{concept_string_or_code}' is invalid. "
@@ -202,7 +202,7 @@ class ConceptBlueprint(BaseModel):
         if refines is not None:
             if not NativeConceptManager.is_native_concept(refines):
                 raise ConceptBlueprintError(f"Forbidden to refine a non-native concept: '{refines}'. Refining non-native concepts will come soon.")
-            cls.validate_concept_string_or_concept_code(concept_string_or_code=refines)
+            cls.validate_concept_string_or_code(concept_string_or_code=refines)
         return refines
 
     @model_validator(mode="before")
