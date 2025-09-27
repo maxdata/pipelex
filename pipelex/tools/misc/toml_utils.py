@@ -115,12 +115,8 @@ def load_toml_from_path(path: str) -> dict[str, Any]:
         raise toml.TomlDecodeError(msg, exc.doc, exc.pos) from exc
 
 
-def failable_load_toml_from_path(path: str) -> dict[str, Any] | None:
-    """Load TOML from path with failure handling."""
+def load_toml_from_path_if_exists(path: str) -> dict[str, Any] | None:
+    """Load TOML from path if it exists."""
     if not path_exists(path):
         return None
-    try:
-        return load_toml_from_path(path)
-    except (toml.TomlDecodeError, TOMLValidationError) as exc:
-        print(f"Failed to parse TOML file '{path}': {exc}")
-        return None
+    return load_toml_from_path(path)

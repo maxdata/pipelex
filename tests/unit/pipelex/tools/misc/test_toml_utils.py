@@ -4,7 +4,7 @@ import pytest
 
 from pipelex.tools.misc.toml_utils import (
     TOMLValidationError,
-    failable_load_toml_from_path,
+    load_toml_from_path_if_exists,
     load_toml_from_path,
     validate_toml_file,
 )
@@ -104,12 +104,12 @@ definition = "Test with trailing space"
         assert isinstance(result, dict)
         assert result["domain"] == "test"
 
-    def test_failable_load_toml_from_path_nonexistent_file(self) -> None:
+    def test_load_toml_from_path_if_exists_nonexistent_file(self) -> None:
         """Test failable loading with non-existent file."""
-        result = failable_load_toml_from_path("/nonexistent/path.toml")
+        result = load_toml_from_path_if_exists("/nonexistent/path.toml")
         assert result is None
 
-    def test_failable_load_toml_from_path_valid_file(self, tmp_path: Path) -> None:
+    def test_load_toml_from_path_if_exists_valid_file(self, tmp_path: Path) -> None:
         """Test failable loading with valid file."""
         toml_content = """domain = "test"
 definition = "Test definition"
@@ -117,12 +117,12 @@ definition = "Test definition"
         toml_file = tmp_path / "valid.toml"
         toml_file.write_text(toml_content)
 
-        result = failable_load_toml_from_path(str(toml_file))
+        result = load_toml_from_path_if_exists(str(toml_file))
 
         assert result is not None
         assert result["domain"] == "test"
 
-    def test_failable_load_toml_from_path_with_whitespace_works(self, tmp_path: Path) -> None:
+    def test_load_toml_from_path_if_exists_with_whitespace_works(self, tmp_path: Path) -> None:
         """Test failable loading works normally with whitespace."""
         toml_content = """domain = "test"   
 """
@@ -130,7 +130,7 @@ definition = "Test definition"
         toml_file.write_text(toml_content)
 
         # Should work fine - loading doesn't validate by default
-        result = failable_load_toml_from_path(str(toml_file))
+        result = load_toml_from_path_if_exists(str(toml_file))
         assert result is not None
         assert result["domain"] == "test"
 

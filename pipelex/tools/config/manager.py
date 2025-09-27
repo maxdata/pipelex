@@ -10,7 +10,7 @@ from pipelex.tools.config.config_root import (
     CONFIG_BASE_OVERRIDES_BEFORE_ENV,
 )
 from pipelex.tools.misc.json_utils import deep_update
-from pipelex.tools.misc.toml_utils import failable_load_toml_from_path, load_toml_from_path
+from pipelex.tools.misc.toml_utils import load_toml_from_path, load_toml_from_path_if_exists
 from pipelex.tools.runtime_manager import runtime_manager
 
 CONFIG_DIR_NAME = ".pipelex"
@@ -74,8 +74,9 @@ class ConfigManager:
             Dict[str, Any]: The configuration dictionary from the local pipelex.toml
 
         """
-        config_path = os.path.join(self.local_root_dir, CONFIG_NAME)
-        return failable_load_toml_from_path(config_path) or {}
+        config_path = os.path.join(self.pipelex_config_dir, CONFIG_NAME)
+        print(f"Getting local config from {config_path}")
+        return load_toml_from_path_if_exists(config_path) or {}
 
     def load_inheritance_config(self, the_pipelex_config: dict[str, Any]):
         """Load the config by inheritance in a pyproject.toml file.
@@ -105,7 +106,7 @@ class ConfigManager:
                 if package_path:
                     config_path = os.path.join(package_path, "pipelex.toml")
                     if os.path.exists(config_path):
-                        config = failable_load_toml_from_path(config_path)
+                        config = load_toml_from_path_if_exists(config_path)
                         if config:
                             deep_update(the_pipelex_config, config)
 
@@ -150,12 +151,12 @@ class ConfigManager:
                     override_path = os.path.join(self.local_root_dir, "tests", f"pipelex_{override}.toml")
                 else:
                     override_path = os.path.join(self.local_root_dir, "pipelex" if self.is_in_pipelex_config else "", f"pipelex_{override}.toml")
-                if override_dict := failable_load_toml_from_path(override_path):
+                if override_dict := load_toml_from_path_if_exists(override_path):
                     deep_update(pipelex_config, override_dict)
 
         #################### 5. Load specific config ####################
         if specific_config_path:
-            config = failable_load_toml_from_path(specific_config_path)
+            config = load_toml_from_path_if_exists(specific_config_path)
             if config:
                 deep_update(pipelex_config, config)
             else:
