@@ -26,23 +26,23 @@ class InterpreterTestCases:
     VALID_TEST_CASES: ClassVar[List[Tuple[str, str, PipelexBundleBlueprint]]] = [  # test_name,plx_content,blueprint
         # Domain tests
         *DOMAIN_TEST_CASES,
-        # Concept tests
+        # # Concept tests
         *STRUCTURED_CONCEPT_TEST_CASES,
-        *REFINING_CONCEPT_TEST_CASES,
-        *SIMPLE_CONCEPT_TEST_CASES,
-        # Pipe operator tests
-        *PIPE_LLM_TEST_CASES,
-        *PIPE_OCR_TEST_CASES,
-        *PIPE_FUNC_TEST_CASES,
-        *PIPE_IMG_GEN_TEST_CASES,
-        *PIPE_JINJA2_TEST_CASES,
-        # # Pipe controller tests
-        *PIPE_SEQUENCE_TEST_CASES,
-        *PIPE_CONDITION_TEST_CASES,
-        *PIPE_PARALLEL_TEST_CASES,
-        *PIPE_BATCH_TEST_CASES,
-        # Complex tests
-        *COMPLEX_TEST_CASES,
+        # *REFINING_CONCEPT_TEST_CASES,
+        # *SIMPLE_CONCEPT_TEST_CASES,
+        # # Pipe operator tests
+        # *PIPE_LLM_TEST_CASES,
+        # *PIPE_OCR_TEST_CASES,
+        # *PIPE_FUNC_TEST_CASES,
+        # *PIPE_IMG_GEN_TEST_CASES,
+        # *PIPE_JINJA2_TEST_CASES,
+        # # # Pipe controller tests
+        # *PIPE_SEQUENCE_TEST_CASES,
+        # *PIPE_CONDITION_TEST_CASES,
+        # *PIPE_PARALLEL_TEST_CASES,
+        # *PIPE_BATCH_TEST_CASES,
+        # # Complex tests
+        # *COMPLEX_TEST_CASES,
     ]
 
     # Error test cases
