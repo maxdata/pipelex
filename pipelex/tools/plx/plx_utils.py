@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Any, Mapping, cast
 
 import tomlkit
@@ -106,6 +107,16 @@ def _convert_mapping_to_table(mapping: Mapping[str, Any]) -> Any:  # Can't type 
     return tbl
 
 
+def _add_spaces_to_inline_tables(toml_string: str) -> str:
+    """Add spaces inside inline table curly braces.
+
+    Converts {key = value} to { key = value }.
+    """
+    # Pattern matches inline tables: { ... }
+    pattern = r"\{([^}]+)\}"
+    return re.sub(pattern, r"{ \1 }", toml_string)
+
+
 def dict_to_plx_styled_toml(data: Mapping[str, Any]) -> str:
     """Top-level keys become tables; second-level mappings become tables; inline tables start at third level."""
     log.debug("=" * 100)
@@ -134,7 +145,8 @@ def dict_to_plx_styled_toml(data: Mapping[str, Any]) -> str:
                 table_obj_for_concept = _make_table_obj_for_concept(section_value)
                 document_root.add(section_key, table_obj_for_concept)
 
-    return tomlkit.dumps(document_root)  # pyright: ignore[reportUnknownMemberType]
+    toml_output = tomlkit.dumps(document_root)  # pyright: ignore[reportUnknownMemberType]
+    return _add_spaces_to_inline_tables(toml_output)
 
 
 def _make_table_obj_for_pipe(section_value: Mapping[str, Any]) -> Any:
