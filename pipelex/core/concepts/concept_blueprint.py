@@ -35,7 +35,7 @@ class ConceptStructureBlueprint(BaseModel):
     item_type: str | None = None
     key_type: str | None = None
     value_type: str | None = None
-    choices: list[str] | None = Field(default_factory=list)
+    choices: list[str] | None = Field(default=None)
     required: bool | None = Field(default=True)
     default_value: Any | None = None
 

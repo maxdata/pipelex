@@ -22,6 +22,13 @@ class SectionKey(StrEnum):
 
 CONCEPT_STRUCTURE_FIELD_KEY = "structure"
 
+# Field ordering for specific keys
+FieldOrdering = list[str]
+# FIELD_ORDER: dict[str, FieldOrdering] = {
+#     "structure": ["type", "definition", "choices", "required"],
+# }
+STRUCTURE_FIELD_ORDERING: FieldOrdering = ["type", "definition", "choices", "required"]
+
 
 def _format_tomlkit_string(
     text: str,
@@ -48,13 +55,18 @@ def _format_tomlkit_string(
     return tomlkit_string(normalized, multiline=needs_multiline, literal=use_literal)
 
 
-def _convert_dicts_to_inline_tables(value: Any) -> Any:  # Can't type this because of tomlkit
+def _convert_dicts_to_inline_tables(value: Any, field_ordering: FieldOrdering | None = None) -> Any:  # Can't type this because of tomlkit
     """Recursively convert Python values; dicts -> inline tables; lists kept as arrays."""
     if isinstance(value, Mapping):
         value = cast("Mapping[str, Any]", value)
         inline_table_obj = inline_table()
-        for key, value_item in value.items():
-            inline_table_obj[key] = _convert_dicts_to_inline_tables(value_item)
+        if field_ordering:
+            for key in field_ordering:
+                if key in value:
+                    inline_table_obj[key] = _convert_dicts_to_inline_tables(value=value[key])
+        else:
+            for key, value_item in value.items():
+                inline_table_obj[key] = _convert_dicts_to_inline_tables(value=value_item)
         return inline_table_obj
 
     if isinstance(value, list):
@@ -66,14 +78,14 @@ def _convert_dicts_to_inline_tables(value: Any) -> Any:  # Can't type this becau
                 element = cast("Mapping[str, Any]", element)
                 inline_element = inline_table()
                 for inner_key, inner_value in element.items():
-                    inline_element[inner_key] = _convert_dicts_to_inline_tables(inner_value)
+                    inline_element[inner_key] = _convert_dicts_to_inline_tables(value=inner_value)
                 array_obj.append(inline_element)  # pyright: ignore[reportUnknownMemberType]
             else:
-                array_obj.append(_convert_dicts_to_inline_tables(element))  # pyright: ignore[reportUnknownMemberType]
+                array_obj.append(_convert_dicts_to_inline_tables(value=element))  # pyright: ignore[reportUnknownMemberType]
         return array_obj
 
     if isinstance(value, str):
-        return _format_tomlkit_string(value)
+        return _format_tomlkit_string(text=value)
     return value
 
 
@@ -177,9 +189,9 @@ def _make_table_obj_for_concept(section_value: Mapping[str, Any]) -> Any:
                         msg = f"Structure field value is neither a string nor a mapping: key = {structure_field_key}, value = {structure_field_value}"
                         raise TypeError(msg)
                     log.debug(f"Structure for '{concept_key}' is a mapping: {structure_field_value}")
-                    # structure_field_value = cast("Mapping[str, Any]", structure_field_value)
-                    # structure_field_table = _convert_mapping_to_table(structure_value)
-                    structure_table_obj.add(structure_field_key, _convert_dicts_to_inline_tables(structure_field_value))
+                    structure_table_obj.add(
+                        structure_field_key, _convert_dicts_to_inline_tables(value=structure_field_value, field_ordering=STRUCTURE_FIELD_ORDERING)
+                    )
                 concept_table_obj.add("structure", structure_table_obj)
             else:
                 # sub_table = _convert_mapping_to_table(concept_field_value)
