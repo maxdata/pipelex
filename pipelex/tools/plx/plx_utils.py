@@ -117,24 +117,54 @@ def _add_spaces_to_inline_tables(toml_string: str) -> str:
 
     Converts {key = value} to { key = value }.
     Only adds spaces if they're not already present.
+    Handles nested inline tables properly.
     """
 
-    # Pattern matches inline tables and captures the content
-    # We check if spaces are already present to avoid double-spacing
-    def replace_inline_table(match: Match[str]) -> str:
-        content = match.group(1)
-        # Only add spaces if the content doesn't already start/end with spaces
-        if content.startswith(" ") and content.endswith(" "):
-            return "{" + content + "}"  # Already has spaces, keep as-is
-        elif content.startswith(" "):
-            return "{" + content + " }"  # Has leading space, add trailing
-        elif content.endswith(" "):
-            return "{ " + content + "}"  # Has trailing space, add leading
-        else:
-            return "{ " + content + " }"  # No spaces, add both
+    def find_and_replace_inline_tables(text: str) -> str:
+        """Find inline tables using proper brace matching and add spaces."""
+        result = ""
+        char_index = 0
 
-    pattern = r"\{([^}]+)\}"
-    return re.sub(pattern, replace_inline_table, toml_string)
+        while char_index < len(text):
+            if text[char_index] == "{":
+                # Found start of inline table, find the matching closing brace
+                brace_count = 1
+                start = char_index
+                char_index += 1
+
+                while char_index < len(text) and brace_count > 0:
+                    if text[char_index] == "{":
+                        brace_count += 1
+                    elif text[char_index] == "}":
+                        brace_count -= 1
+                    char_index += 1
+
+                if brace_count == 0:
+                    # Found complete inline table
+                    content = text[start + 1 : char_index - 1]  # Content between braces
+
+                    # Recursively process nested inline tables first
+                    content = find_and_replace_inline_tables(content)
+
+                    # Add spaces if not already present
+                    if content.startswith(" ") and content.endswith(" "):
+                        result += "{" + content + "}"
+                    elif content.startswith(" "):
+                        result += "{" + content + " }"
+                    elif content.endswith(" "):
+                        result += "{ " + content + "}"
+                    else:
+                        result += "{ " + content + " }"
+                else:
+                    # Unmatched brace, add as-is
+                    result += text[start:char_index]
+            else:
+                result += text[char_index]
+                char_index += 1
+
+        return result
+
+    return find_and_replace_inline_tables(toml_string)
 
 
 def dict_to_plx_styled_toml(data: Mapping[str, Any]) -> str:
