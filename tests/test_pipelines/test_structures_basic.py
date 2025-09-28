@@ -5,6 +5,7 @@ from datetime import datetime
 from pydantic import Field
 
 from pipelex.core.stuffs.stuff_content import StructuredContent
+from pipelex.tools.typing.pydantic_utils import empty_list_factory_of
 
 
 class ConceptWithSimpleStructure(StructuredContent):
@@ -28,7 +29,7 @@ class ConceptWithLists(StructuredContent):
     """A structure with list fields."""
 
     string_list: list[str] = Field(default_factory=list, description="A list of strings")
-    number_list: list[int] = Field(default_factory=list, description="A list of numbers")
+    number_list: list[int] = Field(default_factory=empty_list_factory_of(int), description="A list of numbers")
     optional_list: list[str] | None = Field(None, description="An optional list")
 
 
@@ -37,4 +38,4 @@ class ConceptWithNestedStructures(StructuredContent):
 
     simple_nested: ConceptWithSimpleStructure = Field(..., description="A nested simple structure")
     optional_nested: ConceptWithOptionals | None = Field(None, description="An optional nested structure")
-    list_of_nested: list[ConceptWithSimpleStructure] = Field(default_factory=list, description="A list of nested structures")
+    list_of_nested: list[ConceptWithSimpleStructure] = Field(default_factory=empty_list_factory_of(ConceptWithSimpleStructure), description="A list of nested structures")

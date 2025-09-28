@@ -29,7 +29,7 @@ class PlxFactory:
         return get_config().pipelex.plx_config
 
     @classmethod
-    def _format_tomlkit_string(cls, text: str) -> Any:  # Can't type this because of tomlkit
+    def format_tomlkit_string(cls, text: str) -> Any:  # Can't type this because of tomlkit
         r"""Build a tomlkit string node.
         - If `force_multiline` or the text contains '\\n', we emit a triple-quoted multiline string.
         - When multiline, `ensure_trailing_newline` puts the closing quotes on their own line.
@@ -50,7 +50,7 @@ class PlxFactory:
         return tomlkit_string(normalized, multiline=needs_multiline, literal=use_literal)
 
     @classmethod
-    def _convert_dicts_to_inline_tables(cls, value: Any, field_ordering: list[str] | None = None) -> Any:  # Can't type this because of tomlkit
+    def convert_dicts_to_inline_tables(cls, value: Any, field_ordering: list[str] | None = None) -> Any:  # Can't type this because of tomlkit
         """Recursively convert Python values; dicts -> inline tables; lists kept as arrays."""
         if isinstance(value, Mapping):
             value = cast("Mapping[str, Any]", value)
@@ -58,10 +58,10 @@ class PlxFactory:
             if field_ordering:
                 for key in field_ordering:
                     if key in value:
-                        inline_table_obj[key] = cls._convert_dicts_to_inline_tables(value=value[key])
+                        inline_table_obj[key] = cls.convert_dicts_to_inline_tables(value=value[key])
             else:
                 for key, value_item in value.items():
-                    inline_table_obj[key] = cls._convert_dicts_to_inline_tables(value=value_item)
+                    inline_table_obj[key] = cls.convert_dicts_to_inline_tables(value=value_item)
             return inline_table_obj
 
         elif isinstance(value, list):
@@ -73,19 +73,19 @@ class PlxFactory:
                     element = cast("Mapping[str, Any]", element)
                     inline_element = inline_table()
                     for inner_key, inner_value in element.items():
-                        inline_element[inner_key] = cls._convert_dicts_to_inline_tables(value=inner_value)
+                        inline_element[inner_key] = cls.convert_dicts_to_inline_tables(value=inner_value)
                     array_obj.append(inline_element)  # pyright: ignore[reportUnknownMemberType]
                 else:
-                    array_obj.append(cls._convert_dicts_to_inline_tables(value=element))  # pyright: ignore[reportUnknownMemberType]
+                    array_obj.append(cls.convert_dicts_to_inline_tables(value=element))  # pyright: ignore[reportUnknownMemberType]
             return array_obj
 
         elif isinstance(value, str):
-            return cls._format_tomlkit_string(text=value)
+            return cls.format_tomlkit_string(text=value)
         else:
             return value
 
     @classmethod
-    def _convert_mapping_to_table(
+    def convert_mapping_to_table(
         cls, mapping: Mapping[str, Any], field_ordering: list[str] | None = None
     ) -> Any:  # Can't type this because of tomlkit
         """Convert a mapping into a TOML Table where any nested mappings (third level+)
@@ -103,18 +103,18 @@ class PlxFactory:
                     field_value = mapping[field_key]
                     if isinstance(field_value, Mapping):
                         # Third-level mapping -> inline table
-                        tbl.add(field_key, cls._convert_dicts_to_inline_tables(field_value))
+                        tbl.add(field_key, cls.convert_dicts_to_inline_tables(field_value))
                     else:
-                        tbl.add(field_key, cls._convert_dicts_to_inline_tables(field_value))
+                        tbl.add(field_key, cls.convert_dicts_to_inline_tables(field_value))
 
             # Add any remaining fields not in the ordering
             for field_key, field_value in mapping.items():
                 if field_key not in field_ordering and field_key != "category":
                     if isinstance(field_value, Mapping):
                         # Third-level mapping -> inline table
-                        tbl.add(field_key, cls._convert_dicts_to_inline_tables(field_value))
+                        tbl.add(field_key, cls.convert_dicts_to_inline_tables(field_value))
                     else:
-                        tbl.add(field_key, cls._convert_dicts_to_inline_tables(field_value))
+                        tbl.add(field_key, cls.convert_dicts_to_inline_tables(field_value))
         else:
             # No field ordering provided, use original logic
             for field_key, field_value in mapping.items():
@@ -124,14 +124,14 @@ class PlxFactory:
 
                 if isinstance(field_value, Mapping):
                     # Third-level mapping -> inline table
-                    tbl.add(field_key, cls._convert_dicts_to_inline_tables(field_value))
+                    tbl.add(field_key, cls.convert_dicts_to_inline_tables(field_value))
                 else:
-                    tbl.add(field_key, cls._convert_dicts_to_inline_tables(field_value))
+                    tbl.add(field_key, cls.convert_dicts_to_inline_tables(field_value))
         return tbl
 
     # TODO: replace this by a proper toml formatter utility
     @classmethod
-    def _add_spaces_to_inline_tables(cls, toml_string: str) -> str:
+    def add_spaces_to_inline_tables(cls, toml_string: str) -> str:
         """Add spaces inside inline table curly braces.
 
         Converts {key = value} to { key = value }.
@@ -196,7 +196,7 @@ class PlxFactory:
         return find_and_replace_inline_tables(toml_string)
 
     @classmethod
-    def _make_table_obj_for_pipe(cls, section_value: Mapping[str, Any]) -> Any:
+    def make_table_obj_for_pipe(cls, section_value: Mapping[str, Any]) -> Any:
         """Make a table object for a pipe section."""
         log.debug("******** Making table object for pipe section ********")
         table_obj = table()
@@ -204,15 +204,15 @@ class PlxFactory:
             log.debug(f"------ Field {field_key} is a {type(field_value)}")
             if not isinstance(field_value, Mapping):
                 log.debug(f"Field is not a mapping: key = {field_key}, value = {field_value}")
-                table_obj.add(field_key, cls._convert_dicts_to_inline_tables(field_value))
+                table_obj.add(field_key, cls.convert_dicts_to_inline_tables(field_value))
                 continue
             log.debug(f"Field is a mapping: key = {field_key}, value = {field_value}")
             field_value = cast("Mapping[str, Any]", field_value)
-            table_obj.add(field_key, cls._convert_mapping_to_table(field_value, field_ordering=cls._plx_config().pipes.field_ordering))
+            table_obj.add(field_key, cls.convert_mapping_to_table(field_value, field_ordering=cls._plx_config().pipes.field_ordering))
         return table_obj
 
     @classmethod
-    def _make_table_obj_for_concept(cls, section_value: Mapping[str, Any]) -> Any:
+    def make_table_obj_for_concept(cls, section_value: Mapping[str, Any]) -> Any:
         """Make a table object for a concept section."""
         log.debug("******** Making table object for concept section ********")
         table_obj = table()
@@ -253,7 +253,7 @@ class PlxFactory:
                         log.debug(f"Structure for '{concept_key}' is a mapping: {structure_field_value}")
                         structure_table_obj.add(
                             structure_field_key,
-                            cls._convert_dicts_to_inline_tables(
+                            cls.convert_dicts_to_inline_tables(
                                 value=structure_field_value, field_ordering=cls._plx_config().concepts.structure_field_ordering
                             ),
                         )
@@ -261,7 +261,7 @@ class PlxFactory:
                 else:
                     # sub_table = _convert_mapping_to_table(concept_field_value)
                     log.debug(f"{concept_key}/'{concept_field_key}' is inline: {concept_field_value}")
-                    concept_table_obj.add(concept_field_key, cls._convert_dicts_to_inline_tables(concept_field_value))
+                    concept_table_obj.add(concept_field_key, cls.convert_dicts_to_inline_tables(concept_field_value))
             table_obj.add(concept_key, concept_table_obj)
         return table_obj
 
@@ -274,7 +274,7 @@ class PlxFactory:
         for root_key, root_value in data.items():
             if not isinstance(root_value, Mapping):
                 log.debug(f"Root root_key is not a mapping: key = {root_key}, value = {root_value}")
-                document_root.add(root_key, cls._convert_dicts_to_inline_tables(root_value))
+                document_root.add(root_key, cls.convert_dicts_to_inline_tables(root_value))
                 continue
 
             # It's a mapping, therefore it's a section
@@ -288,15 +288,15 @@ class PlxFactory:
                 continue
             match section_key:
                 case SectionKey.PIPE:
-                    table_obj_for_pipe = cls._make_table_obj_for_pipe(section_value)
+                    table_obj_for_pipe = cls.make_table_obj_for_pipe(section_value)
                     document_root.add(section_key, table_obj_for_pipe)
                 case SectionKey.CONCEPT:
-                    table_obj_for_concept = cls._make_table_obj_for_concept(section_value)
+                    table_obj_for_concept = cls.make_table_obj_for_concept(section_value)
                     document_root.add(section_key, table_obj_for_concept)
 
         toml_output = tomlkit.dumps(document_root)  # pyright: ignore[reportUnknownMemberType]
         if cls._plx_config().inline_tables.spaces_inside_curly_braces:
-            return cls._add_spaces_to_inline_tables(toml_output)
+            return cls.add_spaces_to_inline_tables(toml_output)
         return toml_output
 
     @classmethod
