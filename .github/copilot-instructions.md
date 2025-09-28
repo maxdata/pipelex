@@ -118,7 +118,7 @@ Always fix any issues reported by these tools before proceeding.
 - **Pipelines**: `pipelex/libraries/pipelines/`
 - **Tests**: `tests/` directory
 - **Documentation**: `docs/` directory
- # Pipeline Guide
+# Pipeline Guide
 
 - Always first write your "plan" in natural langage, then transcribe it in pipelex.
 - You should ALWAYS RUN the terminal command `make validate` when you are writing a `.plx` file. It will ensure the pipe is runnable. If not, iterate.
