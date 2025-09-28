@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import ClassVar
 
 from pipelex.tools.config.config_model import ConfigModel
@@ -27,8 +28,8 @@ class LibraryConfig(ConfigModel):
         return "tests/test_pipelines"
 
     @property
-    def failing_pipelines_file_paths(self) -> list[str]:
-        return ["tests/test_pipelines/failing_pipelines.plx"]
+    def failing_pipelines_file_paths(self) -> set[Path]:
+        return {Path("tests/test_pipelines/failing_pipelines.plx")}
 
     def get_templates_paths(self) -> list[str]:
         return [str(path) for path in find_files_in_dir(dir_path=self.templates_dir_path, pattern="*.toml", is_recursive=True)]

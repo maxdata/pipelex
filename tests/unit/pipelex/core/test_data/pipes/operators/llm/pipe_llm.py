@@ -55,7 +55,7 @@ Extract information about $topic from this text:
                 definition="Extract information from text",
                 inputs={"text": "Text", "topic": "Text"},
                 output=NativeConceptEnum.TEXT,
-                prompt_template="Extract information about $topic from this text:\n\n@text",
+                prompt_template="Extract information about $topic from this text:\n\n@text\n",
             ),
         },
     ),
@@ -335,7 +335,7 @@ Documents: @documents
 
 # Export all PipeLLM test cases
 PIPE_LLM_TEST_CASES = [
-    # PIPE_LLM_BASIC,
+    PIPE_LLM_BASIC,
     PIPE_LLM_WITH_INPUTS,
     PIPE_LLM_WITH_SYSTEM_PROMPT,
     PIPE_LLM_MULTIPLE_OUTPUTS,

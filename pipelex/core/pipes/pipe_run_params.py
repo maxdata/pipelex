@@ -177,19 +177,14 @@ class BatchParams(BaseModel):
     @classmethod
     def make_optional_batch_params(
         cls,
-        input_list_name: bool | str,
+        input_list_name: str | None,
         input_item_name: str | None = None,
     ) -> BatchParams | None:
         the_batch_params: BatchParams | None = None
-        if input_list_name or input_item_name:
-            input_list_stuff_name: str
-            if isinstance(input_list_name, str):
-                input_list_stuff_name = input_list_name
-            else:
-                input_list_stuff_name = MAIN_STUFF_NAME
+        if input_list_name:
             input_item_stuff_name = input_item_name or BATCH_ITEM_STUFF_NAME
             the_batch_params = BatchParams(
-                input_list_stuff_name=input_list_stuff_name,
+                input_list_stuff_name=input_list_name,
                 input_item_stuff_name=input_item_stuff_name,
             )
         return the_batch_params

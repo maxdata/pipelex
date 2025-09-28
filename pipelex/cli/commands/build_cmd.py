@@ -32,7 +32,7 @@ def build_pipe_cmd(
     output_path: Annotated[
         str | None,
         typer.Option("--output", "-o", help="Path to save the generated PLX file (use --output='' to skip saving)"),
-    ] = "./generated_pipeline.plx",
+    ] = "./results/generated_pipeline.plx",
 ) -> None:
     Pipelex.make(relative_config_folder_path="../../../pipelex/libraries", from_file=True)
     typer.echo("=" * 70)

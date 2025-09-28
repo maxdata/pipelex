@@ -21,14 +21,16 @@ class TestConceptFactory:
         "test_name,blueprint,expected_result",
         TestCases.MAKE_REFINES_TEST_CASES,
     )
-    def test_make_refines(
+    def test_make_refine(
         self,
         test_name: str,
         blueprint: ConceptBlueprint,
         expected_result: str,
     ):
         """Test make_refines method with different blueprint configurations."""
-        result = ConceptFactory.make_refines(blueprint=blueprint)
+        if not blueprint.refines:
+            pytest.skip("Test case has no refines")
+        result = ConceptFactory.make_refine(refine=blueprint.refines)
         assert result == expected_result, f"Failed for test case: {test_name}"
 
     def test_normalize_structure_blueprint(self):

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import re
-from re import Match
 from typing import TYPE_CHECKING, Any, Mapping, cast
 
 import tomlkit

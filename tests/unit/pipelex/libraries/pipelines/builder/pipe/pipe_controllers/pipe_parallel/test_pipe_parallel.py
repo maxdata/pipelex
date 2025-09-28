@@ -4,7 +4,7 @@ from pipelex.libraries.pipelines.builder.pipe.pipe_parallel_spec import PipePara
 from pipelex.pipe_controllers.parallel.pipe_parallel_blueprint import PipeParallelBlueprint
 
 from .test_data import PipeParallelTestCases
-
+from pipelex import log
 
 class TestPipeParallelBlueprintConversion:
     @pytest.mark.parametrize(
@@ -17,5 +17,7 @@ class TestPipeParallelBlueprintConversion:
         pipe_spec: PipeParallelSpec,
         expected_blueprint: PipeParallelBlueprint,
     ):
+        log.verbose(f"Testing {test_name}")
         result = pipe_spec.to_blueprint()
+        expected_blueprint.source = None
         assert result == expected_blueprint

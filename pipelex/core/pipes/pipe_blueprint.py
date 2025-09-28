@@ -37,6 +37,7 @@ class AllowedPipeTypes(StrEnum):
 
 
 class PipeBlueprint(BaseModel):
+    source: str | None = None
     category: Any
     type: Any  # TODO: Find a better way to handle this.
     definition: str | None = None

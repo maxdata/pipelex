@@ -1,12 +1,14 @@
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from typing_extensions import override
 
+from pipelex.exceptions import PipeDefinitionError
 from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptBlueprint
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSpec
 from pipelex.libraries.pipelines.builder.pipe.sub_pipe_spec import SubPipeSpec
 from pipelex.pipe_controllers.parallel.pipe_parallel_blueprint import PipeParallelBlueprint
+from pipelex.types import Self
 
 
 class PipeParallelSpec(PipeSpec):
@@ -38,7 +40,7 @@ class PipeParallelSpec(PipeSpec):
     category: Literal["PipeController"] = "PipeController"
     the_pipe_code: str = Field(description="Pipe code. Must be snake_case.")
     parallels: list[SubPipeSpec]
-    add_each_output: bool = True
+    add_each_output: bool = False
     combined_output: str | None = None
 
     @field_validator("combined_output", mode="before")
@@ -47,6 +49,16 @@ class PipeParallelSpec(PipeSpec):
         if combined_output:
             ConceptBlueprint.validate_concept_string_or_code(concept_string_or_code=combined_output)
         return combined_output
+
+    @model_validator(mode="after")
+    def validate_output_options(self) -> Self:
+        if not self.add_each_output and not self.combined_output:
+            msg = (
+                "PipeParallel requires either add_each_output to be True or combined_output to be set, "
+                "or both, otherwise the pipe won't output anything"
+            )
+            raise PipeDefinitionError(msg)
+        return self
 
     @override
     def to_blueprint(self) -> PipeParallelBlueprint:

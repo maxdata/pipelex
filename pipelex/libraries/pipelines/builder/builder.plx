@@ -102,6 +102,7 @@ parallels = [
     { pipe = "draft_to_conceptspecs_text",   result = "concept_spec_drafts_text" },
     { pipe = "draft_to_pipesignatures_text", result = "pipe_signatures_text" },
 ]
+add_each_output = true
 
 [pipe.draft_to_conceptspecs_text]
 type = "PipeLLM"
