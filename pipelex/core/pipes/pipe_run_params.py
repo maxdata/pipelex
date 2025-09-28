@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from pipelex import log
 from pipelex.core.memory.working_memory import BATCH_ITEM_STUFF_NAME, MAIN_STUFF_NAME
+from pipelex.exceptions import BatchParamsError
 from pipelex.types import Self, StrEnum
 
 
@@ -178,16 +179,19 @@ class BatchParams(BaseModel):
     def make_optional_batch_params(
         cls,
         input_list_name: str | None,
-        input_item_name: str | None = None,
+        input_item_name: str | None,
     ) -> BatchParams | None:
-        the_batch_params: BatchParams | None = None
         if input_list_name:
             input_item_stuff_name = input_item_name or BATCH_ITEM_STUFF_NAME
-            the_batch_params = BatchParams(
+            return BatchParams(
                 input_list_stuff_name=input_list_name,
                 input_item_stuff_name=input_item_stuff_name,
             )
-        return the_batch_params
+        elif input_item_name:
+            msg = "input_item_name is required when input_list_name is not provided"
+            raise BatchParamsError(msg)
+        else:
+            return None
 
     @classmethod
     def make_default(cls) -> BatchParams:

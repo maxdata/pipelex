@@ -221,6 +221,10 @@ class DryRunError(PipeExecutionError):
         super().__init__(message)
 
 
+class BatchParamsError(PipelexError):
+    pass
+
+
 class PipeConditionError(PipelexError):
     pass
 
