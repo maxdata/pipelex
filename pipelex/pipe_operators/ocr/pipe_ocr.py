@@ -108,6 +108,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
                 case StaticValidationReaction.RAISE:
                     raise missing_input_var_error
 
+        # We have confirmed right above that we have exactly one input
         # get input_name, requirement from single item in inputs
         input_name, requirement = self.inputs.items[0]
         log.debug(f"{input_name=}")
