@@ -7,13 +7,13 @@ from pipelex.cogt.config_cogt import Cogt
 from pipelex.cogt.model_backends.prompting_target import PromptingTarget
 from pipelex.exceptions import PipelexConfigError, StaticValidationErrorType
 from pipelex.hub import get_required_config
+from pipelex.language.plx_config import PlxConfig
 from pipelex.libraries.library_config import LibraryConfig
 from pipelex.pipeline.track.tracker_config import TrackerConfig
 from pipelex.tools.aws.aws_config import AwsConfig
 from pipelex.tools.config.config_model import ConfigModel
 from pipelex.tools.config.config_root import ConfigRoot
 from pipelex.tools.log.log_config import LogConfig
-from pipelex.tools.plx.plx_config import PlxConfig
 from pipelex.tools.templating.templating_models import PromptingStyle
 from pipelex.types import StrEnum
 

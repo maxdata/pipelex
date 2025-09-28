@@ -6,11 +6,11 @@ import typer
 
 from pipelex import pretty_print
 from pipelex.hub import get_report_delegate
+from pipelex.language.plx_factory import PlxFactory
 from pipelex.libraries.pipelines.builder.builder import PipelexBundleSpec
 from pipelex.pipelex import Pipelex
 from pipelex.pipeline.execute import execute_pipeline
 from pipelex.tools.misc.file_utils import ensure_directory_for_file_path, save_text_to_path
-from pipelex.tools.plx.plx_utils import make_plx_content
 
 build_app = typer.Typer(help="Build artifacts like pipelines", no_args_is_help=True)
 
@@ -60,7 +60,7 @@ def build_pipe_cmd(
         )
         pretty_print(pipe_output, title="Pipe Output")
         pipelex_bundle_spec = pipe_output.working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
-        plx_content = make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
+        plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
 
         # Save to file unless explicitly disabled with --no-output
         if not no_output:

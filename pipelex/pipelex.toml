@@ -219,6 +219,19 @@ image_urls = [
 # PLX config
 ####################################################################################################
 
-[pipelex.plx_config]
-length_limit_to_multiline_strings = 100
+[pipelex.plx_config.inline_tables]
+spaces_inside_curly_braces = true
+
+[pipelex.plx_config.strings]
+prefer_literal = false
+force_multiline = false
+length_limit_to_multiline = 100
+ensure_trailing_newline = true
+ensure_leading_blank_line = true
+
+[pipelex.plx_config.concepts]
+structure_field_ordering = ["type", "definition", "choices", "required"]
+
+[pipelex.plx_config.pipes]
+field_ordering = ["type", "definition", "inputs", "output"]
 
