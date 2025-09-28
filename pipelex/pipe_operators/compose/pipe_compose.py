@@ -33,9 +33,7 @@ from pipelex.types import Self
 
 
 class PipeComposeOutput(PipeOutput):
-    @property
-    def rendered_text(self) -> str:
-        return self.main_stuff_as_text.text
+    pass
 
 
 class PipeCompose(PipeOperator[PipeComposeOutput]):

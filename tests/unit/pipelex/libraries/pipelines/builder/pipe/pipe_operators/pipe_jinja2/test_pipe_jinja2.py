@@ -11,7 +11,7 @@ class TestPipeComposeBlueprintConversion:
         "test_name,pipe_spec,expected_blueprint",
         PipeComposeTestCases.TEST_CASES,
     )
-    def test_pipe_jinja2_spec_to_blueprint(
+    def test_pipe_compose_spec_to_blueprint(
         self,
         test_name: str,
         pipe_spec: PipeComposeSpec,

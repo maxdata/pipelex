@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Literal, cast
+from typing import Literal
 
 import shortuuid
 from pydantic import field_validator, model_validator
@@ -28,16 +28,12 @@ from pipelex.exceptions import (
 from pipelex.hub import get_pipe_router, get_pipeline_tracker, get_required_pipe
 from pipelex.pipe_controllers.condition.pipe_condition_details import PipeConditionDetails, PipeConditionPipeMap
 from pipelex.pipe_controllers.pipe_controller import PipeController
-from pipelex.pipe_operators.compose.pipe_compose import PipeComposeOutput
 from pipelex.pipe_operators.compose.pipe_compose_blueprint import PipeComposeBlueprint
 from pipelex.pipe_operators.compose.pipe_compose_factory import PipeComposeFactory
 from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
 from pipelex.pipeline.job_metadata import JobCategory, JobMetadata
 from pipelex.tools.typing.validation_utils import has_exactly_one_among_attributes_from_list
 from pipelex.types import Self
-
-if TYPE_CHECKING:
-    from pipelex.pipe_operators.compose.pipe_compose import PipeComposeOutput
 
 
 class PipeCondition(PipeController):
@@ -130,13 +126,14 @@ class PipeCondition(PipeController):
     @override
     def required_variables(self) -> set[str]:
         required_variables: set[str] = set()
+        # TODO: use jinja2 directly without going though a pipe
         # Variables from the expression/expression_template
-        pipe_jinja2 = PipeComposeFactory.make_pipe_compose_from_template_str(
+        pipe_compose = PipeComposeFactory.make_pipe_compose_from_template_str(
             domain=self.domain,
             template_str=self.applied_expression_template,
             inputs=self.inputs,
         )
-        required_variables.update(pipe_jinja2.required_variables())
+        required_variables.update(pipe_compose.required_variables())
 
         # Variables from the pipe_map
         for pipe_code in self.pipe_dependencies():
@@ -165,13 +162,13 @@ class PipeCondition(PipeController):
         needed_inputs = PipeInputSpecFactory.make_empty()
 
         # 1. Add the variables from the expression/expression_template
-        pipe_jinja2 = PipeComposeFactory.make_pipe_compose_from_template_str(
+        pipe_compose = PipeComposeFactory.make_pipe_compose_from_template_str(
             domain=self.domain,
             template_str=self.applied_expression_template,
             inputs=self.inputs,
         )
 
-        for var_name in pipe_jinja2.required_variables():
+        for var_name in pipe_compose.required_variables():
             if not var_name.startswith("_"):  # exclude internal variables starting with `_`
                 # We don't know the concept code from just the variable name,
                 # so we'll use a generic placeholder that will be validated later
@@ -285,7 +282,7 @@ class PipeCondition(PipeController):
                 multiplicity=requirement.multiplicity,
             )
 
-        pipe_jinja2_blueprint = PipeComposeBlueprint(
+        pipe_compose_blueprint = PipeComposeBlueprint(
             definition="Jinja2 template for pipe condition evaluation",
             jinja2=self.applied_expression_template,
             inputs=inputs_blueprint,
@@ -293,10 +290,10 @@ class PipeCondition(PipeController):
         )
 
         # TODO: use jinja2 directly without going though a pipe
-        pipe_jinja2 = PipeComposeFactory.make_from_blueprint(
+        pipe_compose = PipeComposeFactory.make_from_blueprint(
             domain=self.domain,
             pipe_code="evaluation_for_pipe_condition",
-            blueprint=pipe_jinja2_blueprint,
+            blueprint=pipe_compose_blueprint,
         )
         jinja2_job_metadata = job_metadata.copy_with_update(
             updated_metadata=JobMetadata(
@@ -304,23 +301,13 @@ class PipeCondition(PipeController):
             ),
         )
         log.debug(f"Jinja2 expression: {self.applied_expression_template}")
-        # evaluated_expression = (
-        #     await pipe_jinja2.run_pipe(
-        #         job_metadata=jinja2_job_metadata,
-        #         working_memory=working_memory,
-        #         pipe_run_params=pipe_run_params,
-        #     )
-        # ).rendered_text.strip()
-        # TODO: restore the possibility above, without need to explicitly cast the output
-        pipe_jinja2_output = cast(
-            "PipeComposeOutput",
-            await pipe_jinja2.run_pipe(
+        evaluated_expression = (
+            await pipe_compose.run_pipe(
                 job_metadata=jinja2_job_metadata,
                 working_memory=working_memory,
                 pipe_run_params=pipe_run_params,
-            ),
-        )
-        evaluated_expression = pipe_jinja2_output.rendered_text.strip()
+            )
+        ).main_stuff_as_str.strip()
 
         if not evaluated_expression or evaluated_expression == "None":
             error_msg = f"Conditional expression returned an empty string in pipe {self.code}:"
@@ -356,7 +343,7 @@ class PipeCondition(PipeController):
             evaluated_expression=evaluated_expression,
             chosen_pipe_code=chosen_pipe_code,
         )
-        required_variables = pipe_jinja2.required_variables()
+        required_variables = pipe_compose.required_variables()
         log.debug(required_variables, title=f"Required variables for PipeCondition '{self.code}'")
         required_stuff_names = {required_variable for required_variable in required_variables if not required_variable.startswith("_")}
         try:
@@ -426,13 +413,13 @@ class PipeCondition(PipeController):
 
         # 2. Validate that the expression template is valid
         try:
-            pipe_jinja2 = PipeComposeFactory.make_pipe_compose_from_template_str(
+            pipe_compose = PipeComposeFactory.make_pipe_compose_from_template_str(
                 domain=self.domain,
                 template_str=self.applied_expression_template,
                 inputs=self.inputs,
             )
             # Get required variables to validate the template syntax
-            required_variables = pipe_jinja2.required_variables()
+            required_variables = pipe_compose.required_variables()
             log.debug(f"Expression template is valid, requires variables: {required_variables}")
         except Exception as exc:
             log.error(f"Dry run failed: invalid expression template: {exc}")

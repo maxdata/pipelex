@@ -76,16 +76,17 @@ class PipeComposeFactory(PipeFactoryProtocol[PipeComposeBlueprint, PipeCompose])
             )
             return PipeCompose(
                 domain=domain,
-                code="adhoc_pipe_jinja2_from_template_str",
+                code="adhoc_pipe_compose_from_template_str",
                 jinja2=preprocessed_template,
                 inputs=inputs or PipeInputSpecFactory.make_empty(),
             )
-        if template_name:
+        elif template_name:
             return PipeCompose(
                 domain=domain,
-                code="adhoc_pipe_jinja2_from_template_name",
+                code="adhoc_pipe_compose_from_template_name",
                 jinja2_name=template_name,
                 inputs=inputs or PipeInputSpecFactory.make_empty(),
             )
-        msg = "Either template_str or template_name must be provided to make_pipe_jinja2_from_template_str"
-        raise PipeDefinitionError(msg)
+        else:
+            msg = "Could not make a PipeCompose because neither template_str nor template_name were provided"
+            raise PipeDefinitionError(msg)
