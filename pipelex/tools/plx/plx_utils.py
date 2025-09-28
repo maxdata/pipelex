@@ -7,6 +7,7 @@ from tomlkit import array, document, inline_table, table
 from tomlkit import string as tomlkit_string
 
 from pipelex import log
+from pipelex.config import get_config
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 from pipelex.tools.misc.json_utils import remove_none_values_from_dict
 from pipelex.types import StrEnum
@@ -48,7 +49,8 @@ def _format_tomlkit_string(
     - When multiline, `ensure_trailing_newline` puts the closing quotes on their own line.
     - When multiline, `ensure_leading_blank_line` inserts a real blank line at the start of the string.
     """
-    needs_multiline = force_multiline or ("\n" in text)
+    length_limit = get_config().pipelex.plx_config.length_limit_to_multiline_strings
+    needs_multiline = force_multiline or ("\n" in text) or len(text) > length_limit
     normalized = text
 
     if needs_multiline:

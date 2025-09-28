@@ -215,3 +215,10 @@ image_urls = [
     "https://storage.googleapis.com/public_test_files_7fa6_4277_9ab/fashion/fashion_photo_2.png",
 ]
 
+####################################################################################################
+# PLX config
+####################################################################################################
+
+[pipelex.plx_config]
+length_limit_to_multiline_strings = 100
+

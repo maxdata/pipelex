@@ -89,6 +89,34 @@ prompt_template = "Analyze the following data and provide insights"
     ),
 )
 
+# PipeLLM with long prompt
+PIPE_LLM_WITH_LONG_PROMPT = (
+    "pipe_llm_with_long_prompt",
+    '''domain = "test_pipes"
+definition = "Domain with pipe definitions"
+
+[pipe.expert_analysis]
+type = "PipeLLM"
+definition = "Expert analysis with system prompt"
+output = "Text"
+prompt_template = """
+Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if available. Return each article as separate structured data.
+"""
+''',
+    PipelexBundleBlueprint(
+        domain="test_pipes",
+        definition="Domain with pipe definitions",
+        pipe={
+            "expert_analysis": PipeLLMBlueprint(
+                type="PipeLLM",
+                definition="Expert analysis with system prompt",
+                output=NativeConceptEnum.TEXT,
+                prompt_template="Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if available. Return each article as separate structured data.\n",
+            ),
+        },
+    ),
+)
+
 # PipeLLM with multiple outputs (nb_output)
 PIPE_LLM_MULTIPLE_OUTPUTS = (
     "pipe_llm_multiple_outputs",
@@ -338,6 +366,7 @@ PIPE_LLM_TEST_CASES = [
     PIPE_LLM_BASIC,
     PIPE_LLM_WITH_INPUTS,
     PIPE_LLM_WITH_SYSTEM_PROMPT,
+    PIPE_LLM_WITH_LONG_PROMPT,
     PIPE_LLM_MULTIPLE_OUTPUTS,
     PIPE_LLM_DYNAMIC_MULTIPLE,
     PIPE_LLM_VISION,

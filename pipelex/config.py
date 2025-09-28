@@ -13,6 +13,7 @@ from pipelex.tools.aws.aws_config import AwsConfig
 from pipelex.tools.config.config_model import ConfigModel
 from pipelex.tools.config.config_root import ConfigRoot
 from pipelex.tools.log.log_config import LogConfig
+from pipelex.tools.plx.plx_config import PlxConfig
 from pipelex.tools.templating.templating_models import PromptingStyle
 from pipelex.types import StrEnum
 
@@ -110,6 +111,7 @@ class Pipelex(ConfigModel):
     tracker_config: TrackerConfig
     structure_config: StructureConfig
     prompting_config: PromptingConfig
+    plx_config: PlxConfig
 
     dry_run_config: DryRunConfig
     pipe_run_config: PipeRunConfig

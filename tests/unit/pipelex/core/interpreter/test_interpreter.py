@@ -32,14 +32,6 @@ class TestPipelexInterpreter:
         assert blueprint == expected_blueprint
 
     @pytest.mark.parametrize("test_name,expected_plx_content,blueprint", InterpreterTestCases.VALID_TEST_CASES)
-    def test_output_make_plx_content(self, test_name: str, expected_plx_content: str, blueprint: PipelexBundleBlueprint):
-        """Test making blueprint from various valid PLX content."""
-        pretty_print(blueprint, title=f"Blueprint {test_name}")
-        pretty_print(expected_plx_content, title=f"Expected PLX content {test_name}")
-        plx_content = make_plx_content(blueprint=blueprint)
-        print(plx_content)
-
-    @pytest.mark.parametrize("test_name,expected_plx_content,blueprint", InterpreterTestCases.VALID_TEST_CASES)
     def test_make_plx_content(self, test_name: str, expected_plx_content: str, blueprint: PipelexBundleBlueprint):
         """Test making blueprint from various valid PLX content."""
         plx_content = make_plx_content(blueprint=blueprint)
