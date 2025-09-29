@@ -19,6 +19,10 @@ PipeOperatorOutputType = TypeVar("PipeOperatorOutputType", bound=PipeOutput)
 class PipeOperator(PipeAbstract, Generic[PipeOperatorOutputType]):
     category: Literal["PipeOperator"] = "PipeOperator"
 
+    @property
+    def class_name(self) -> str:
+        return self.__class__.__name__
+
     @override
     async def run_pipe(
         self,

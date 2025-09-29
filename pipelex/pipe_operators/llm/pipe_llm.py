@@ -315,7 +315,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         log.debug(f"TextContent.__class__.__name__: {TextContent.__class__.__name__}")
         log.debug(f"is_multiple_output: {is_multiple_output}")
         if output_concept.structure_class_name == "TextContent" and not is_multiple_output:
-            log.debug(f"PipeLLM generating a single text output: {self.class_name}_gen_text")
+            log.debug(f"PipeLLM generating a single text output: {self.__class__.__name__}_gen_text")
             llm_prompt_1_for_text = await self.llm_prompt_spec.make_llm_prompt(
                 output_concept_string=output_concept.concept_string,
                 context_provider=working_memory,
@@ -445,9 +445,9 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
         if is_multiple_output:
             # We're generating a list of (possibly multiple) objects
             if fixed_nb_output:
-                task_desc = f"{self.class_name}_gen_{fixed_nb_output}x{content_class.__class__.__name__}"
+                task_desc = f"{self.__class__.__name__}_gen_{fixed_nb_output}x{content_class.__class__.__name__}"
             else:
-                task_desc = f"{self.class_name}_gen_list_{content_class.__class__.__name__}"
+                task_desc = f"{self.__class__.__name__}_gen_list_{content_class.__class__.__name__}"
             log.dev(task_desc)
             generated_objects: list[StuffContent]
             if llm_prompt_2_factory is not None:
@@ -480,7 +480,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
             the_content = ListContent(items=generated_objects)
         else:
             # We're generating a single object
-            task_desc = f"{self.class_name}_gen_single_{content_class.__name__}"
+            task_desc = f"{self.__class__.__name__}_gen_single_{content_class.__name__}"
             log.verbose(task_desc)
             if llm_prompt_2_factory is not None:
                 # We're generating a single object using preliminary text
@@ -528,6 +528,7 @@ class PipeLLM(PipeOperator[PipeLLMOutput]):
 
     @staticmethod
     def get_output_structure_prompt(concept_string: str, is_with_preliminary_text: bool) -> str | None:
+        return None
         concept = get_required_concept(concept_string=concept_string)
         class_name = concept.structure_class_name
         output_class = get_class_registry().get_class(class_name)

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from typing_extensions import override
 
 from pipelex.libraries.pipelines.builder.pipe.pipe_signature import PipeSpec
@@ -45,6 +45,14 @@ class PipeOcrSpec(PipeSpec):
     page_image_captions: bool | None = None
     page_views: bool | None = None
     page_views_dpi: int | None = None
+
+    @field_validator("ocr", mode="before")
+    @classmethod
+    def validate_ocr(cls, ocr_value: str | None) -> RecommendedOcrPreset | None:
+        if ocr_value is None:
+            return None
+        else:
+            return RecommendedOcrPreset(ocr_value)
 
     @override
     def to_blueprint(self) -> PipeOcrBlueprint:

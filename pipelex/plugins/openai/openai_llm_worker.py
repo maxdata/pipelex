@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from openai.types.chat import ChatCompletionMessage
 from typing_extensions import override
 
-from pipelex import log
+from pipelex import log, pretty_print
 from pipelex.cogt.exceptions import LLMCompletionError, LLMModelNotFoundError, SdkTypeError
 from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.cogt.llm.llm_worker_internal_abstract import LLMWorkerInternalAbstract
@@ -19,6 +19,18 @@ from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
 from pipelex.plugins.openai.openai_factory import OpenAIFactory
 from pipelex.reporting.reporting_protocol import ReportingProtocol
 from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
+
+
+def dump_kwargs(*_: Any, **kwargs: Any) -> None:
+    pretty_print(kwargs, title="Instructor about to send to OpenAI")
+
+
+def dump_response(response: Any) -> None:
+    pretty_print(response, title="Instructor response from OpenAI")
+
+
+def dump_error(error: Exception) -> None:
+    pretty_print(error, title="Instructor error from OpenAI")
 
 
 class OpenAILLMWorker(LLMWorkerInternalAbstract):
@@ -47,6 +59,10 @@ class OpenAILLMWorker(LLMWorkerInternalAbstract):
             self.instructor_for_objects = instructor.from_openai(client=sdk_instance, mode=instructor_mode)
         else:
             self.instructor_for_objects = instructor.from_openai(client=sdk_instance)
+
+        self.instructor_for_objects.on(hook_name="completion:kwargs", handler=dump_kwargs)
+        self.instructor_for_objects.on(hook_name="completion:response", handler=dump_response)
+        self.instructor_for_objects.on(hook_name="completion:error", handler=dump_error)
 
     #########################################################
     @override

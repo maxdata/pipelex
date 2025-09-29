@@ -18,7 +18,7 @@ class PipeSequenceSpec(PipeSpec):
     Attributes:
         the_pipe_code: Pipe code. Must be snake_case.
         type: Fixed to "PipeSequence" for this pipe type.
-        steps: Ordered list of SubPipeBlueprint instances defining the pipes
+        steps: Ordered list of SubPipeSpec instances referencing the pipes
               to execute. Each step runs after the previous one completes,
               with access to all prior outputs in the context.
 

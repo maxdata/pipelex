@@ -6,7 +6,7 @@ from pipelex.core.pipes.exceptions import PipeBlueprintError
 from pipelex.core.pipes.pipe_blueprint import AllowedPipeCategories, AllowedPipeTypes, PipeBlueprint
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.core.stuffs.stuff_content import StructuredContent
-from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptSpec, ConceptSpecDraft
+from pipelex.libraries.pipelines.builder.concept.concept_spec import ConceptSpec
 from pipelex.libraries.pipelines.builder.pipe.inputs_spec import InputRequirementSpec
 from pipelex.tools.misc.string_utils import is_snake_case
 
@@ -27,41 +27,20 @@ class PipeSignature(StructuredContent):
 
 
 class PipeSpec(StructuredContent):
-    """Spec defining a pipe component in the Pipelex framework.
-
-    Pipes are the fundamental processing units in Pipelex workflows. They transform
-    input concepts into output concepts through various operations like LLM processing,
-    image generation, OCR, or custom functions.
-
-    Attributes:
-        type: The pipe type (PipeFunc, PipeLLM, PipeImgGen, PipeOcr, PipeBatch,
-              PipeCondition, PipeParallel, PipeSequence). Uses Any type to avoid
-              type override conflicts but validated at runtime.
-        category: The pipe category (PipeOperator, PipeController). Uses Any type to avoid
-              category override conflicts but validated at runtime.
-              The pipe controllers are PipeSequence, PipeParallel, PipeCondition, PipeBatch.
-              The pipe operators are PipeFunc, PipeLLM, PipeImgGen, PipeOcr, PipeCompose.
-        definition: Natural language description of what the pipe does.
-        inputs: Input concept specifications. should be an InputRequirementBlueprint
-               Dictionary keys are input names in snake_case, values are concept specifications in PascalCase.
-        output: Output concept code in PascalCase format.
-
-    Validation Rules:
-        1. Pipe type: Must be one of the AllowedPipeTypes enum values.
-        2. Output concept: Must be valid concept string or code in PascalCase.
-        3. Input concepts: When provided, must use PascalCase for concept references.
-        4. Pipe codes: When validating pipe codes, must be in snake_case format.
-
+    """Spec defining a pipe: an executable component with a clear contract defined by its inputs and output.
+    There are two categories of pipes: controllers and operators.
+    Controllers are used to control the flow of the pipeline, and operators are used to perform specific tasks.
     """
 
-    type: Any = Field(description=f"Pipe type. Must be one of: {AllowedPipeTypes}")
-    category: Any = Field(description=f"Pipe category. Must be one of: {AllowedPipeCategories}")
+    type: Any = Field(description=f"Pipe type. It is defined with type `Any` but validated at runtime and it must be one of: {AllowedPipeTypes}")
+    category: Any = Field(
+        description=f"Pipe category. It is defined with type `Any` but validated at runtime and it must be one of: {AllowedPipeCategories}"
+    )
     definition: str | None = Field(description="Natural language description of what the pipe does.")
     inputs: dict[str, str | InputRequirementSpec] | None = Field(
         description=(
-            "Input concept specifications. Can be either: "
-            "InputRequirementSpec with additional constraints"
-            "Dictionary keys are input names, values are concept specifications. If Its the concept itself, use the concept code in PascalCase."
+            "Input concept specifications. The keys are input names in snake_case. "
+            "Each value is aither the ConceptCode in PascalCase or an InputRequirementSpec with additional constraints"
         ),
     )
     output: str = Field(description="Output concept code in PascalCase format!! Very important")

@@ -4,7 +4,7 @@ import instructor
 from anthropic import AsyncAnthropic, AsyncAnthropicBedrock, omit
 from typing_extensions import override
 
-from pipelex import log
+from pipelex import log, pretty_print
 from pipelex.cogt.exceptions import LLMCompletionError, SdkTypeError
 from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.cogt.llm.llm_worker_internal_abstract import LLMWorkerInternalAbstract
@@ -15,6 +15,10 @@ from pipelex.plugins.anthropic.anthropic_factory import AnthropicFactory, Anthro
 from pipelex.reporting.reporting_protocol import ReportingProtocol
 from pipelex.tools.typing.pydantic_utils import BaseModelTypeVar
 from pipelex.types import StrEnum
+
+
+def dump_kwargs(*_: Any, **kwargs: Any) -> None:
+    pretty_print(kwargs, title="Instructor about to send to Anthropic")
 
 
 class AnthropicExtraField(StrEnum):
@@ -74,6 +78,8 @@ class AnthropicLLMWorker(LLMWorkerInternalAbstract):
             self.instructor_for_objects = instructor.from_anthropic(client=sdk_instance, mode=instructor_mode)
         else:
             self.instructor_for_objects = instructor.from_anthropic(client=sdk_instance)
+
+        self.instructor_for_objects.on(hook_name="completion:kwargs", handler=dump_kwargs)
 
     #########################################################
     # Instance methods
