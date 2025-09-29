@@ -18,7 +18,7 @@ DomainInformation = "A domain information object."
 [pipe.pipe_builder]
 type = "PipeSequence"
 description = "This pipe is going to be the entry point for the builder. It will take a UserBrief and return a PipelexBundleSpec."
-inputs = { brief = "UserBrief", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", failed_pipes = "PipeFailure", fixed_pipes = "PipeSpec" }
+inputs = { brief = "UserBrief" }
 output = "PipelexBundleSpec"
 steps = [
     { pipe = "draft_the_plan", result = "plan_draft" },
@@ -29,8 +29,8 @@ steps = [
     { pipe = "pipe_builder_domain_information", result = "domain_information" },
     { pipe = "create_pipes_from_signatures", batch_over = "pipe_signatures", batch_as = "pipe_signature", result = "pipe_specs" },
     { pipe = "compile_in_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
-    { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" }
-    { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
+    # { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" }
+    # { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
 ]
 
 [pipe.pipe_builder_domain_information]
@@ -208,88 +208,88 @@ inputs = { pipe_specs = "PipeSpec", concept_specs = "ConceptSpec", domain_inform
 output = "PipelexBundleSpec"
 function_name = "compile_in_pipelex_bundle_spec"
 
-[pipe.validate_pipelex_bundle_loading]
-type = "PipeSequence"
-description = "Validate the pipelex bundle spec with iterative fixing."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
-output = "PipelexBundleSpec"
-steps = [
-    { pipe = "validate_loading", result = "validation_result" }
-    { pipe = "handle_validation_result", result = "pipelex_bundle_spec" }
-]
+# [pipe.validate_pipelex_bundle_loading]
+# type = "PipeSequence"
+# description = "Validate the pipelex bundle spec with iterative fixing."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
+# output = "PipelexBundleSpec"
+# steps = [
+#     { pipe = "validate_loading", result = "validation_result" }
+#     { pipe = "handle_validation_result", result = "pipelex_bundle_spec" }
+# ]
 
-[pipe.validate_pipelex_bundle_dry_run]
-type = "PipeSequence"
-description = "Validate the pipelex bundle spec with iterative fixing."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
-output = "PipelexBundleSpec"
-steps = [
-    { pipe = "validate_dry_run", result = "validation_result" },
-    { pipe = "handle_validation_result", result = "pipelex_bundle_spec" }
-]
+# [pipe.validate_pipelex_bundle_dry_run]
+# type = "PipeSequence"
+# description = "Validate the pipelex bundle spec with iterative fixing."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
+# output = "PipelexBundleSpec"
+# steps = [
+#     { pipe = "validate_dry_run", result = "validation_result" },
+#     { pipe = "handle_validation_result", result = "pipelex_bundle_spec" }
+# ]
 
 
-[pipe.handle_validation_result]
-type = "PipeCondition"
-description = "Handle validation result - continue if success or fix failures once."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", validation_result = "ValidationResult", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
-output = "PipelexBundleSpec"
-expression_template = "{% if validation_result.failed_concepts %}fix_concepts{% elif validation_result.failed_pipes %}fix_pipes{% else %}continue{% endif %}"
+# [pipe.handle_validation_result]
+# type = "PipeCondition"
+# description = "Handle validation result - continue if success or fix failures once."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", validation_result = "ValidationResult", failed_concepts = "ConceptFailure", fixed_concepts = "ConceptSpec", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
+# output = "PipelexBundleSpec"
+# expression_template = "{% if validation_result.failed_concepts %}fix_concepts{% elif validation_result.failed_pipes %}fix_pipes{% else %}continue{% endif %}"
 
-[pipe.handle_validation_result.pipe_map]
-fix_concepts = "fix_failing_concepts_once"
-fix_pipes = "fix_failing_pipes_once"
-continue = "continue"
+# [pipe.handle_validation_result.pipe_map]
+# fix_concepts = "fix_failing_concepts_once"
+# fix_pipes = "fix_failing_pipes_once"
+# continue = "continue"
 
-[pipe.fix_failing_concepts_once]
-type = "PipeSequence"
-description = "Fix failing concepts once and return the result."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concepts = "ConceptFailure", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
-output = "PipelexBundleSpec"
-steps = [
-    { pipe = "fix_failing_concept", batch_over = "failed_concepts", batch_as = "failed_concept", result = "fixed_concepts" },
-    { pipe = "reconstruct_bundle_with_all_fixes", result = "pipelex_bundle_spec" },
-    { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" },
-    { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
-]
+# [pipe.fix_failing_concepts_once]
+# type = "PipeSequence"
+# description = "Fix failing concepts once and return the result."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_concepts = "ConceptFailure", fixed_pipes = "PipeSpec", failed_pipes = "PipeFailure" }
+# output = "PipelexBundleSpec"
+# steps = [
+#     { pipe = "fix_failing_concept", batch_over = "failed_concepts", batch_as = "failed_concept", result = "fixed_concepts" },
+#     { pipe = "reconstruct_bundle_with_all_fixes", result = "pipelex_bundle_spec" },
+#     { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" },
+#     { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
+# ]
 
-[pipe.fix_failing_pipes_once]
-type = "PipeSequence"
-description = "Fix failing pipes once and return the result."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipes = "PipeFailure", fixed_concepts = "ConceptSpec", failed_concepts = "ConceptFailure" }
-output = "PipelexBundleSpec"
-steps = [
-    { pipe = "fix_failing_pipe", batch_over = "failed_pipes", batch_as = "failed_pipe", result = "fixed_pipes" },
-    { pipe = "reconstruct_bundle_with_all_fixes", result = "pipelex_bundle_spec" },
-    { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" },
-    { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
-]
+# [pipe.fix_failing_pipes_once]
+# type = "PipeSequence"
+# description = "Fix failing pipes once and return the result."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipes = "PipeFailure", fixed_concepts = "ConceptSpec", failed_concepts = "ConceptFailure" }
+# output = "PipelexBundleSpec"
+# steps = [
+#     { pipe = "fix_failing_pipe", batch_over = "failed_pipes", batch_as = "failed_pipe", result = "fixed_pipes" },
+#     { pipe = "reconstruct_bundle_with_all_fixes", result = "pipelex_bundle_spec" },
+#     { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" },
+#     { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
+# ]
 
-[pipe.validate_loading]
-type = "PipeFunc"
-description = "Validate loading of the bundle spec and return the first error."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
-output = "ValidationResult"
-function_name = "validate_loading"
+# [pipe.validate_loading]
+# type = "PipeFunc"
+# description = "Validate loading of the bundle spec and return the first error."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
+# output = "ValidationResult"
+# function_name = "validate_loading"
 
-[pipe.validate_dry_run]
-type = "PipeFunc"
-description = "Validate the dry running the bundle's pipes and report only failed pipes."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
-output = "ValidationResult"
-function_name = "validate_dry_run"
+# [pipe.validate_dry_run]
+# type = "PipeFunc"
+# description = "Validate the dry running the bundle's pipes and report only failed pipes."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
+# output = "ValidationResult"
+# function_name = "validate_dry_run"
 
-[pipe.continue]
-type = "PipeCompose"
-description = "Continue with successful validation - return the bundle unchanged."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
-output = "PipelexBundleSpec"
-jinja2 = "{{ pipelex_bundle_spec }}"
+# [pipe.continue]
+# type = "PipeCompose"
+# description = "Continue with successful validation - return the bundle unchanged."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec" }
+# output = "PipelexBundleSpec"
+# jinja2 = "{{ pipelex_bundle_spec }}"
 
-[pipe.reconstruct_bundle_with_all_fixes]
-type = "PipeFunc"
-description = "Reconstruct the bundle spec with all the fixed pipes."
-inputs = { pipelex_bundle_spec = "PipelexBundleSpec", fixed_pipes = "Dynamic", fixed_concepts = "Dynamic" }
-output = "PipelexBundleSpec"
-function_name = "reconstruct_bundle_with_all_fixes"
+# [pipe.reconstruct_bundle_with_all_fixes]
+# type = "PipeFunc"
+# description = "Reconstruct the bundle spec with all the fixed pipes."
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", fixed_pipes = "Dynamic", fixed_concepts = "Dynamic" }
+# output = "PipelexBundleSpec"
+# function_name = "reconstruct_bundle_with_all_fixes"
 
