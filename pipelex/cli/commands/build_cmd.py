@@ -5,11 +5,12 @@ from typing import Annotated
 import typer
 
 from pipelex import pretty_print
-from pipelex.core.interpreter import PipelexInterpreter
 from pipelex.hub import get_report_delegate
+from pipelex.language.plx_factory import PlxFactory
 from pipelex.libraries.pipelines.builder.builder import PipelexBundleSpec
 from pipelex.pipelex import Pipelex
 from pipelex.pipeline.execute import execute_pipeline
+from pipelex.tools.misc.file_utils import ensure_directory_for_file_path, save_text_to_path
 
 build_app = typer.Typer(help="Build artifacts like pipelines", no_args_is_help=True)
 
@@ -30,9 +31,13 @@ def build_pipe_cmd(
         typer.Argument(help="Brief description of what the pipeline should do"),
     ],
     output_path: Annotated[
-        str | None,
-        typer.Option("--output", "-o", help="Path to save the generated PLX file (use --output='' to skip saving)"),
-    ] = "./generated_pipeline.plx",
+        str,
+        typer.Option("--output", "-o", help="Path to save the generated PLX file"),
+    ] = "./results/generated_pipeline.plx",
+    no_output: Annotated[
+        bool,
+        typer.Option("--no-output", help="Skip saving the pipeline to file"),
+    ] = False,
 ) -> None:
     Pipelex.make(relative_config_folder_path="../../../pipelex/libraries", from_file=True)
     typer.echo("=" * 70)
@@ -40,21 +45,29 @@ def build_pipe_cmd(
     typer.echo("")
 
     async def run_pipeline():
+        if not no_output:
+            if not output_path:
+                typer.echo(typer.style("\n⚠️  Cannot save a pipeline to an empty file name", fg=typer.colors.RED))
+                raise typer.Exit(1)
+
+            ensure_directory_for_file_path(file_path=output_path)
+        else:
+            typer.echo(typer.style("\n⚠️  Pipeline will not be saved to file (--no-output specified)", fg=typer.colors.YELLOW))
+
         pipe_output = await execute_pipeline(
             pipe_code="pipe_builder",
             input_memory={"brief": brief},
         )
         pretty_print(pipe_output, title="Pipe Output")
         pipelex_bundle_spec = pipe_output.working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
-        plx_content = PipelexInterpreter.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
+        plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
 
-        # Save to file unless explicitly disabled with empty string
-        if output_path and output_path != "":
-            with open(output_path, "w") as f:
-                f.write(plx_content)
+        # Save to file unless explicitly disabled with --no-output
+        if not no_output:
+            save_text_to_path(text=plx_content, path=output_path)
             typer.echo(typer.style(f"\n✅ Pipeline saved to: {output_path}", fg=typer.colors.GREEN))
-        elif output_path == "":
-            typer.echo(typer.style("\n⚠️  Pipeline not saved to file (--output='' specified)", fg=typer.colors.YELLOW))
+        else:
+            typer.echo(typer.style("\n⚠️  Pipeline not saved to file (--no-output specified)", fg=typer.colors.YELLOW))
 
     start_time = time.time()
     asyncio.run(run_pipeline())

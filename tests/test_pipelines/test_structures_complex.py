@@ -5,6 +5,7 @@ from pydantic import Field
 
 from pipelex.core.stuffs.stuff_content import StructuredContent
 from tests.test_pipelines.test_structures_basic import ConceptWithOptionals, ConceptWithSimpleStructure
+from pipelex.tools.typing.pydantic_utils import empty_list_factory_of
 
 
 class ConceptWithDicts(StructuredContent):
@@ -20,7 +21,7 @@ class ConceptWithUnions(StructuredContent):
 
     string_or_int: str | int = Field(..., description="A field that can be string or int")
     optional_union: str | bool | None = Field(None, description="An optional union field")
-    list_of_unions: list[str | int] = Field(default_factory=list, description="A list of union types")
+    list_of_unions: list[str | int] = Field(default_factory=lambda: [], description="A list of union types")
 
 
 class ConceptWithComplexUnions(StructuredContent):
@@ -37,7 +38,7 @@ class ConceptWithNestedUnions(StructuredContent):
 
     simple_or_complex: ConceptWithSimpleStructure | ConceptWithOptionals = Field(..., description="Simple or complex structure")
     list_of_union_structures: list[ConceptWithSimpleStructure | ConceptWithUnions] = Field(
-        default_factory=list, description="List of different structure types",
+        default_factory=lambda: [], description="List of different structure types",
     )
     optional_nested_union: ConceptWithUnions | ConceptWithComplexUnions | None = Field(
         None, description="Optional union of union structures",

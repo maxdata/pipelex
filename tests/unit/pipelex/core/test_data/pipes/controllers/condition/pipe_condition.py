@@ -10,8 +10,8 @@ definition = "Domain with conditional pipe"
 type = "PipeCondition"
 definition = "Process based on condition"
 output = "ProcessedData"
-pipe_map = { small = "process_small", large = "process_large" }
 expression = "input_data.category"
+pipe_map = { small = "process_small", large = "process_large" }
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",

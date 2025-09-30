@@ -31,6 +31,7 @@ PipeBlueprintUnion = Annotated[
 class PipelexBundleBlueprint(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    source: str | None = None
     domain: str
     definition: str | None = None
     system_prompt: str | None = None

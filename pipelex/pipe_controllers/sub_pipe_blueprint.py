@@ -12,7 +12,7 @@ class SubPipeBlueprint(BaseModel):
     result: str | None = None
     nb_output: int | None = None
     multiple_output: bool | None = None
-    batch_over: bool | str = False
+    batch_over: str | None = None
     batch_as: str | None = None
 
     @model_validator(mode="after")
@@ -24,14 +24,11 @@ class SubPipeBlueprint(BaseModel):
 
     @model_validator(mode="after")
     def validate_batch_params(self) -> Self:
-        batch_over_is_specified = self.batch_over is not False and self.batch_over != ""
-        batch_as_is_specified = self.batch_as is not None and self.batch_as != ""
-
-        if batch_over_is_specified and not batch_as_is_specified:
+        if self.batch_over and not self.batch_as:
             msg = f"In pipe '{self.pipe}': When 'batch_over' is specified, 'batch_as' must also be provided"
             raise PipeDefinitionError(msg)
 
-        if batch_as_is_specified and not batch_over_is_specified:
+        if self.batch_as and not self.batch_over:
             msg = f"In pipe '{self.pipe}': When 'batch_as' is specified, 'batch_over' must also be provided"
             raise PipeDefinitionError(msg)
 

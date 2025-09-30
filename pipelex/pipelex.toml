@@ -204,14 +204,34 @@ text_gen_truncate_length = 256
 nb_list_items = 3
 nb_ocr_pages = 4
 allowed_to_fail_pipes = [
-    "infinite_loop_1", # Loop but only for testing purposes
-    "fix_failing_pipes_once", # Loop but its normal
+    "infinite_loop_1",              # Loop but only for testing purposes
+    "fix_failing_pipes_once",       # Loop but its normal
     "validate_pipelex_bundle_spec", # Loop but its normal
-    "handle_validation_result", # Complex case of a sub pipe needed a ListContent because its batching on, but the dry_run cannot know.
-    "pipe_builder", # because of the 'fix_failing_pipes_once', 'validate_pipelex_bundle_spec', 'handle_validation_result'
+    "handle_validation_result",     # Complex case of a sub pipe needed a ListContent because its batching on, but the dry_run cannot know.
+    "pipe_builder",                 # because of the 'fix_failing_pipes_once', 'validate_pipelex_bundle_spec', 'handle_validation_result'
 ]
 image_urls = [
     "https://storage.googleapis.com/public_test_files_7fa6_4277_9ab/fashion/fashion_photo_1.jpg",
     "https://storage.googleapis.com/public_test_files_7fa6_4277_9ab/fashion/fashion_photo_2.png",
 ]
+
+####################################################################################################
+# PLX config
+####################################################################################################
+
+[pipelex.plx_config.inline_tables]
+spaces_inside_curly_braces = true
+
+[pipelex.plx_config.strings]
+prefer_literal = false
+force_multiline = false
+length_limit_to_multiline = 100
+ensure_trailing_newline = true
+ensure_leading_blank_line = true
+
+[pipelex.plx_config.concepts]
+structure_field_ordering = ["type", "definition", "choices", "required"]
+
+[pipelex.plx_config.pipes]
+field_ordering = ["type", "definition", "inputs", "output"]
 

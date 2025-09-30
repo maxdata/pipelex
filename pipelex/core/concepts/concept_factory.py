@@ -13,7 +13,7 @@ from pipelex.core.concepts.concept_native import NativeConceptEnumData, NativeCo
 from pipelex.core.concepts.structure_generator import StructureGenerator
 from pipelex.core.domains.domain import SpecialDomain
 from pipelex.core.stuffs.stuff_content import TextContent
-from pipelex.exceptions import ConceptFactoryError, StructureClassError
+from pipelex.exceptions import ConceptCodeError, ConceptDefinitionError, ConceptRefineError, StructureClassError
 
 
 class DomainAndConceptCode(BaseModel):
@@ -106,16 +106,10 @@ class ConceptFactory:
 
     @classmethod
     def make_refine(cls, refine: str) -> str:
-        if NativeConceptManager.is_native_concept(concept_string_or_code=refine):
-            return NativeConceptManager.get_native_concept_string(concept_string_or_code=refine)
-        msg = f"Refine '{refine}' is not a native concept"
-        raise ConceptFactoryError(msg)
-
-    @classmethod
-    def make_refines(cls, blueprint: ConceptBlueprint) -> str | None:
-        if blueprint.refines:
-            return cls.make_refine(refine=blueprint.refines)
-        return None
+        if not NativeConceptManager.is_native_concept(concept_string_or_code=refine):
+            msg = f"Refine '{refine}' is not a native concept"
+            raise ConceptRefineError(msg)
+        return NativeConceptManager.get_native_concept_string(concept_string_or_code=refine)
 
     @classmethod
     def make_from_blueprint(
@@ -125,7 +119,11 @@ class ConceptFactory:
         blueprint: ConceptBlueprint,
         concept_codes_from_the_same_domain: list[str] | None = None,
     ) -> Concept:
-        ConceptBlueprint.validate_concept_code(concept_code=concept_code)
+        try:
+            ConceptBlueprint.validate_concept_code(concept_code=concept_code)
+        except ConceptCodeError as exc:
+            msg = f"Could not validate concept code '{concept_code}' in domain '{domain}': {exc}"
+            raise ConceptDefinitionError(msg) from exc
         structure_class_name: str
         current_refine: str | None = None
 
@@ -163,7 +161,7 @@ class ConceptFactory:
 
                 except Exception as exc:
                     msg = f"Error generating structure class for concept '{concept_code}' in domain '{domain}': {exc}"
-                    raise ConceptFactoryError(msg) from exc
+                    raise ConceptDefinitionError(msg) from exc
 
         # Handle refines definition
         elif blueprint.refines:
@@ -173,8 +171,12 @@ class ConceptFactory:
                     f"Concept '{concept_code}' in domain '{domain}' has refines but also has a structure class registered. "
                     "A concept cannot have both structure and refines."
                 )
-                raise ConceptFactoryError(msg)
-            current_refine = cls.make_refines(blueprint=blueprint)
+                raise ConceptDefinitionError(msg)
+            try:
+                current_refine = cls.make_refine(refine=blueprint.refines)
+            except ConceptRefineError as exc:
+                msg = f"Could not validate refine '{blueprint.refines}' for concept '{concept_code}' in domain '{domain}': {exc}"
+                raise ConceptDefinitionError(msg) from exc
             structure_class_name = current_refine.split(".")[1] + "Content" if current_refine else TextContent.__name__
         # Handle neither structure nor refines - check the class registry
         # If there is a class, use it. structure_class_name is then the concept_code

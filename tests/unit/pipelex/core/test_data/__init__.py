@@ -1,4 +1,4 @@
-from typing import ClassVar, List, Tuple, Type, Union
+from typing import ClassVar, Type, Union
 
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 
@@ -23,7 +23,7 @@ class InterpreterTestCases:
     """Test cases for PipelexInterpreter with PLX content and expected blueprints."""
 
     # Aggregate all valid test cases from organized modules
-    VALID_TEST_CASES: ClassVar[list[tuple[str, str, PipelexBundleBlueprint]]] = [
+    VALID_TEST_CASES: ClassVar[list[tuple[str, str, PipelexBundleBlueprint]]] = [  # test_name,plx_content,blueprint
         # Domain tests
         *DOMAIN_TEST_CASES,
         # Concept tests
@@ -36,7 +36,7 @@ class InterpreterTestCases:
         *PIPE_FUNC_TEST_CASES,
         *PIPE_IMG_GEN_TEST_CASES,
         *PIPE_JINJA2_TEST_CASES,
-        # # Pipe controller tests
+        # Pipe controller tests
         *PIPE_SEQUENCE_TEST_CASES,
         *PIPE_CONDITION_TEST_CASES,
         *PIPE_PARALLEL_TEST_CASES,

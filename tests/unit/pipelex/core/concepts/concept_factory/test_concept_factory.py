@@ -1,6 +1,3 @@
-"""Tests for ConceptFactory methods."""
-
-
 import pytest
 
 from pipelex.core.concepts.concept import Concept
@@ -21,14 +18,16 @@ class TestConceptFactory:
         "test_name,blueprint,expected_result",
         TestCases.MAKE_REFINES_TEST_CASES,
     )
-    def test_make_refines(
+    def test_make_refine(
         self,
         test_name: str,
         blueprint: ConceptBlueprint,
         expected_result: str,
     ):
         """Test make_refines method with different blueprint configurations."""
-        result = ConceptFactory.make_refines(blueprint=blueprint)
+        if not blueprint.refines:
+            pytest.skip("Test case has no refines")
+        result = ConceptFactory.make_refine(refine=blueprint.refines)
         assert result == expected_result, f"Failed for test case: {test_name}"
 
     def test_normalize_structure_blueprint(self):
@@ -73,7 +72,7 @@ class TestConceptFactory:
         "domain,concept_string_or_code,concept_codes_from_the_same_domain,expected_result",
         TestCases.MAKE_DOMAIN_AND_CONCEPT_CODE_TEST_CASES,
     )
-    def test_make_domain_and_concept_code_from_concept_string_orcode(
+    def test_make_domain_and_concept_code_from_concept_string_or_code(
         self,
         domain: str,
         concept_string_or_code: str,

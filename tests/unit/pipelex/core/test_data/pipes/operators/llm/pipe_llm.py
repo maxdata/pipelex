@@ -32,7 +32,7 @@ prompt_template = "Generate a story about a programmer"
 # PipeLLM with inputs and template variables
 PIPE_LLM_WITH_INPUTS = (
     "pipe_llm_with_inputs",
-    """domain = "test_pipes"
+    '''domain = "test_pipes"
 definition = "Domain with pipe definitions"
 
 [pipe.extract_info]
@@ -40,8 +40,12 @@ type = "PipeLLM"
 definition = "Extract information from text"
 inputs = { text = "Text", topic = "Text" }
 output = "Text"
-prompt_template = "Extract information about $topic from this text:\\n\\n@text"
-""",
+prompt_template = """
+Extract information about $topic from this text:
+
+@text
+"""
+''',
     PipelexBundleBlueprint(
         domain="test_pipes",
         definition="Domain with pipe definitions",
@@ -51,7 +55,7 @@ prompt_template = "Extract information about $topic from this text:\\n\\n@text"
                 definition="Extract information from text",
                 inputs={"text": "Text", "topic": "Text"},
                 output=NativeConceptEnum.TEXT,
-                prompt_template="Extract information about $topic from this text:\n\n@text",
+                prompt_template="Extract information about $topic from this text:\n\n@text\n",
             ),
         },
     ),
@@ -85,6 +89,34 @@ prompt_template = "Analyze the following data and provide insights"
     ),
 )
 
+# PipeLLM with long prompt
+PIPE_LLM_WITH_LONG_PROMPT = (
+    "pipe_llm_with_long_prompt",
+    '''domain = "test_pipes"
+definition = "Domain with pipe definitions"
+
+[pipe.expert_analysis]
+type = "PipeLLM"
+definition = "Expert analysis with system prompt"
+output = "Text"
+prompt_template = """
+Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if available. Return each article as separate structured data.
+"""
+''',
+    PipelexBundleBlueprint(
+        domain="test_pipes",
+        definition="Domain with pipe definitions",
+        pipe={
+            "expert_analysis": PipeLLMBlueprint(
+                type="PipeLLM",
+                definition="Expert analysis with system prompt",
+                output=NativeConceptEnum.TEXT,
+                prompt_template="Extract all articles/items from this invoice text: $extracted_text. For each item find: item name, quantity, unit price, total price, description, and product code if available. Return each article as separate structured data.\n",
+            ),
+        },
+    ),
+)
+
 # PipeLLM with multiple outputs (nb_output)
 PIPE_LLM_MULTIPLE_OUTPUTS = (
     "pipe_llm_multiple_outputs",
@@ -95,8 +127,8 @@ definition = "Domain with pipe definitions"
 type = "PipeLLM"
 definition = "Generate multiple ideas"
 output = "Text"
-nb_output = 3
 prompt_template = "Generate creative ideas for a mobile app"
+nb_output = 3
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
@@ -116,7 +148,7 @@ prompt_template = "Generate creative ideas for a mobile app"
 # PipeLLM with dynamic multiple outputs
 PIPE_LLM_DYNAMIC_MULTIPLE = (
     "pipe_llm_dynamic_multiple",
-    """domain = "test_pipes"
+    '''domain = "test_pipes"
 definition = "Domain with pipe definitions"
 
 [pipe.brainstorm_solutions]
@@ -124,9 +156,9 @@ type = "PipeLLM"
 definition = "Brainstorm multiple solutions"
 inputs = { problem = { concept = "Text" } }
 output = "Text"
+prompt_template = "Brainstorm solutions for this problem: $problem"
 multiple_output = true
-prompt_template = "Brainstorm solutions for this problem: @problem"
-""",
+''',
     PipelexBundleBlueprint(
         domain="test_pipes",
         definition="Domain with pipe definitions",
@@ -137,7 +169,7 @@ prompt_template = "Brainstorm solutions for this problem: @problem"
                 inputs={"problem": InputRequirementBlueprint(concept="Text")},
                 output=NativeConceptEnum.TEXT,
                 multiple_output=True,
-                prompt_template="Brainstorm solutions for this problem: @problem",
+                prompt_template="Brainstorm solutions for this problem: $problem",
             ),
         },
     ),
@@ -290,7 +322,7 @@ prompt_template = "Extract person information from this text: @text"
 # PipeLLM with boolean multiplicity values
 PIPE_LLM_BOOLEAN_MULTIPLICITY = (
     "pipe_llm_boolean_multiplicity",
-    """domain = "test_pipes"
+    '''domain = "test_pipes"
 definition = "Domain with pipe definitions"
 
 [concept]
@@ -301,8 +333,12 @@ type = "PipeLLM"
 definition = "Analyze multiple documents and single query"
 inputs = { documents = { concept = "Text", multiplicity = true }, query = { concept = "Text", multiplicity = false } }
 output = "DocumentSummary"
-prompt_template = "Analyze these documents based on the query: $query\\n\\nDocuments: @documents"
-""",
+prompt_template = """
+Analyze these documents based on the query: $query
+
+Documents: @documents
+"""
+''',
     PipelexBundleBlueprint(
         domain="test_pipes",
         definition="Domain with pipe definitions",
@@ -316,7 +352,10 @@ prompt_template = "Analyze these documents based on the query: $query\\n\\nDocum
                     "query": InputRequirementBlueprint(concept="Text", multiplicity=False),
                 },
                 output="DocumentSummary",
-                prompt_template="Analyze these documents based on the query: $query\n\nDocuments: @documents",
+                prompt_template="""Analyze these documents based on the query: $query
+
+Documents: @documents
+""",
             ),
         },
     ),
@@ -327,6 +366,7 @@ PIPE_LLM_TEST_CASES = [
     PIPE_LLM_BASIC,
     PIPE_LLM_WITH_INPUTS,
     PIPE_LLM_WITH_SYSTEM_PROMPT,
+    PIPE_LLM_WITH_LONG_PROMPT,
     PIPE_LLM_MULTIPLE_OUTPUTS,
     PIPE_LLM_DYNAMIC_MULTIPLE,
     PIPE_LLM_VISION,

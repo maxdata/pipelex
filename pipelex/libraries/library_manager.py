@@ -21,9 +21,12 @@ from pipelex.core.pipes.pipe_abstract import PipeAbstract
 from pipelex.core.pipes.pipe_factory import PipeFactory
 from pipelex.core.pipes.pipe_library import PipeLibrary
 from pipelex.exceptions import (
+    ConceptDefinitionError,
     ConceptLibraryError,
+    DomainDefinitionError,
     LibraryError,
-    PipelexSetupError,
+    LibraryLoadingError,
+    PipeDefinitionError,
     PipeLibraryError,
 )
 from pipelex.libraries.library_config import LibraryConfig
@@ -141,28 +144,30 @@ class LibraryManager(LibraryManagerAbstract):
         return all_plx_paths
 
     @override
-    def load_from_file(self, plx_path: Path) -> None:
-        """Load a single file - this method is kept for compatibility."""
-        if not PipelexInterpreter.is_pipelex_file(plx_path):
-            msg = f"File is not a valid Pipelex PLX file: {plx_path}"
-            raise LibraryError(msg)
-
-        blueprint = PipelexInterpreter(file_path=plx_path).make_pipelex_bundle_blueprint()
-        self.load_from_blueprint(blueprint)
-
-    @override
     def load_from_blueprint(self, blueprint: PipelexBundleBlueprint) -> list[PipeAbstract]:
         """Load a blueprint."""
         # Create and load domain
-        domain = self._load_domain_from_blueprint(blueprint)
+        try:
+            domain = self._load_domain_from_blueprint(blueprint)
+        except DomainDefinitionError as exc:
+            msg = f"Could not load domain from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
+            raise LibraryLoadingError(msg) from exc
         self.domain_library.add_domain(domain=domain)
 
         # Create and load concepts
-        concepts = self._load_concepts_from_blueprint(blueprint)
+        try:
+            concepts = self._load_concepts_from_blueprint(blueprint)
+        except ConceptDefinitionError as exc:
+            msg = f"Could not load concepts from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
+            raise LibraryLoadingError(msg) from exc
         self.concept_library.add_concepts(concepts=concepts)
 
         # Create and load pipes
-        pipes = self._load_pipes_from_blueprint(blueprint)
+        try:
+            pipes = self._load_pipes_from_blueprint(blueprint)
+        except PipeDefinitionError as exc:
+            msg = f"Could not load pipes from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
+            raise LibraryLoadingError(msg) from exc
         self.pipe_library.add_pipes(pipes=pipes)
 
         return pipes
@@ -194,19 +199,23 @@ class LibraryManager(LibraryManagerAbstract):
         )
 
     def _load_concepts_from_blueprint(self, blueprint: PipelexBundleBlueprint) -> list[Concept]:
-        concepts: list[Concept] = []
+        if blueprint.concept is None:
+            return []
 
-        if blueprint.concept is not None:
-            for concept_code, concept_blueprint_or_str in blueprint.concept.items():
-                concept = ConceptFactory.make_from_blueprint(
-                    domain=blueprint.domain,
-                    concept_code=concept_code,
-                    concept_codes_from_the_same_domain=list(blueprint.concept.keys()),
-                    blueprint=ConceptBlueprint(definition=concept_blueprint_or_str)
-                    if isinstance(concept_blueprint_or_str, str)
-                    else concept_blueprint_or_str,
-                )
-                concepts.append(concept)
+        concepts: list[Concept] = []
+        for concept_code, concept_blueprint_or_str in blueprint.concept.items():
+            concept_blueprint: ConceptBlueprint
+            if isinstance(concept_blueprint_or_str, str):
+                concept_blueprint = ConceptBlueprint(definition=concept_blueprint_or_str)
+            else:
+                concept_blueprint = concept_blueprint_or_str
+            concept = ConceptFactory.make_from_blueprint(
+                domain=blueprint.domain,
+                concept_code=concept_code,
+                concept_codes_from_the_same_domain=list(blueprint.concept.keys()),
+                blueprint=concept_blueprint,
+            )
+            concepts.append(concept)
         return concepts
 
     def _load_pipes_from_blueprint(self, blueprint: PipelexBundleBlueprint) -> list[PipeAbstract]:
@@ -228,57 +237,69 @@ class LibraryManager(LibraryManagerAbstract):
         library_dirs: list[Path] | None = None,
         library_file_paths: list[Path] | None = None,
     ) -> None:
-        dirs_to_use: list[Path] = self._get_pipeline_library_dirs()
-        all_plx_paths: list[Path] = self._get_pipelex_plx_files_from_dirs(dirs_to_use)
+        dirs_to_use = library_dirs or self._get_pipeline_library_dirs()
 
-        # Remove failing pipelines from the list
-        failing_pipelines_file_paths = get_config().pipelex.library_config.failing_pipelines_file_paths
-        failing_paths_set = {Path(fp) for fp in failing_pipelines_file_paths}
-        all_plx_paths = [path for path in all_plx_paths if path not in failing_paths_set]
-
-        if library_dirs is not None:
-            dirs_to_use = library_dirs
+        valid_plx_paths: list[Path]
+        if library_file_paths:
+            valid_plx_paths = library_file_paths
+        else:
+            all_plx_paths: list[Path] = self._get_pipelex_plx_files_from_dirs(dirs_to_use)
+            # Remove failing pipelines from the list
+            failing_pipelines_file_paths = get_config().pipelex.library_config.failing_pipelines_file_paths
+            valid_plx_paths = [path for path in all_plx_paths if path not in failing_pipelines_file_paths]
 
         # Register classes in the directories
         for library_dir in dirs_to_use:
             ClassRegistryUtils.register_classes_in_folder(folder_path=str(library_dir))
             FuncRegistryUtils.register_funcs_in_folder(folder_path=str(library_dir))
 
-        if library_file_paths is not None:
-            all_plx_paths = library_file_paths
-
         # Parse all blueprints first
         blueprints: list[PipelexBundleBlueprint] = []
-        for plx_file_path in all_plx_paths:
+        for plx_file_path in valid_plx_paths:
             try:
                 blueprint = PipelexInterpreter(file_path=plx_file_path).make_pipelex_bundle_blueprint()
             except FileNotFoundError as exc:
                 msg = f"Could not find PLX blueprint at '{plx_file_path}'"
-                raise PipelexSetupError(msg) from exc
+                raise LibraryLoadingError(msg) from exc
             except ValidationError as exc:
                 formatted_error_msg = format_pydantic_validation_error(exc)
                 msg = f"Could not load PLX blueprint from '{plx_file_path}' because of: {formatted_error_msg}"
-                raise PipelexSetupError(msg) from exc
+                raise LibraryLoadingError(msg) from exc
+            except PipeDefinitionError as exc:
+                msg = f"Could not load PLX blueprint from '{plx_file_path}': {exc}"
+                raise LibraryLoadingError(msg) from exc
+            blueprint.source = str(plx_file_path)
             blueprints.append(blueprint)
 
         # Load all domains first
         all_domains: list[Domain] = []
         for blueprint in blueprints:
-            domain = self._load_domain_from_blueprint(blueprint)
+            try:
+                domain = self._load_domain_from_blueprint(blueprint)
+            except DomainDefinitionError as exc:
+                msg = f"Could not load domain from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
+                raise LibraryLoadingError(msg) from exc
             all_domains.append(domain)
-        for domain in all_domains:
-            self.domain_library.add_domain(domain=domain)
+        self.domain_library.add_domains(domains=all_domains)
 
         # Load all concepts second
         all_concepts: list[Concept] = []
         for blueprint in blueprints:
-            concepts = self._load_concepts_from_blueprint(blueprint)
+            try:
+                concepts = self._load_concepts_from_blueprint(blueprint)
+            except ConceptDefinitionError as exc:
+                msg = f"Could not load concepts from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
+                raise LibraryLoadingError(msg) from exc
             all_concepts.extend(concepts)
         self.concept_library.add_concepts(concepts=all_concepts)
 
         # Load all pipes third
         all_pipes: list[PipeAbstract] = []
         for blueprint in blueprints:
-            pipes = self._load_pipes_from_blueprint(blueprint)
+            try:
+                pipes = self._load_pipes_from_blueprint(blueprint)
+            except PipeDefinitionError as exc:
+                msg = f"Could not load pipes from PLX blueprint at '{blueprint.source}', domain code: '{blueprint.domain}': {exc}"
+                raise LibraryLoadingError(msg) from exc
             all_pipes.extend(pipes)
         self.pipe_library.add_pipes(pipes=all_pipes)

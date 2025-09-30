@@ -7,6 +7,7 @@ from pipelex.cogt.config_cogt import Cogt
 from pipelex.cogt.model_backends.prompting_target import PromptingTarget
 from pipelex.exceptions import PipelexConfigError, StaticValidationErrorType
 from pipelex.hub import get_required_config
+from pipelex.language.plx_config import PlxConfig
 from pipelex.libraries.library_config import LibraryConfig
 from pipelex.pipeline.track.tracker_config import TrackerConfig
 from pipelex.tools.aws.aws_config import AwsConfig
@@ -110,6 +111,7 @@ class Pipelex(ConfigModel):
     tracker_config: TrackerConfig
     structure_config: StructureConfig
     prompting_config: PromptingConfig
+    plx_config: PlxConfig
 
     dry_run_config: DryRunConfig
     pipe_run_config: PipeRunConfig
