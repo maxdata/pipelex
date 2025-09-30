@@ -31,7 +31,7 @@ class PipeFuncTestCases:
         PipeFuncSpec(
             the_pipe_code="generator_func",
             definition="Generate data",
-            inputs=None,
+            inputs={},
             output="GeneratedData",
             function_name="generate_data",
         ),

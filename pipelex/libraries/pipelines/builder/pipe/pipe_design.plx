@@ -133,6 +133,7 @@ type = "PipeLLM"
 description = "Build a PipeImgGenSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeImgGenSpec"
+llm = "llm_to_engineer"
 prompt_template = """
 Your job is to design a PipeImgGenSpec to generate an image from a text prompt.
 
@@ -150,6 +151,7 @@ type = "PipeLLM"
 description = "Build a PipeComposeSpec from the signature."
 inputs = { plan_draft = "PlanDraft", pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
 output = "PipeComposeSpec"
+llm = "llm_to_engineer"
 prompt_template = """
 Your job is to design a PipeComposeSpec to render a jinja2 template.
 

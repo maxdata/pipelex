@@ -13,7 +13,7 @@ class PipeImgGenTestCases:
         PipeImgGenSpec(
             the_pipe_code="img_generator",
             definition="Generate an image",
-            inputs=None,
+            inputs={},
             output="GeneratedImage",
         ),
         PipeImgGenBlueprint(

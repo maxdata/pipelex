@@ -34,7 +34,7 @@ class PipeLLMTestCases:
         PipeLLMSpec(
             the_pipe_code="generate_pipe",
             definition="Generate without inputs",
-            inputs=None,
+            inputs={},
             output="Text",
             llm="llm_for_creative_writing",
             prompt_template="Generate something interesting",
@@ -54,7 +54,7 @@ class PipeLLMTestCases:
         PipeLLMSpec(
             the_pipe_code="generate",
             definition="Generate with preset",
-            inputs=None,
+            inputs={},
             output="Text",
             prompt_template="Generate text",
             llm="llm_to_reason",
@@ -74,7 +74,7 @@ class PipeLLMTestCases:
         PipeLLMSpec(
             the_pipe_code="generate",
             definition="Generate with settings",
-            inputs=None,
+            inputs={},
             output="Text",
             prompt_template="Generate text",
             llm="llm_cheap_for_easy_questions",
@@ -122,7 +122,7 @@ class PipeLLMTestCases:
         PipeLLMSpec(
             the_pipe_code="generate_items",
             definition="Generate multiple items",
-            inputs=None,
+            inputs={},
             output="Item",
             prompt_template="Generate items",
             multiple_output=True,
@@ -145,7 +145,7 @@ class PipeLLMTestCases:
         PipeLLMSpec(
             the_pipe_code="generate_items",
             definition="Generate exactly 5 items",
-            inputs=None,
+            inputs={},
             output="Item",
             prompt_template="Generate items",
             nb_output=5,

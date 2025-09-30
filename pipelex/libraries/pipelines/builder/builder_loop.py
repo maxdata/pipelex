@@ -1,7 +1,13 @@
 from pipelex import pretty_print
 from pipelex.client.protocol import ImplicitMemory
 from pipelex.language.plx_factory import PlxFactory
-from pipelex.libraries.pipelines.builder.builder import PipelexBundleSpec, validate_bundle_spec
+from pipelex.libraries.pipelines.builder.builder import (
+    PipelexBundleError,
+    PipelexBundleSpec,
+    PipeSpecUnion,
+    reconstruct_bundle_with_pipe_fixes,
+    validate_bundle_spec,
+)
 from pipelex.pipeline.execute import execute_pipeline
 from pipelex.tools.misc.file_utils import save_text_to_path
 
@@ -20,6 +26,16 @@ class BuilderLoop:
         plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
         save_text_to_path(text=plx_content, path="results/generated_pipeline_1st_iteration.plx")
 
-        await validate_bundle_spec(pipelex_bundle_spec=pipelex_bundle_spec)
+        try:
+            await validate_bundle_spec(pipelex_bundle_spec=pipelex_bundle_spec)
+        except PipelexBundleError as exc:
+            pretty_print(exc, title="Pipelex Bundle Error")
+
+            fixed_pipes: list[PipeSpecUnion] = []
+            # TODO: fixe the pipes)
+            pipelex_bundle_spec = await reconstruct_bundle_with_pipe_fixes(pipelex_bundle_spec=pipelex_bundle_spec, fixed_pipes=fixed_pipes)
+            # pretty_print(pipelex_bundle_spec, title="Pipelex Bundle Spec • 2nd iteration")
+            # plx_content = PlxFactory.make_plx_content(blueprint=pipelex_bundle_spec.to_blueprint())
+            # save_text_to_path(text=plx_content, path="results/generated_pipeline_2nd_iteration.plx")
 
         return pipelex_bundle_spec

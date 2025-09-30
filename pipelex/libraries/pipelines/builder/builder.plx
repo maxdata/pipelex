@@ -36,6 +36,7 @@ type = "PipeLLM"
 description = "Turn the brief into a DomainInformation object."
 inputs = { brief = "UserBrief" }
 output = "DomainInformation"
+llm = "llm_to_engineer"
 prompt_template = """
 Name and define the domain of this process:
 @brief

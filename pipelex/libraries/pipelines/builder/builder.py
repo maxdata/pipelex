@@ -302,6 +302,18 @@ async def validate_bundle_spec(pipelex_bundle_spec: PipelexBundleSpec):
     dry_run_result = await dry_run_pipes(pipes=pipes, raise_on_failure=False)
     library_manager.remove_from_blueprint(blueprint=pipelex_bundle_blueprint)
 
+    pipe_type_to_spec_class = {
+        "PipeFunc": PipeFuncSpec,
+        "PipeImgGen": PipeImgGenSpec,
+        "PipeCompose": PipeComposeSpec,
+        "PipeLLM": PipeLLMSpec,
+        "PipeOcr": PipeOcrSpec,
+        "PipeBatch": PipeBatchSpec,
+        "PipeCondition": PipeConditionSpec,
+        "PipeParallel": PipeParallelSpec,
+        "PipeSequence": PipeSequenceSpec,
+    }
+
     dry_run_pipe_failures: list[PipeFailure] = []
     for pipe_code, dry_run_output in dry_run_result.items():
         if dry_run_output.status.is_failure:
@@ -312,33 +324,33 @@ async def validate_bundle_spec(pipelex_bundle_spec: PipelexBundleSpec):
                 msg = f"Pipe '{pipe_code}' not found in bundle spec but we recorded a dry run failure for it"
                 raise PipelexBundleUnexpectedError(message=msg)
 
-            failing_pipe_spec = pipelex_bundle_spec.pipe[pipe_code]
-            pipe_spec_type_name = failing_pipe_spec.type
-            pipe_spec_class_name = pipe_spec_type_name + "Spec"
-            spec_class = get_class_registry().get_class(name=pipe_spec_class_name)
+            pipe_spec = pipelex_bundle_spec.pipe[pipe_code]
+            spec_class = pipe_type_to_spec_class.get(pipe_spec.type)
             if not spec_class:
-                msg = f"Unknown pipe spec class: {pipe_spec_class_name}"
-                raise PipelexBundleUnexpectedError(message=msg)
-            pipe_spec = spec_class.model_validate(obj=failing_pipe_spec.model_dump(serialize_as_any=True))
-            dry_run_pipe_failures.append(
-                PipeFailure(
-                    pipe_spec=pipe_spec,
-                    error_message=dry_run_output.error_message or "",
-                ),
+                msg = f"Unknown pipe type: {pipe_spec.type}"
+                raise ValidateDryRunError(msg)
+            pipe_spec = spec_class(**pipe_spec.model_dump(serialize_as_any=True))
+            pipe_failure = PipeFailure(
+                pipe_spec=pipe_spec,
+                error_message=dry_run_output.error_message or "",
             )
+            dry_run_pipe_failures.append(pipe_failure)
     if dry_run_pipe_failures:
         raise PipelexBundleError(message="Pipes failed during dry run", pipe_failures=dry_run_pipe_failures)
 
 
-async def reconstruct_bundle_with_pipe_fixes(working_memory: WorkingMemory) -> PipelexBundleSpec:
+async def reconstruct_bundle_with_pipe_fixes_from_memory(working_memory: WorkingMemory) -> PipelexBundleSpec:
     pipelex_bundle_spec = working_memory.get_stuff_as(name="pipelex_bundle_spec", content_type=PipelexBundleSpec)
     fixed_pipes_list = cast("ListContent[PipeSpecUnion]", working_memory.get_stuff(name="fixed_pipes").content)
+    return await reconstruct_bundle_with_pipe_fixes(pipelex_bundle_spec=pipelex_bundle_spec, fixed_pipes=fixed_pipes_list.items)
 
+
+async def reconstruct_bundle_with_pipe_fixes(pipelex_bundle_spec: PipelexBundleSpec, fixed_pipes: list[PipeSpecUnion]) -> PipelexBundleSpec:
     if not pipelex_bundle_spec.pipe:
         msg = "No pipes section found in bundle spec"
         raise PipeBuilderError(msg)
 
-    for fixed_pipe_blueprint in fixed_pipes_list.items:
+    for fixed_pipe_blueprint in fixed_pipes:
         pipe_code = fixed_pipe_blueprint.the_pipe_code
         pipelex_bundle_spec.pipe[pipe_code] = fixed_pipe_blueprint
 

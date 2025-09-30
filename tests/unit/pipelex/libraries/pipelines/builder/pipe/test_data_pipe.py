@@ -55,7 +55,7 @@ class PipeBlueprintTestCases:
             type="PipeFunc",
             category="PipeOperator",
             definition="Pipe without inputs",
-            inputs=None,
+            inputs={},
             output="GeneratedData",
         ),
         PipeBlueprint(
