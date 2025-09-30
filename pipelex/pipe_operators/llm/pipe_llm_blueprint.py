@@ -39,8 +39,8 @@ class PipeLLMBlueprint(PipeBlueprint):
     multiple_output: bool | None = None
 
     @field_validator("nb_output", mode="after")
-    @staticmethod
-    def validate_nb_output(value: int | None = None) -> int | None:
+    @classmethod
+    def validate_nb_output(cls, value: int | None = None) -> int | None:
         if value and value < 1:
             msg = "PipeLLMBlueprint nb_output must be greater than 0"
             raise PipeDefinitionError(msg)
