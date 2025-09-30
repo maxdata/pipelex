@@ -173,9 +173,3 @@ Output this only: "large"
 """ '''
         toml_file = tmp_path / "pipe_condition_real_case.toml"
         toml_file.write_text(toml_content)
-
-    def test_validate_toml_file_actual_problematic_file(self) -> None:
-        """Test validation on the actual problematic file from the codebase."""
-        # problematic_file = "tests/data/tools_data/problematic_test_cases.toml"
-
-        # validate_toml_file(problematic_file)
