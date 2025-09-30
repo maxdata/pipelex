@@ -129,7 +129,10 @@ class ConceptBlueprint(BaseModel):
     @classmethod
     def validate_concept_code(cls, concept_code: str) -> None:
         if not is_pascal_case(concept_code):
-            msg = f"ConceptBlueprint validate_concept_code: Concept code '{concept_code}' must be PascalCase (letters and numbers only, starting with uppercase, without `.`)"
+            msg = (
+                f"ConceptBlueprint validate_concept_code: Concept code '{concept_code}' must be PascalCase "
+                f"(letters and numbers only, starting with uppercase, without `.`)"
+            )
             raise ConceptCodeError(msg)
 
     @classmethod
@@ -165,7 +168,10 @@ class ConceptBlueprint(BaseModel):
 
         # Validate concept code
         if not is_pascal_case(concept_code):
-            msg = f"ConceptBlueprint validate_concept_string: Concept code '{concept_code}' must be PascalCase (letters and numbers only, starting with uppercase, without `.`)"
+            msg = (
+                f"ConceptBlueprint validate_concept_string: Concept code '{concept_code}' must be PascalCase "
+                f"(letters and numbers only, starting with uppercase, without `.`)"
+            )
             raise ConceptCodeError(msg)
 
         # Validate that if the concept code is among the native concepts, the domain MUST be native.

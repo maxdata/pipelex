@@ -33,9 +33,7 @@ class ConceptSpecError(Exception):
 
 
 class ConceptStructureSpec(StructuredContent):
-    """Spec defining a field in the structure of a concept.
-
-    This class represents the schema for a single field in a concept's structure. It supports
+    """ConceptStructureSpec represents the schema for a single field in a concept's structure. It supports
     various field types including text, integer, boolean, number, and date.
 
     Attributes:
@@ -201,7 +199,10 @@ class ConceptSpec(StructuredContent):
     @classmethod
     def _post_validate_concept_code(cls, concept_code: str) -> None:
         if not is_pascal_case(concept_code):
-            msg = f"ConceptSpec _post_validate_concept_code: Concept code '{concept_code}' must be PascalCase (letters and numbers only, starting with uppercase, without `.`)"
+            msg = (
+                f"ConceptSpec _post_validate_concept_code: Concept code '{concept_code}' must be PascalCase "
+                f"(letters and numbers only, starting with uppercase, without `.`)"
+            )
             raise ConceptCodeError(msg)
 
     @classmethod

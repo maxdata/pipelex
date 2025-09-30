@@ -73,14 +73,6 @@ class DomainFailure(StructuredContent):
     error_message: str = Field(description="The error message for this domain")
 
 
-# class DomainSpecError(PipelexError):
-#     """Details of a single domain failure during dry run."""
-
-#     def __init__(self, message: str, domain_failure: DomainFailure):
-#         self.domain_failure = domain_failure
-#         super().__init__(message)
-
-
 class ConceptFailure(StructuredContent):
     """Details of a single concept failure during dry run."""
 

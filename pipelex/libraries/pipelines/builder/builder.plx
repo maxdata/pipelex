@@ -27,7 +27,6 @@ steps = [
     { pipe = "design_pipe_signatures", result = "pipe_signatures" },
     { pipe = "detail_pipe_spec", batch_over = "pipe_signatures", batch_as = "pipe_signature", result = "pipe_specs" },
     { pipe = "pipe_builder_domain_information", result = "domain_information" },
-    { pipe = "create_pipes_from_signatures", batch_over = "pipe_signatures", batch_as = "pipe_signature", result = "pipe_specs" },
     { pipe = "compile_in_pipelex_bundle_spec", result = "pipelex_bundle_spec" }
     # { pipe = "validate_pipelex_bundle_loading", result = "pipelex_bundle_spec" }
     # { pipe = "validate_pipelex_bundle_dry_run", result = "pipelex_bundle_spec" }
@@ -157,7 +156,7 @@ Your job is to extract a list of ConceptSpec from these concept drafts:
 type = "PipeLLM"
 description = "Write the pipe signatures for the plan."
 inputs = { plan_draft = "PlanDraft", brief = "UserBrief", concept_specs = "concept.ConceptSpec" }
-output = "pipe.PipeSignature"
+output = "pipe_design.PipeSignature"
 multiple_output = true
 llm = "llm_to_engineer"
 prompt_template = """

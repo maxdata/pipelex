@@ -1,274 +1,274 @@
-domain = "pipe"
-definition = "Build and process pipes."
+# domain = "pipe"
+# definition = "Build and process pipes."
 
-[concept]
-PipeSignature = "A pipe contract which says what the pipe does, not how it does it: code (the pipe code in snake_case), type, description, inputs, output."
-PipeSpec = "A structured spec for a pipe (union)."
-# Pipe controllers
-PipeBatchSpec = "A structured spec for a pipe batch."
-PipeConditionSpec = "A structured spec for a pipe condition."
-PipeParallelSpec = "A structured spec for a pipe parallel."
-PipeSequenceSpec = "A structured spec for a pipe sequence."
-# Pipe operators
-PipeFuncSpec = "A structured spec for a pipe func."
-PipeImgGenSpec = "A structured spec for a pipe img gen."
-PipeComposeSpec = "A structured spec for a pipe jinja2."
-PipeLLMSpec = "A structured spec for a pipe llm."
-PipeOcrSpec = "A structured spec for a pipe ocr."
-PipeFailure = "Details of a single pipe failure during dry run."
+# [concept]
+# PipeSignature = "A pipe contract which says what the pipe does, not how it does it: code (the pipe code in snake_case), type, description, inputs, output."
+# PipeSpec = "A structured spec for a pipe (union)."
+# # Pipe controllers
+# PipeBatchSpec = "A structured spec for a pipe batch."
+# PipeConditionSpec = "A structured spec for a pipe condition."
+# PipeParallelSpec = "A structured spec for a pipe parallel."
+# PipeSequenceSpec = "A structured spec for a pipe sequence."
+# # Pipe operators
+# PipeFuncSpec = "A structured spec for a pipe func."
+# PipeImgGenSpec = "A structured spec for a pipe img gen."
+# PipeComposeSpec = "A structured spec for a pipe jinja2."
+# PipeLLMSpec = "A structured spec for a pipe llm."
+# PipeOcrSpec = "A structured spec for a pipe ocr."
+# PipeFailure = "Details of a single pipe failure during dry run."
 
-[pipe]
-# ────────────────────────────────────────────────────────────────────────────────
-# NEW ENTRY POINT — takes PipeSignature[] + ConceptSpecs → PipeSpecs[]
-# ────────────────────────────────────────────────────────────────────────────────
-[pipe.create_pipes_from_signatures]
-type = "PipeSequence"
-description = "PipeSignature[] + ConceptSpecs → PipeSpecs[] (linked & ready)."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
-output = "Dynamic"
-steps = [
-    { pipe = "generate_pipe_spec", result = "pipe_spec" },
-    { pipe = "compile_one_signature_spec", result = "compiled_spec" },
-]
+# [pipe]
+# # ────────────────────────────────────────────────────────────────────────────────
+# # NEW ENTRY POINT — takes PipeSignature[] + ConceptSpecs → PipeSpecs[]
+# # ────────────────────────────────────────────────────────────────────────────────
+# [pipe.create_pipes_from_signatures]
+# type = "PipeSequence"
+# description = "PipeSignature[] + ConceptSpecs → PipeSpecs[] (linked & ready)."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
+# output = "Dynamic"
+# steps = [
+#     { pipe = "generate_pipe_spec", result = "pipe_spec" },
+#     { pipe = "compile_one_signature_spec", result = "compiled_spec" },
+# ]
 
-[pipe.generate_pipe_spec]
-type = "PipeLLM"
-description = "Generate a PipeSpec from a PipeSignature."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
-output = "PipeSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Return a PipeSpec for this signature.
+# [pipe.generate_pipe_spec]
+# type = "PipeLLM"
+# description = "Generate a PipeSpec from a PipeSignature."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec" }
+# output = "PipeSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Return a PipeSpec for this signature.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-and here are the existing concepts:
-@concept_specs
+# and here are the existing concepts:
+# @concept_specs
 
-The inputs keys should be snake_case.
-The values should be a concept code in PascalCase.
-"""
+# The inputs keys should be snake_case.
+# The values should be a concept code in PascalCase.
+# """
 
-# ────────────────────────────────────────────────────────────────────────────────
-# CORE: signature → route to spec emitter
-# ────────────────────────────────────────────────────────────────────────────────
-[pipe.compile_one_signature_spec]
-type = "PipeCondition"
-description = "Route by signature.type to the correct spec emitter."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "ConceptSpec", pipe_spec = "PipeSpec" }
-output = "Dynamic"
-expression = "pipe_signature.type"
+# # ────────────────────────────────────────────────────────────────────────────────
+# # CORE: signature → route to spec emitter
+# # ────────────────────────────────────────────────────────────────────────────────
+# [pipe.compile_one_signature_spec]
+# type = "PipeCondition"
+# description = "Route by signature.type to the correct spec emitter."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "Dynamic"
+# expression = "pipe_signature.type"
 
-[pipe.compile_one_signature_spec.pipe_map]
-PipeSequence  = "emit_sequence_from_signature"
-PipeParallel  = "emit_parallel_from_signature"
-PipeCondition = "emit_condition_from_signature"
-PipeBatch     = "emit_batch_from_signature"
-PipeLLM       = "emit_llm_from_signature"
-PipeOcr       = "emit_ocr_from_signature"
-PipeImgGen    = "emit_imggen_from_signature"
-PipeCompose    = "emit_jinja_from_signature"
-PipeFunc      = "emit_func_from_signature"
+# [pipe.compile_one_signature_spec.pipe_map]
+# PipeSequence  = "emit_sequence_from_signature"
+# PipeParallel  = "emit_parallel_from_signature"
+# PipeCondition = "emit_condition_from_signature"
+# PipeBatch     = "emit_batch_from_signature"
+# PipeLLM       = "emit_llm_from_signature"
+# PipeOcr       = "emit_ocr_from_signature"
+# PipeImgGen    = "emit_imggen_from_signature"
+# PipeCompose    = "emit_jinja_from_signature"
+# PipeFunc      = "emit_func_from_signature"
 
-# ────────────────────────────────────────────────────────────────────────────────
-# EMITTERS — one per pipe type, all using the same minimal contract
-# (Optionally, emitters could be extended later to read from concept_index.)
-# ────────────────────────────────────────────────────────────────────────────────
+# # ────────────────────────────────────────────────────────────────────────────────
+# # EMITTERS — one per pipe type, all using the same minimal contract
+# # (Optionally, emitters could be extended later to read from concept_index.)
+# # ────────────────────────────────────────────────────────────────────────────────
 
-[pipe.emit_sequence_from_signature]
-type = "PipeLLM"
-description = "Build a PipeSequenceSpec from the signature (children referenced by code)."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeSequenceSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Return a PipeSequenceSpec for this signature.
-The Pipe sequence NEEDS to have at least one step.
-Orchestrate all the necessary steps to achieve the goal of the pipe.
+# [pipe.emit_sequence_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeSequenceSpec from the signature (children referenced by code)."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeSequenceSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Return a PipeSequenceSpec for this signature.
+# The Pipe sequence NEEDS to have at least one step.
+# Orchestrate all the necessary steps to achieve the goal of the pipe.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_parallel_from_signature]
-type = "PipeLLM"
-description = "Build a PipeParallelSpec from the signature."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeParallelSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Return a PipeParallelSpec for this signature.
+# [pipe.emit_parallel_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeParallelSpec from the signature."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeParallelSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Return a PipeParallelSpec for this signature.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_condition_from_signature]
-type = "PipeLLM"
-description = "Build a PipeConditionSpec from the signature (provide expression/pipe_map consistent with children)."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeConditionSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Return a PipeConditionSpec for this signature.
+# [pipe.emit_condition_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeConditionSpec from the signature (provide expression/pipe_map consistent with children)."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeConditionSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Return a PipeConditionSpec for this signature.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_batch_from_signature]
-type = "PipeLLM"
-description = "Build a PipeBatchSpec from the signature (choose branch_pipe_code/params)."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeBatchSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Return a PipeBatchSpec for this signature.
+# [pipe.emit_batch_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeBatchSpec from the signature (choose branch_pipe_code/params)."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeBatchSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Return a PipeBatchSpec for this signature.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_llm_from_signature]
-type = "PipeLLM"
-description = "Build a PipeLLMSpec from the signature."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeLLMSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Return a PipeLLMSpec for this signature.
+# [pipe.emit_llm_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeLLMSpec from the signature."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeLLMSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Return a PipeLLMSpec for this signature.
 
-THe prompt is the field "prompt_template" in the PipeLLMSpec.
-Signature:
-@pipe_signature
+# THe prompt is the field "prompt_template" in the PipeLLMSpec.
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_ocr_from_signature]
-type = "PipeLLM"
-description = "Build a PipeOcrSpec from the signature."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeOcrSpec"
-prompt_template = """
-Return a PipeOcrSpec for this signature.
+# [pipe.emit_ocr_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeOcrSpec from the signature."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeOcrSpec"
+# prompt_template = """
+# Return a PipeOcrSpec for this signature.
 
-VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
-Signature:
-@pipe_signature
+# VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_imggen_from_signature]
-type = "PipeLLM"
-description = "Build a PipeImgGenSpec from the signature."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeImgGenSpec"
-prompt_template = """
-Return a PipeImgGenSpec for this signature.
-The inputs for the image has to be only:
-input_name : prompt
-concept : A concept that refines Text. It should be text
-The output concept should be a concept in Pascal case that refines Image.
-For example:
-```
-inputs = { prompt: ImgGenPrompt }
-```
-if ImgGenPrompt is a text concept.
+# [pipe.emit_imggen_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeImgGenSpec from the signature."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeImgGenSpec"
+# prompt_template = """
+# Return a PipeImgGenSpec for this signature.
+# The inputs for the image has to be only:
+# input_name : prompt
+# concept : A concept that refines Text. It should be text
+# The output concept should be a concept in Pascal case that refines Image.
+# For example:
+# ```
+# inputs = { prompt: ImgGenPrompt }
+# ```
+# if ImgGenPrompt is a text concept.
 
-IMPORTANT: imgg_prompt SHOULD BE NONE
-IMPORTANT: img_gen_prompt_var_name SHOULD BE NONE
-The prompt will need to be be generated by a pipe with the necessary elements.
+# IMPORTANT: imgg_prompt SHOULD BE NONE
+# IMPORTANT: img_gen_prompt_var_name SHOULD BE NONE
+# The prompt will need to be be generated by a pipe with the necessary elements.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_jinja_from_signature]
-type = "PipeLLM"
-description = "Build a PipeComposeSpec from the signature."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeComposeSpec"
-prompt_template = """
-Return a PipeComposeSpec for this signature.
+# [pipe.emit_jinja_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeComposeSpec from the signature."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeComposeSpec"
+# prompt_template = """
+# Return a PipeComposeSpec for this signature.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-[pipe.emit_func_from_signature]
-type = "PipeLLM"
-description = "Build a PipeFuncSpec from the signature."
-inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
-output = "PipeFuncSpec"
-llm = "llm_to_engineer"
-prompt_template = """
-Return a PipeFuncSpec for this signature.
+# [pipe.emit_func_from_signature]
+# type = "PipeLLM"
+# description = "Build a PipeFuncSpec from the signature."
+# inputs = { pipe_signature = "PipeSignature", concept_specs = "concept.ConceptSpec", pipe_spec = "PipeSpec" }
+# output = "PipeFuncSpec"
+# llm = "llm_to_engineer"
+# prompt_template = """
+# Return a PipeFuncSpec for this signature.
 
-Signature:
-@pipe_signature
+# Signature:
+# @pipe_signature
 
-Here is the base PipeSpec:
-@pipe_spec
+# Here is the base PipeSpec:
+# @pipe_spec
 
-And here are the concepts you can use:
-@concept_specs
-"""
+# And here are the concepts you can use:
+# @concept_specs
+# """
 
-# ────────────────────────────────────────────────────────────────────────────────
-# PIPE FIXERS — one per pipe type, all fixing specific pipe type issues
-# ────────────────────────────────────────────────────────────────────────────────
+# # ────────────────────────────────────────────────────────────────────────────────
+# # PIPE FIXERS — one per pipe type, all fixing specific pipe type issues
+# # ────────────────────────────────────────────────────────────────────────────────
 
 # [pipe.fix_failing_pipe]
 # type = "PipeCondition"
 # description = "Route to specific pipe fixer based on the failing pipe type."
-# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", failed_pipe = "PipeFailure" }
+# inputs = { pipelex_bundle_spec = "PipelexBundleSpec", pipe_failure = "PipeFailure" }
 # output = "Dynamic"
 # expression = "failed_pipe.pipe.type"
 

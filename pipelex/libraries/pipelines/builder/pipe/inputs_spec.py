@@ -12,24 +12,27 @@ class InputRequirementSpec(StructuredContent):
     Defines the concept type and multiplicity constraints for pipe inputs, ensuring
     proper data validation and flow control in pipeline execution.
 
-    Attributes:
-        concept: The concept code or concept string for the input. Must be in PascalCase
-                format. When using concept strings, format is "domain.ConceptCode" with
-                domain in lowercase and ConceptCode in PascalCase.
-        multiplicity: Optional constraint on input cardinality (e.g., single, multiple).
-                     Defines how many instances of the concept the pipe can process.
-
     Validation Rules:
         1. Concept must be a valid concept code (PascalCase) or concept string (domain.ConceptCode).
         2. Domain and concept code are separated by a dot when using full concept strings.
-        3. Concept validation is performed using ConceptBlueprint.validate_concept_string_or_code.
 
     """
 
-    concept: str = Field(description="Concept code or concept string in PascalCase format")
-    multiplicity: PipeOutputMultiplicity | None = None
+    concept: str = Field(
+        description=(
+            "The concept code or concept string for the input. Must be in PascalCase"
+            "format. When using concept strings, format is `domain.ConceptCode` with"
+            "domain in lowercase and ConceptCode in PascalCase"
+        )
+    )
+    multiplicity: PipeOutputMultiplicity | None = Field(
+        default=None,
+        description=(
+            "Optional constraint on input cardinality (e.g., single, multiple). Defines how many instances of the concept the pipe can process."
+        ),
+    )
 
-    @field_validator("concept", mode="before")
+    @field_validator("concept", mode="after")
     @classmethod
     def validate_concept_string(cls, concept_string: str) -> str:
         ConceptBlueprint.validate_concept_string_or_code(concept_string_or_code=concept_string)
