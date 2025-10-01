@@ -1,11 +1,9 @@
 import asyncio
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING
 
 from anthropic import AsyncAnthropic, AsyncAnthropicBedrock
 from anthropic.types import Usage
-from anthropic.types.image_block_param import ImageBlockParam
 from anthropic.types.message_param import MessageParam
-from anthropic.types.text_block_param import TextBlockParam
 from openai.types.chat import (
     ChatCompletionMessageParam,
     ChatCompletionSystemMessageParam,
@@ -15,10 +13,10 @@ from pipelex import log
 from pipelex.cogt.exceptions import CogtError
 from pipelex.cogt.image.prompt_image import (
     PromptImage,
-    PromptImageBytes,
+    PromptImageBase64,
     PromptImagePath,
-    PromptImageTypedBytes,
-    PromptImageTypedBytesOrUrl,
+    PromptImageTypedBase64,
+    PromptImageTypedUrlOrBase64,
     PromptImageUrl,
 )
 from pipelex.cogt.image.prompt_image_factory import PromptImageFactory
@@ -30,6 +28,10 @@ from pipelex.plugins.plugin_sdk_registry import Plugin
 from pipelex.tools.misc.base_64_utils import load_binary_as_base64_async
 from pipelex.tools.misc.filetype_utils import detect_file_type_from_base64
 from pipelex.types import StrEnum
+
+if TYPE_CHECKING:
+    from anthropic.types.image_block_param import ImageBlockParam
+    from anthropic.types.text_block_param import TextBlockParam
 
 
 class AnthropicFactoryError(CogtError):
@@ -46,11 +48,12 @@ class AnthropicFactory:
     def make_anthropic_client(
         plugin: Plugin,
         backend: InferenceBackend,
-    ) -> Union[AsyncAnthropic, AsyncAnthropicBedrock]:
+    ) -> AsyncAnthropic | AsyncAnthropicBedrock:
         try:
             sdk_variant = AnthropicSdkVariant(plugin.sdk)
-        except ValueError:
-            raise AnthropicFactoryError(f"Plugin '{plugin}' is not supported by AnthropicFactory")
+        except ValueError as exc:
+            msg = f"Plugin '{plugin}' is not supported by AnthropicFactory"
+            raise AnthropicFactoryError(msg) from exc
 
         match sdk_variant:
             case AnthropicSdkVariant.ANTHROPIC:
@@ -73,7 +76,7 @@ class AnthropicFactory:
         llm_job: LLMJob,
     ) -> MessageParam:
         message: MessageParam
-        content: List[Union[TextBlockParam, ImageBlockParam]] = []
+        content: list[TextBlockParam | ImageBlockParam] = []
 
         if llm_job.llm_prompt.user_text:
             text_block_param: TextBlockParam = {
@@ -87,15 +90,15 @@ class AnthropicFactory:
             # images_block_params: List[ImageBlockParam] = []
             for prepped_image in prepped_user_images:
                 image_block_param: ImageBlockParam
-                if isinstance(prepped_image, PromptImageTypedBytes):
+                if isinstance(prepped_image, PromptImageTypedBase64):
                     mime = prepped_image.file_type.mime
                     image_block_param = {
                         "type": "image",
                         "source": {
                             "type": "base64",
-                            "media_type": mime,  # type: ignore
+                            "media_type": mime,  # type: ignore[typeddict-item]
                             "data": prepped_image.base_64.decode("utf-8"),
-                        },  # type: ignore
+                        },  # pyright: ignore[reportAssignmentType]
                     }
                 elif isinstance(prepped_image, str):  # pyright: ignore[reportUnnecessaryIsInstance]
                     url = prepped_image
@@ -107,7 +110,8 @@ class AnthropicFactory:
                         },
                     }
                 else:
-                    raise AnthropicFactoryError(f"Unsupported PromptImageTypedBytesOrUrl type: '{type(prepped_image).__name__}'")
+                    msg = f"Unsupported PromptImageTypedBytesOrUrl type: '{type(prepped_image).__name__}'"
+                    raise AnthropicFactoryError(msg)
                 content.append(image_block_param)
 
         message = {
@@ -121,24 +125,24 @@ class AnthropicFactory:
     @staticmethod
     def openai_typed_user_message(
         user_content_txt: str,
-        prepped_user_images: Optional[List[PromptImageTypedBytesOrUrl]] = None,
+        prepped_user_images: list[PromptImageTypedUrlOrBase64] | None = None,
     ) -> ChatCompletionMessageParam:
         text_block_param: TextBlockParam = {"type": "text", "text": user_content_txt}
         message: MessageParam
         if prepped_user_images is not None:
             log.debug(prepped_user_images)
-            images_block_params: List[ImageBlockParam] = []
+            images_block_params: list[ImageBlockParam] = []
             for prepped_image in prepped_user_images:
                 image_block_param_in_loop: ImageBlockParam
-                if isinstance(prepped_image, PromptImageTypedBytes):
+                if isinstance(prepped_image, PromptImageTypedBase64):
                     mime = prepped_image.file_type.mime
                     image_block_param_in_loop = {
                         "type": "image",
                         "source": {
                             "type": "base64",
-                            "media_type": mime,  # type: ignore
+                            "media_type": mime,  # type: ignore[typeddict-item]
                             "data": prepped_image.base_64.decode("utf-8"),
-                        },  # type: ignore
+                        },  # pyright: ignore[reportAssignmentType]
                     }
                 elif isinstance(prepped_image, str):  # pyright: ignore[reportUnnecessaryIsInstance]
                     url = prepped_image
@@ -150,10 +154,11 @@ class AnthropicFactory:
                         },
                     }
                 else:
-                    raise AnthropicFactoryError(f"Unsupported PromptImageTypedBytesOrUrl type: '{type(prepped_image).__name__}'")
+                    msg = f"Unsupported PromptImageTypedBytesOrUrl type: '{type(prepped_image).__name__}'"
+                    raise AnthropicFactoryError(msg)
                 images_block_params.append(image_block_param_in_loop)
 
-            content: List[Union[TextBlockParam, ImageBlockParam]] = images_block_params + [text_block_param]
+            content: list[TextBlockParam | ImageBlockParam] = [*images_block_params, text_block_param]
             message = {
                 "role": "user",
                 "content": content,
@@ -165,42 +170,41 @@ class AnthropicFactory:
                 "content": [text_block_param],
             }
 
-        return message  # type: ignore
+        return message  # type: ignore[return-value, valid-type] # pyright: ignore[reportReturnType]
 
     @classmethod
     async def _prep_image_for_anthropic(
         cls,
         prompt_image: PromptImage,
-    ) -> PromptImageTypedBytesOrUrl:
-        typed_bytes_or_url: PromptImageTypedBytesOrUrl
-        if isinstance(prompt_image, PromptImageBytes):
-            typed_bytes_or_url = prompt_image.make_prompt_image_typed_bytes()
+    ) -> PromptImageTypedUrlOrBase64:
+        typed_bytes_or_url: PromptImageTypedUrlOrBase64
+        if isinstance(prompt_image, PromptImageBase64):
+            typed_bytes_or_url = prompt_image.make_prompt_image_typed_base64()
         elif isinstance(prompt_image, PromptImageUrl):
-            image_bytes = await PromptImageFactory().make_promptimagebytes_from_url_async(prompt_image)
+            image_bytes = await PromptImageFactory.make_promptimagebase64_from_url_async(prompt_image)
             file_type = detect_file_type_from_base64(image_bytes.base_64)
-            typed_bytes_or_url = PromptImageTypedBytes(base_64=image_bytes.base_64, file_type=file_type)
+            typed_bytes_or_url = PromptImageTypedBase64(base_64=image_bytes.base_64, file_type=file_type)
         elif isinstance(prompt_image, PromptImagePath):
             b64 = await load_binary_as_base64_async(prompt_image.file_path)
-            typed_bytes_or_url = PromptImageTypedBytes(base_64=b64, file_type=prompt_image.get_file_type())
+            typed_bytes_or_url = PromptImageTypedBase64(base_64=b64, file_type=prompt_image.get_file_type())
         else:
-            raise AnthropicFactoryError(f"Unsupported PromptImage type: '{type(prompt_image).__name__}'")
+            msg = f"Unsupported PromptImage type: '{type(prompt_image).__name__}'"
+            raise AnthropicFactoryError(msg)
         return typed_bytes_or_url
 
     @classmethod
     async def make_simple_messages(
         cls,
         llm_job: LLMJob,
-    ) -> List[ChatCompletionMessageParam]:
-        """
-        Makes a list of messages with a system message (if provided) and followed by a user message.
-        """
+    ) -> list[ChatCompletionMessageParam]:
+        """Makes a list of messages with a system message (if provided) and followed by a user message."""
         llm_prompt = llm_job.llm_prompt
-        messages: List[ChatCompletionMessageParam] = []
+        messages: list[ChatCompletionMessageParam] = []
         #### System message ####
         if system_content := llm_prompt.system_text:
             messages.append(ChatCompletionSystemMessageParam(role="system", content=system_content))
 
-        prepped_user_images: Optional[List[PromptImageTypedBytesOrUrl]]
+        prepped_user_images: list[PromptImageTypedUrlOrBase64] | None
         if llm_prompt.user_images:
             tasks_to_prep_images = [cls._prep_image_for_anthropic(prompt_image) for prompt_image in llm_prompt.user_images]
             prepped_user_images = await asyncio.gather(*tasks_to_prep_images)
@@ -212,7 +216,7 @@ class AnthropicFactory:
             AnthropicFactory.openai_typed_user_message(
                 user_content_txt=llm_prompt.user_text if llm_prompt.user_text else "",
                 prepped_user_images=prepped_user_images,
-            )
+            ),
         )
         return messages
 

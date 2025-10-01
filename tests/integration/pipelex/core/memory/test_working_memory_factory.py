@@ -9,9 +9,9 @@ class TestWorkingMemoryFactory:
         """Test deserialization of compact memory with text content."""
         compact_memory: CompactMemory = {
             "text_item": {
-                "concept_code": NativeConceptEnum.TEXT.value,
+                "concept_code": NativeConceptEnum.TEXT,
                 "content": "Hello, world!",
-            }
+            },
         }
 
         working_memory = WorkingMemoryFactory.make_from_compact_memory(compact_memory)
@@ -20,7 +20,7 @@ class TestWorkingMemoryFactory:
         assert "text_item" in working_memory.root
 
         stuff = working_memory.root["text_item"]
-        assert stuff.concept.code == NativeConceptEnum.TEXT.value
+        assert stuff.concept.code == NativeConceptEnum.TEXT
         assert isinstance(stuff.content, TextContent)
         assert stuff.content.text == "Hello, world!"
 
@@ -28,12 +28,12 @@ class TestWorkingMemoryFactory:
         """Test deserialization of compact memory with complex nested structured content."""
         compact_memory: CompactMemory = {
             "complex_page": {
-                "concept_code": NativeConceptEnum.PAGE.value,
+                "concept_code": NativeConceptEnum.PAGE,
                 "content": {
                     "text_and_images": {
                         "text": {
                             "text": "This is a complex document page with multiple images and rich text content. "
-                            "It demonstrates nested structured content handling."
+                            "It demonstrates nested structured content handling.",
                         },
                         "images": [
                             {
@@ -51,7 +51,7 @@ class TestWorkingMemoryFactory:
                     },
                     "page_view": {"url": "mock_url", "caption": "Full page screenshot"},
                 },
-            }
+            },
         }
 
         working_memory = WorkingMemoryFactory.make_from_compact_memory(compact_memory)
@@ -60,7 +60,7 @@ class TestWorkingMemoryFactory:
         assert "complex_page" in working_memory.root
 
         stuff = working_memory.root["complex_page"]
-        assert stuff.concept.code == NativeConceptEnum.PAGE.value
+        assert stuff.concept.code == NativeConceptEnum.PAGE
         assert isinstance(stuff.content, PageContent)
 
         # Verify text_and_images structure
@@ -118,11 +118,11 @@ class TestWorkingMemoryFactory:
         """Test deserialization of compact memory with multiple items."""
         compact_memory: CompactMemory = {
             "text1": {
-                "concept_code": NativeConceptEnum.TEXT.value,
+                "concept_code": NativeConceptEnum.TEXT,
                 "content": "First text",
             },
             "text2": {
-                "concept_code": NativeConceptEnum.TEXT.value,
+                "concept_code": NativeConceptEnum.TEXT,
                 "content": "Second text",
             },
         }

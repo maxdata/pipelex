@@ -16,7 +16,7 @@ class TestConceptStructureBlueprintValidation:
         """Test that valid structure blueprints are accepted."""
         # Valid text field with default
         text_blueprint = ConceptStructureBlueprint(
-            definition="A text field", type=ConceptStructureBlueprintFieldType.TEXT, default_value="default text"
+            definition="A text field", type=ConceptStructureBlueprintFieldType.TEXT, default_value="default text",
         )
         assert text_blueprint.default_value == "default text"
 
@@ -38,23 +38,23 @@ class TestConceptStructureBlueprintValidation:
 
         # Valid list field with default
         list_blueprint = ConceptStructureBlueprint(
-            definition="A list field", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", default_value=["item1", "item2"]
+            definition="A list field", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", default_value=["item1", "item2"],
         )
         assert list_blueprint.default_value == ["item1", "item2"]
 
-        # Valid dict field with default
-        dict_blueprint = ConceptStructureBlueprint(
-            definition="A dict field",
-            type=ConceptStructureBlueprintFieldType.DICT,
-            key_type="text",
-            value_type="text",
-            default_value={"key": "value"},
-        )
-        assert dict_blueprint.default_value == {"key": "value"}
+    # Valid dict field with default
+    dict_blueprint = ConceptStructureBlueprint(
+        definition="A dict field",
+        type=ConceptStructureBlueprintFieldType.DICT,
+        key_type="text",
+        value_type="text",
+        default_value={"key": "value"},
+    )
+    assert dict_blueprint.default_value == {"key": "value"}
 
-        # Valid choice field with default
-        choice_blueprint = ConceptStructureBlueprint(definition="A choice field", choices=["low", "medium", "high"], default_value="medium")
-        assert choice_blueprint.default_value == "medium"
+    # Valid choice field with default
+    choice_blueprint = ConceptStructureBlueprint(definition="A choice field", choices=["low", "medium", "high"], default_value="medium")
+    assert choice_blueprint.default_value == "medium"
 
     def test_default_value_type_mismatch(self):
         """Test that default_value type mismatches are caught."""
@@ -77,7 +77,7 @@ class TestConceptStructureBlueprintValidation:
         # List field with non-list default
         with pytest.raises(ConceptStructureBlueprintError, match="default_value type mismatch: expected list"):
             ConceptStructureBlueprint(
-                definition="A list field", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", default_value="not a list"
+                definition="A list field", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", default_value="not a list",
             )
 
         # Dict field with non-dict default
@@ -136,21 +136,21 @@ class TestConceptStructureBlueprintValidation:
 
         # Boolean field with False default (should be valid)
         bool_false_blueprint = ConceptStructureBlueprint(
-            definition="Boolean field with False default", type=ConceptStructureBlueprintFieldType.BOOLEAN, default_value=False
+            definition="Boolean field with False default", type=ConceptStructureBlueprintFieldType.BOOLEAN, default_value=False,
         )
         assert bool_false_blueprint.default_value is False
 
         # Integer field with 0 default (should be valid)
         int_zero_blueprint = ConceptStructureBlueprint(
-            definition="Integer field with 0 default", type=ConceptStructureBlueprintFieldType.INTEGER, default_value=0
+            definition="Integer field with 0 default", type=ConceptStructureBlueprintFieldType.INTEGER, default_value=0,
         )
         assert int_zero_blueprint.default_value == 0
 
         # Empty list as default (should be valid)
         empty_list_blueprint = ConceptStructureBlueprint(
-            definition="List field with empty default", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", default_value=[]
+            definition="List field with empty default", type=ConceptStructureBlueprintFieldType.LIST, item_type="text", default_value=[],
         )
-        assert empty_list_blueprint.default_value == []
+        assert not empty_list_blueprint.default_value
 
         # Empty dict as default (should be valid)
         empty_dict_blueprint = ConceptStructureBlueprint(
@@ -160,4 +160,4 @@ class TestConceptStructureBlueprintValidation:
             value_type="text",
             default_value={},
         )
-        assert empty_dict_blueprint.default_value == {}
+        assert not empty_dict_blueprint.default_value

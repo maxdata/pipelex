@@ -1,5 +1,5 @@
 from pipelex.core.concepts.concept_factory import ConceptBlueprint, ConceptFactory
-from pipelex.core.pipes.pipe_input_spec_blueprint import InputRequirementBlueprint
+from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
 from pipelex.hub import get_concept_provider
 from pipelex.pipe_controllers.condition.pipe_condition_blueprint import PipeConditionBlueprint, PipeConditionPipeMapBlueprint
 from pipelex.pipe_controllers.condition.pipe_condition_factory import PipeConditionFactory
@@ -18,7 +18,7 @@ class TestPipeConditionValidation:
             concept_codes_from_the_same_domain=["TestConcept"],
         )
         concept_2 = ConceptFactory.make_from_blueprint(
-            concept_code="Result", domain=domain, blueprint=ConceptBlueprint(definition="Lorem Ipsum"), concept_codes_from_the_same_domain=["Result"]
+            concept_code="Result", domain=domain, blueprint=ConceptBlueprint(definition="Lorem Ipsum"), concept_codes_from_the_same_domain=["Result"],
         )
         concept_library = get_concept_provider()
         concept_library.add_concepts([concept_1, concept_2])
@@ -58,7 +58,7 @@ class TestPipeConditionValidation:
             concept_codes_from_the_same_domain=["TestConcept"],
         )
         concept_2 = ConceptFactory.make_from_blueprint(
-            concept_code="Result", domain=domain, blueprint=ConceptBlueprint(definition="Lorem Ipsum"), concept_codes_from_the_same_domain=["Result"]
+            concept_code="Result", domain=domain, blueprint=ConceptBlueprint(definition="Lorem Ipsum"), concept_codes_from_the_same_domain=["Result"],
         )
         concept_library.add_concepts([concept_1, concept_2])
 

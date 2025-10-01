@@ -1,5 +1,4 @@
 import asyncio
-from typing import List, Tuple
 
 import pytest
 from pydantic import BaseModel
@@ -7,12 +6,12 @@ from pydantic import BaseModel
 from pipelex import pretty_print
 from pipelex.cogt.llm.llm_job_components import LLMJobParams
 from pipelex.cogt.llm.llm_job_factory import LLMJobFactory
-from pipelex.hub import get_llm_worker, get_models_manager
+from pipelex.hub import get_llm_worker, get_model_deck
 from tests.integration.pipelex.cogt.test_data import LLMTestCases
 
 
 def get_async_worker_and_job(llm_preset_id: str, user_text: str):
-    llm_setting = get_models_manager().get_model_deck().get_llm_setting(llm_setting_or_preset_id=llm_preset_id)
+    llm_setting = get_model_deck().get_llm_setting(llm_choice=llm_preset_id)
     pretty_print(llm_setting, title=llm_preset_id)
     pretty_print(user_text)
     llm_worker = get_llm_worker(llm_handle=llm_setting.llm_handle)
@@ -56,12 +55,12 @@ class TestLLMGenObject:
 
     @pytest.mark.parametrize("case_tuples", LLMTestCases.MULTIPLE_OBJECTS)
     async def test_gen_object_async_multiple_using_handle(
-        self, llm_job_params: LLMJobParams, llm_handle: str, case_tuples: List[Tuple[str, BaseModel]]
+        self, llm_job_params: LLMJobParams, llm_handle: str, case_tuples: list[tuple[str, BaseModel]],
     ):
         llm_worker = get_llm_worker(llm_handle=llm_handle)
         if not llm_worker.is_gen_object_supported:
             pytest.skip(f"'{llm_worker.desc}' does not support object generation")
-        tasks: List[asyncio.Task[BaseModel]] = []
+        tasks: list[asyncio.Task[BaseModel]] = []
         for case_tuple in case_tuples:
             user_text, expected_instance = case_tuple
             expected_class = expected_instance.__class__
@@ -81,11 +80,11 @@ class TestLLMGenObject:
             assert output_instance.model_dump(serialize_as_any=True) == expected_instance.model_dump(serialize_as_any=True)
 
     @pytest.mark.parametrize("case_tuples", LLMTestCases.MULTIPLE_OBJECTS)
-    async def test_gen_object_async_multiple_using_llm_preset(self, llm_preset_id: str, case_tuples: List[Tuple[str, BaseModel]]):
+    async def test_gen_object_async_multiple_using_llm_preset(self, llm_preset_id: str, case_tuples: list[tuple[str, BaseModel]]):
         llm_worker, llm_job = get_async_worker_and_job(llm_preset_id=llm_preset_id, user_text=case_tuples[0][0])
         if not llm_worker.is_gen_object_supported:
             pytest.skip(f"'{llm_worker.desc}' does not support object generation")
-        tasks: List[asyncio.Task[BaseModel]] = []
+        tasks: list[asyncio.Task[BaseModel]] = []
         for case_tuple in case_tuples:
             user_text, expected_instance = case_tuple
             expected_class = expected_instance.__class__

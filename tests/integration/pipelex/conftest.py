@@ -1,8 +1,6 @@
-from typing import Optional
 
 import pytest
 
-from pipelex.cogt.imgg.imgg_handle import ImggHandle
 from pipelex.cogt.llm.llm_job_components import LLMJobParams
 from pipelex.plugins.plugin_sdk_registry import Plugin
 
@@ -12,14 +10,13 @@ from pipelex.plugins.plugin_sdk_registry import Plugin
         # "llm_for_testing_gen_text",
         # "llm_for_testing_gen_object",
         "llm_for_creative_writing",
-    ]
+    ],
 )
 def llm_preset_id(request: pytest.FixtureRequest) -> str:
     assert isinstance(request.param, str)
     return request.param
 
 
-# TODO: make it efficient to also test multiple platforms like openai/azure and mistral/anthropic/bedrock
 @pytest.fixture(
     params=[
         # "o1",
@@ -30,24 +27,16 @@ def llm_preset_id(request: pytest.FixtureRequest) -> str:
         # "o3-mini",
         # "gpt-5-mini", # TODO: fix this
         # "gpt-5-nano", # TODO: fix this
-        # "best-gpt",
         # "claude-3-haiku",
         # "claude-3-5-sonnet",
         # "claude-3-7-sonnet",
-        # "best-claude",
         # "mistral-large",
         # "ministral-3b",
         # "ministral-8b",
-        "mistral-medium",
-        "mistral-medium-2508",
+        # "mistral-medium",
+        # "mistral-medium-2508",
         # "pixtral-12b",
         # "pixtral-large",
-        # "gemini-1-5-pro",
-        # "gemini-1-5-flash",
-        # "gemini-2-flash",
-        # "gemini-2-pro",
-        # "gemini-2-5-flash",
-        # "gemini-2-5-pro",
         # "bedrock-mistral-large",
         # "bedrock-claude-3-7-sonnet",
         # "bedrock-meta-llama-3-3-70b-instruct",
@@ -57,23 +46,23 @@ def llm_preset_id(request: pytest.FixtureRequest) -> str:
         # "pipelex/claude-3.7-sonnet",
         # "pipelex/gemini-2.0-flash-vertex",
         # "pipelex/gemini-2.0-flash",
-        # "best-claude",
         # "llm_to_engineer",
         # "gpt-5-nano",
         # "gpt-4o-mini",
         # "gpt-5-mini",
         # "gpt-5-chat",
-        # "claude-4-sonnet",
+        "claude-4-sonnet",
         # "claude-4.1-opus",
         # "claude-3.5-sonnet",
         # "claude-3.5-sonnet-v2"
         # "claude-3.7-sonnet",
+        # "grok-3",
+        # "grok-3-mini",
+        # "base-claude",
         # "gemini-2.5-flash-lite",
         # "gemini-2.5-flash",
         # "gemini-2.5-pro",
-        # "grok-3",
-        # "grok-3-mini",
-    ]
+    ],
 )
 def llm_handle(request: pytest.FixtureRequest) -> str:
     assert isinstance(request.param, str)
@@ -99,10 +88,13 @@ def llm_handle(request: pytest.FixtureRequest) -> str:
         # "gemini-2.5-pro",
         # "gemini-2.5-flash",
         # "mistral-small3.1",
-        "mistral-medium",
-        "mistral-medium-2508",
+        # "mistral-medium",
+        # "mistral-medium-2508",
+        "gemini-2.5-flash-lite",
+        # "gemini-2.5-flash",
+        # "gemini-2.5-pro",
         # "qwen3:8b",
-    ]
+    ],
 )
 def llm_handle_for_vision(request: pytest.FixtureRequest) -> str:
     assert isinstance(request.param, str)
@@ -113,7 +105,7 @@ def llm_handle_for_vision(request: pytest.FixtureRequest) -> str:
     params=[
         Plugin(sdk="openai", backend="openai"),
         Plugin(sdk="azure_openai", backend="azure_openai"),
-    ]
+    ],
 )
 def plugin_for_openai(request: pytest.FixtureRequest) -> Plugin:
     assert isinstance(request.param, Plugin)
@@ -124,7 +116,7 @@ def plugin_for_openai(request: pytest.FixtureRequest) -> Plugin:
     params=[
         Plugin(sdk="anthropic", backend="anthropic"),
         Plugin(sdk="bedrock_anthropic", backend="bedrock_anthropic"),
-    ]
+    ],
 )
 def plugin_for_anthropic(request: pytest.FixtureRequest) -> Plugin:
     assert isinstance(request.param, Plugin)
@@ -135,9 +127,9 @@ def plugin_for_anthropic(request: pytest.FixtureRequest) -> Plugin:
     params=[
         # None,
         "https://inference.pipelex.com/v1",
-    ]
+    ],
 )
-def openai_endpoint(request: pytest.FixtureRequest) -> Optional[str]:
+def openai_endpoint(request: pytest.FixtureRequest) -> str | None:
     assert isinstance(request.param, str) or request.param is None
     return request.param
 
@@ -183,7 +175,7 @@ def openai_endpoint(request: pytest.FixtureRequest) -> Optional[str]:
         # "pipelex/gpt-4o-mini",
         # "pipelex/claude-3.7-sonnet",
         # "vertex_ai/gemini-2.0-flash",
-    ]
+    ],
 )
 def llm_id(request: pytest.FixtureRequest) -> str:
     assert isinstance(request.param, str)
@@ -197,7 +189,7 @@ def llm_id(request: pytest.FixtureRequest) -> str:
             max_tokens=None,
             seed=None,
         ),
-    ]
+    ],
 )
 def llm_job_params(request: pytest.FixtureRequest) -> LLMJobParams:
     assert isinstance(request.param, LLMJobParams)
@@ -206,15 +198,15 @@ def llm_job_params(request: pytest.FixtureRequest) -> LLMJobParams:
 
 @pytest.fixture(
     params=[
-        # ImggHandle.FLUX_1_PRO_LEGACY,
-        # ImggHandle.FLUX_1_1_PRO,
-        # ImggHandle.FLUX_1_1_ULTRA,
-        ImggHandle.SDXL_LIGHTNING,
-        # ImggHandle.OPENAI_GPT_IMAGE_1,
-    ]
+        # "flux-pro",
+        "flux-pro/v1.1",
+        # "flux-pro/v1.1-ultra",
+        "fast-lightning-sdxl",
+        "gpt-image-1",
+    ],
 )
-def imgg_handle(request: pytest.FixtureRequest) -> ImggHandle:
-    assert isinstance(request.param, ImggHandle)
+def img_gen_handle(request: pytest.FixtureRequest) -> str:
+    assert isinstance(request.param, str)
     return request.param
 
 
@@ -222,7 +214,7 @@ def imgg_handle(request: pytest.FixtureRequest) -> ImggHandle:
     params=[
         "pypdfium2-extract-text",
         "mistral-ocr",
-    ]
+    ],
 )
 def ocr_handle(request: pytest.FixtureRequest) -> str:
     assert isinstance(request.param, str)
@@ -232,8 +224,28 @@ def ocr_handle(request: pytest.FixtureRequest) -> str:
 @pytest.fixture(
     params=[
         "mistral-ocr",
-    ]
+    ],
 )
 def ocr_handle_from_image(request: pytest.FixtureRequest) -> str:
+    assert isinstance(request.param, str)
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        "base_ocr_mistral",
+    ],
+)
+def ocr_choice_for_pdf(request: pytest.FixtureRequest) -> str:
+    assert isinstance(request.param, str)
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        "base_ocr_mistral",
+    ],
+)
+def ocr_choice_for_image(request: pytest.FixtureRequest) -> str:
     assert isinstance(request.param, str)
     return request.param

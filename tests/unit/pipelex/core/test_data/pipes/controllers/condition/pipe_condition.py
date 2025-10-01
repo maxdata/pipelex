@@ -1,5 +1,3 @@
-"""PipeCondition test cases."""
-
 from pipelex.core.bundles.pipelex_bundle_blueprint import PipelexBundleBlueprint
 from pipelex.pipe_controllers.condition.pipe_condition_blueprint import PipeConditionBlueprint, PipeConditionPipeMapBlueprint
 
@@ -12,8 +10,8 @@ definition = "Domain with conditional pipe"
 type = "PipeCondition"
 definition = "Process based on condition"
 output = "ProcessedData"
-pipe_map = { small = "process_small", large = "process_large" }
 expression = "input_data.category"
+pipe_map = { small = "process_small", large = "process_large" }
 """,
     PipelexBundleBlueprint(
         domain="test_pipes",
@@ -28,7 +26,7 @@ expression = "input_data.category"
                     {
                         "small": "process_small",
                         "large": "process_large",
-                    }
+                    },
                 ),
             ),
         },

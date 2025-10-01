@@ -1,5 +1,4 @@
 import asyncio
-from typing import List, Tuple
 
 import pytest
 
@@ -10,12 +9,12 @@ from pipelex.cogt.llm.llm_job_factory import LLMJobFactory
 from pipelex.cogt.llm.llm_worker_abstract import LLMWorkerAbstract
 from pipelex.cogt.llm.llm_worker_internal_abstract import LLMWorkerInternalAbstract
 from pipelex.cogt.model_backends.model_constraints import ModelConstraints
-from pipelex.hub import get_llm_worker, get_models_manager, get_report_delegate
+from pipelex.hub import get_llm_worker, get_model_deck
 from tests.integration.pipelex.cogt.test_data import LLMTestCases
 
 
-def get_worker_and_job(llm_preset_id: str, user_text: str) -> Tuple[LLMWorkerAbstract, LLMJob]:
-    llm_setting = get_models_manager().get_model_deck().get_llm_setting(llm_setting_or_preset_id=llm_preset_id)
+def get_worker_and_job(llm_preset_id: str, user_text: str) -> tuple[LLMWorkerAbstract, LLMJob]:
+    llm_setting = get_model_deck().get_llm_setting(llm_choice=llm_preset_id)
     pretty_print(llm_setting, title=llm_preset_id)
     pretty_print(user_text)
     llm_worker = get_llm_worker(llm_handle=llm_setting.llm_handle)
@@ -33,7 +32,7 @@ def get_worker_and_job(llm_preset_id: str, user_text: str) -> Tuple[LLMWorkerAbs
 class TestLLMGenText:
     @pytest.mark.parametrize("topic, prompt_text", LLMTestCases.SINGLE_TEXT)
     async def test_gen_text_using_handle(self, llm_job_params: LLMJobParams, llm_handle: str, topic: str, prompt_text: str):
-        pretty_print(prompt_text, title=topic)
+        pretty_print(prompt_text, title=f"Generating text about '{topic}' using '{llm_handle}'")
         llm_worker = get_llm_worker(llm_handle=llm_handle)
         llm_job = LLMJobFactory.make_llm_job_from_prompt_contents(
             user_text=prompt_text,
@@ -42,7 +41,6 @@ class TestLLMGenText:
         generated_text = await llm_worker.gen_text(llm_job=llm_job)
         assert generated_text
         pretty_print(generated_text)
-        get_report_delegate().generate_report()
 
     @pytest.mark.parametrize("topic, prompt_text", LLMTestCases.SINGLE_TEXT)
     async def test_gen_text_using_llm_preset(self, llm_preset_id: str, topic: str, prompt_text: str):
@@ -57,7 +55,7 @@ class TestLLMGenText:
         job_params_base = llm_job.job_params
         max_tokens = 30
         temperature = 0.1
-        tasks: List[asyncio.Task[str]] = []
+        tasks: list[asyncio.Task[str]] = []
         for _ in range(4):
             max_tokens += 50
             temperature += 0.2

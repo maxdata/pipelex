@@ -7,7 +7,7 @@ import pytest
 from pipelex import log
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
-from pipelex.core.pipes.pipe_input_spec import TypedNamedInputRequirement
+from pipelex.core.pipes.pipe_input import TypedNamedInputRequirement
 from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.core.stuffs.stuff_factory import StuffFactory
@@ -36,7 +36,7 @@ async def test_review_analysis_sequence_with_batching(pipe_run_mode: PipeRunMode
                     ),
                     structure_class=Document,
                 ),
-            ]
+            ],
         )
         pipe = get_required_pipe(pipe_code="analyze_reviews_sequence")
         pipe_output = await pipe.run_pipe(
@@ -82,7 +82,7 @@ async def test_review_analysis_sequence_with_batching(pipe_run_mode: PipeRunMode
     # Verify final product rating
     stuff = pipe_output.working_memory.get_stuff("product_rating")
     # Use cast to tell the type system what we know about the object
-    product_rating_stuff = cast(ProductRating, stuff.content)
+    product_rating_stuff = cast("ProductRating", stuff.content)
     assert product_rating_stuff is not None
 
     # Check that the ProductRating has meaningful values

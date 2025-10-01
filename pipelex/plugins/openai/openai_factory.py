@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import openai
 from openai.types.chat import (
     ChatCompletionContentPartImageParam,
@@ -14,10 +12,9 @@ from openai.types.completion_usage import CompletionUsage
 
 from pipelex import log
 from pipelex.cogt.exceptions import CogtError, LLMPromptParameterError
-from pipelex.cogt.image.prompt_image import PromptImage, PromptImageBytes, PromptImagePath, PromptImageUrl
+from pipelex.cogt.image.prompt_image import PromptImage, PromptImageBase64, PromptImagePath, PromptImageUrl
 from pipelex.cogt.llm.llm_job import LLMJob
 from pipelex.cogt.model_backends.backend import InferenceBackend
-from pipelex.cogt.model_backends.model_spec import InferenceModelSpec
 from pipelex.cogt.usage.token_category import NbTokensByCategoryDict, TokenCategory
 from pipelex.plugins.plugin_sdk_registry import Plugin
 from pipelex.tools.misc.base_64_utils import load_binary_as_base64
@@ -46,15 +43,17 @@ class OpenAIFactory:
     ) -> openai.AsyncClient:
         try:
             sdk_variant = OpenAISdkVariant(plugin.sdk)
-        except ValueError:
-            raise OpenAIFactoryError(f"Plugin '{plugin}' is not supported by OpenAIFactory")
+        except ValueError as exc:
+            msg = f"Plugin '{plugin}' is not supported by OpenAIFactory"
+            raise OpenAIFactoryError(msg) from exc
 
         the_client: openai.AsyncOpenAI
         match sdk_variant:
             case OpenAISdkVariant.AZURE_OPENAI:
                 log.debug(f"Making AsyncOpenAI client with endpoint: {backend.endpoint}")
                 if backend.endpoint is None:
-                    raise OpenAIFactoryError("Azure OpenAI endpoint is not set")
+                    msg = "Azure OpenAI endpoint is not set"
+                    raise OpenAIFactoryError(msg)
                 the_client = openai.AsyncAzureOpenAI(
                     azure_endpoint=backend.endpoint,
                     api_key=backend.api_key,
@@ -74,15 +73,12 @@ class OpenAIFactory:
     def make_simple_messages(
         cls,
         llm_job: LLMJob,
-        inference_model: InferenceModelSpec,
-    ) -> List[ChatCompletionMessageParam]:
-        """
-        Makes a list of messages with a system message (if provided) and followed by a user message.
-        """
+    ) -> list[ChatCompletionMessageParam]:
+        """Makes a list of messages with a system message (if provided) and followed by a user message."""
         llm_prompt = llm_job.llm_prompt
-        messages: List[ChatCompletionMessageParam] = []
-        user_contents: List[ChatCompletionContentPartParam] = []
-        if inference_model.is_system_prompt_supported and (system_content := llm_prompt.system_text):
+        messages: list[ChatCompletionMessageParam] = []
+        user_contents: list[ChatCompletionContentPartParam] = []
+        if system_content := llm_prompt.system_text:
             messages.append(ChatCompletionSystemMessageParam(role="system", content=system_content))
         # TODO: confirm that we can prompt without user_contents, for instance if we have only images,
         # otherwise consider using a default user_content
@@ -103,20 +99,21 @@ class OpenAIFactory:
         if isinstance(prompt_image, PromptImageUrl):
             url = prompt_image.url
             openai_image_url = ImageURL(url=url, detail="high")
-        elif isinstance(prompt_image, PromptImageBytes):
+        elif isinstance(prompt_image, PromptImageBase64):
             # TODO: manage image type
             url_with_bytes: str = f"data:image/jpeg;base64,{prompt_image.base_64.decode('utf-8')}"
             openai_image_url = ImageURL(url=url_with_bytes, detail="high")
         elif isinstance(prompt_image, PromptImagePath):
             image_bytes = load_binary_as_base64(path=prompt_image.file_path)
-            return cls.make_openai_image_url(PromptImageBytes(base_64=image_bytes))
+            return cls.make_openai_image_url(PromptImageBase64(base_64=image_bytes))
         else:
-            raise LLMPromptParameterError(f"prompt_image of type {type(prompt_image)} is not supported")
+            msg = f"prompt_image of type {type(prompt_image)} is not supported"
+            raise LLMPromptParameterError(msg)
         return openai_image_url
 
     @staticmethod
     def make_openai_error_info(exception: Exception) -> str:
-        error_mapping: Dict[type, str] = {
+        error_mapping: dict[type, str] = {
             openai.BadRequestError: "OpenAI API request was invalid.",
             openai.InternalServerError: "OpenAI is having trouble. Please try again later.",
             openai.RateLimitError: "OpenAI API request exceeded rate limit.",
@@ -127,8 +124,7 @@ class OpenAIFactory:
             openai.APIConnectionError: "OpenAI API request failed to connect.",
             openai.APIError: "OpenAI API returned an API Error.",
         }
-        error_info = error_mapping.get(type(exception), "An unexpected error occurred with the OpenAI API.")
-        return error_info
+        return error_mapping.get(type(exception), "An unexpected error occurred with the OpenAI API.")
 
     # reference:
     # https://help.openai.com/en/articles/5247780-using-logit-bias-to-define-token-probability

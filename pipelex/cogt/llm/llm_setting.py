@@ -1,42 +1,26 @@
-from typing import Literal, Optional, Set, Union
+from typing import Literal, Union
 
-from pydantic import Field, field_validator, model_validator
-from typing_extensions import Self
+from pydantic import Field, field_validator
 
-from pipelex.cogt.exceptions import LLMSettingsValidationError
 from pipelex.cogt.llm.llm_job_components import LLMJobParams
 from pipelex.cogt.model_backends.prompting_target import PromptingTarget
 from pipelex.tools.config.config_model import ConfigModel
-from pipelex.tools.exceptions import ConfigValidationError
+from pipelex.types import Self
 
 
 class LLMSetting(ConfigModel):
     llm_handle: str
     temperature: float = Field(..., ge=0, le=1)
-    max_tokens: Optional[int] = None
-    prompting_target: Optional[PromptingTarget] = Field(default=None, strict=False)
+    max_tokens: int | None = None
+    prompting_target: PromptingTarget | None = Field(default=None, strict=False)
 
     @field_validator("max_tokens", mode="before")
     @classmethod
-    def validate_max_tokens(cls, value: Union[int, Literal["auto"], None]) -> Optional[int]:
-        if value is None:
+    def validate_max_tokens(cls, value: int | Literal["auto"] | None) -> int | None:
+        if value is None or (isinstance(value, str) and value == "auto"):
             return None
-        elif isinstance(value, str) and value == "auto":
-            return None
-        elif isinstance(value, int):  # pyright: ignore[reportUnnecessaryIsInstance]
+        if isinstance(value, int):  # pyright: ignore[reportUnnecessaryIsInstance]
             return value
-        else:
-            raise ConfigValidationError(f'Invalid max_tokens shoubd be an int or "auto" but it is a {type(value)}: {value}')
-
-    @model_validator(mode="after")
-    def validate_temperature(self) -> Self:
-        if self.llm_handle.startswith("gemini") and self.temperature > 1:
-            error_msg = (
-                f"Gemini LLMs such as '{self.llm_handle}' support temperatures up to 2 but we normalize between 0 and 1, "
-                f"so you can't set a temperature of {self.temperature}"
-            )
-            raise LLMSettingsValidationError(error_msg)
-        return self
 
     def make_llm_job_params(self) -> LLMJobParams:
         return LLMJobParams(
@@ -52,35 +36,26 @@ class LLMSetting(ConfigModel):
         )
 
 
-LLMSettingOrPresetId = Union[LLMSetting, str]
+LLMChoice = Union[LLMSetting, str]
 
 
 class LLMSettingChoicesDefaults(ConfigModel):
-    for_text: LLMSettingOrPresetId
-    for_object: LLMSettingOrPresetId
+    for_text: LLMChoice
+    for_object: LLMChoice
 
 
 class LLMSettingChoices(ConfigModel):
-    for_text: Optional[LLMSettingOrPresetId]
-    for_object: Optional[LLMSettingOrPresetId]
+    for_text: LLMChoice | None
+    for_object: LLMChoice | None
 
-    def list_used_presets(self) -> Set[str]:
-        return set(
-            [
-                setting
-                for setting in [
-                    self.for_text,
-                    self.for_object,
-                ]
-                if isinstance(setting, str)
-            ]
-        )
+    def list_choices(self) -> set[str]:
+        return {c for c in (self.for_text, self.for_object) if isinstance(c, str)}
 
     @classmethod
     def make_completed_with_defaults(
         cls,
-        for_text: Optional[LLMSettingOrPresetId] = None,
-        for_object: Optional[LLMSettingOrPresetId] = None,
+        for_text: LLMChoice | None = None,
+        for_object: LLMChoice | None = None,
     ) -> Self:
         return cls(
             for_text=for_text,
