@@ -1,30 +1,28 @@
 from typing import ClassVar
 
 from pipelex.core.pipes.pipe_input_blueprint import InputRequirementBlueprint
-
-from pipelex.libraries.pipelines.builder.pipe.pipe_condition_spec import  PipeConditionSpec
+from pipelex.libraries.pipelines.builder.pipe.pipe_condition_spec import PipeConditionSpec
 from pipelex.pipe_controllers.condition.pipe_condition_blueprint import PipeConditionBlueprint, PipeConditionPipeMapBlueprint
 
 
 class PipeConditionTestCases:
-
     CONDITION_WITH_TEMPLATE = (
         "condition_with_template",
         PipeConditionSpec(
             the_pipe_code="template_condition",
-            definition="Conditional with template",
+            description="Conditional with template",
             inputs={"item": "Item"},
             output="ProcessedItem",
             jinja2_expression_template="{{ item.category }}",
             pipe_map={
-                    "A": "process_a",
-                    "B": "process_b",
-                    "C": "process_c",
-                },
+                "A": "process_a",
+                "B": "process_b",
+                "C": "process_c",
+            },
             default_pipe_code="process_default",
         ),
         PipeConditionBlueprint(
-            definition="Conditional with template",
+            description="Conditional with template",
             inputs={"item": InputRequirementBlueprint(concept="Item")},
             output="ProcessedItem",
             type="PipeCondition",

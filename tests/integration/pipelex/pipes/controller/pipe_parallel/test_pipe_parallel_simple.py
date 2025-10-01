@@ -22,13 +22,11 @@ from pipelex.pipeline.job_metadata import JobMetadata
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestPipeParallelSimple:
-    """Simple integration test for PipeParallel controller."""
-
     async def test_parallel_text_analysis(self, request: FixtureRequest, pipe_run_mode: PipeRunMode):
         """Test PipeParallel running three text analysis pipes in parallel."""
         # Create PipeParallel instance - pipes are loaded from PLX files
         pipe_parallel_blueprint = PipeParallelBlueprint(
-            definition="Parallel text analysis pipeline",
+            description="Parallel text analysis pipeline",
             inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             parallels=[
@@ -78,7 +76,7 @@ class TestPipeParallelSimple:
 
         # Actually run the PipeParallel pipe
         pipe_output = await pipe_parallel.run_pipe(
-            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # type: ignore
+            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             working_memory=working_memory,
             output_name="parallel_results",
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
@@ -144,7 +142,7 @@ class TestPipeParallelSimple:
         """Test PipeParallel with shorter text to verify consistent behavior."""
         # Create PipeParallel instance
         pipe_parallel_blueprint = PipeParallelBlueprint(
-            definition="Parallel text analysis pipeline for short text",
+            description="Parallel text analysis pipeline for short text",
             inputs={"input_text": InputRequirementBlueprint(concept=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}")},
             output=f"{SpecialDomain.NATIVE}.{NativeConceptEnum.TEXT}",
             parallels=[
@@ -172,7 +170,7 @@ class TestPipeParallelSimple:
 
         # Actually run the PipeParallel pipe
         pipe_output = await pipe_parallel.run_pipe(
-            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # type: ignore
+            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             working_memory=working_memory,
             output_name="parallel_results",
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),

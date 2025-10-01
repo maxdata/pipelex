@@ -1,4 +1,4 @@
-"""Simple integration test for PipeBatch controller."""
+from __future__ import annotations
 
 from typing import cast
 
@@ -33,20 +33,20 @@ class TestPipeBatchSimple:
         concept_1 = ConceptFactory.make_from_blueprint(
             concept_code="TestConcept1",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept1"],
         )
         concept_2 = ConceptFactory.make_from_blueprint(
             concept_code="TestConcept2",
             domain=domain,
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["TestConcept2"],
         )
         concept_library = get_concept_provider()
         concept_library.add_concepts([concept_1, concept_2])
 
         pipe_batch_blueprint = PipeBatchBlueprint(
-            definition="Simple batch processing test",
+            description="Simple batch processing test",
             branch_pipe_code="uppercase_transformer",  # This exists in the PLX file
             inputs={
                 "text_list": InputRequirementBlueprint(concept=concept_1.concept_string),
@@ -90,16 +90,12 @@ class TestPipeBatchSimple:
 
         # Verify the working memory has the correct structure
         assert working_memory is not None
-        text_list = working_memory.get_stuff("text_list")
+        text_list = working_memory.get_stuff_as_list("text_list", item_type=TextContent)
         assert text_list is not None
-        assert isinstance(text_list.content, ListContent)
-
-        # Cast the content to the proper type for type checking
-        list_content = cast("ListContent[TextContent]", text_list.content)  # type: ignore
-        assert len(list_content.items) == 3
+        assert len(text_list.items) == 3
 
         # Verify each item in the list
-        for i, item in enumerate(list_content.items):
+        for i, item in enumerate(text_list.items):
             assert isinstance(item, TextContent)
             assert item.text == ["hello", "world", "test"][i]
 
@@ -108,8 +104,8 @@ class TestPipeBatchSimple:
         pretty_print(working_memory, title="Initial working memory with text list")
 
         # Actually run the PipeBatch pipe
-        pipe_output = await pipe_batch._run_controller_pipe(  # pyright: ignore[reportPrivateUsage]
-            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # type: ignore
+        pipe_output = await pipe_batch.run_pipe(  # pyright: ignore[reportPrivateUsage]
+            job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             working_memory=working_memory,
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
             output_name="batch_result",
@@ -138,14 +134,12 @@ class TestPipeBatchSimple:
         final_working_memory = pipe_output.working_memory
 
         # Original input should still be there
-        original_list = final_working_memory.get_stuff("text_list")
+        original_list = final_working_memory.get_stuff_as_list("text_list", item_type=TextContent)
         assert original_list is not None
-        assert isinstance(original_list.content, ListContent)
-        original_items = cast("ListContent[TextContent]", original_list.content)  # type: ignore
-        assert len(original_items.items) == 3
-        assert original_items.items[0].text == "hello"
-        assert original_items.items[1].text == "world"
-        assert original_items.items[2].text == "test"
+        assert len(original_list.items) == 3
+        assert original_list.items[0].text == "hello"
+        assert original_list.items[1].text == "world"
+        assert original_list.items[2].text == "test"
 
         # New result should be added
         batch_result = final_working_memory.get_stuff("batch_result")
@@ -155,7 +149,7 @@ class TestPipeBatchSimple:
 
         # Verify the batch result content matches exactly
         assert isinstance(batch_result.content, ListContent)
-        result_list = cast("ListContent[TextContent]", batch_result.content)  # type: ignore
+        result_list = batch_result.as_list_of_fixed_content_type(item_type=TextContent)
         assert len(result_list.items) == 3
         if pipe_run_mode != PipeRunMode.DRY:
             assert result_list.items[0].text == "UPPER: HELLO"
