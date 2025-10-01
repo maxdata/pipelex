@@ -90,16 +90,12 @@ class TestPipeBatchSimple:
 
         # Verify the working memory has the correct structure
         assert working_memory is not None
-        text_list = working_memory.get_stuff("text_list")
+        text_list = working_memory.get_stuff_as_list("text_list", item_type=TextContent)
         assert text_list is not None
-        assert isinstance(text_list.content, ListContent)
-
-        # Cast the content to the proper type for type checking
-        list_content = cast("ListContent[TextContent]", text_list.content)
-        assert len(list_content.items) == 3
+        assert len(text_list.items) == 3
 
         # Verify each item in the list
-        for i, item in enumerate(list_content.items):
+        for i, item in enumerate(text_list.items):
             assert isinstance(item, TextContent)
             assert item.text == ["hello", "world", "test"][i]
 
@@ -138,14 +134,12 @@ class TestPipeBatchSimple:
         final_working_memory = pipe_output.working_memory
 
         # Original input should still be there
-        original_list = final_working_memory.get_stuff("text_list")
+        original_list = final_working_memory.get_stuff_as_list("text_list", item_type=TextContent)
         assert original_list is not None
-        assert isinstance(original_list.content, ListContent)
-        original_items = cast("ListContent[TextContent]", original_list.content)
-        assert len(original_items.items) == 3
-        assert original_items.items[0].text == "hello"
-        assert original_items.items[1].text == "world"
-        assert original_items.items[2].text == "test"
+        assert len(original_list.items) == 3
+        assert original_list.items[0].text == "hello"
+        assert original_list.items[1].text == "world"
+        assert original_list.items[2].text == "test"
 
         # New result should be added
         batch_result = final_working_memory.get_stuff("batch_result")
@@ -155,7 +149,7 @@ class TestPipeBatchSimple:
 
         # Verify the batch result content matches exactly
         assert isinstance(batch_result.content, ListContent)
-        result_list = cast("ListContent[TextContent]", batch_result.content)
+        result_list = batch_result.as_list_of_fixed_content_type(item_type=TextContent)
         assert len(result_list.items) == 3
         if pipe_run_mode != PipeRunMode.DRY:
             assert result_list.items[0].text == "UPPER: HELLO"
