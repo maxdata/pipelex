@@ -6,7 +6,7 @@ This document provides guidance for migrating between different versions of Pipe
 
 ### Breaking Change
 
-We changed the syntax for defining concepts in PLX library files. The key name for concept definitions has changed from `Concept` to `definition`.
+We changed the syntax for defining concepts in PLX library files. The key name for concept definitions has changed from `Concept` to `description`.
 
 ### What Changed
 
@@ -20,7 +20,7 @@ refines = "Text"
 **New syntax:**
 ```plx
 [concept.MyConceptName]
-definition = "Description of the concept"
+description = "Description of the concept"
 refines = "Text"
 ```
 
@@ -28,7 +28,7 @@ refines = "Text"
 
 This change improves consistency in our PLX schema by:
 
-- Using more descriptive field names (`definition` instead of `Concept`)
+- Using more descriptive field names (`description` instead of `Concept`)
 - Aligning with the internal `ConceptBlueprint` data structure
 - Making the PLX files more self-documenting and intuitive
 
@@ -49,7 +49,7 @@ pipelex migrate run
 The migration command will:
 
 - Find all `.toml` files in your configured pipelines directory
-- Replace `Concept =` with `definition =` in concept definitions
+- Replace `Concept =` with `description =` in concept definitions
 - Preserve all other formatting and comments
 - Create backups of modified files (with `.backup` extension)
 
@@ -58,7 +58,7 @@ The migration command will:
 If you prefer to migrate manually or need to handle special cases:
 
 1. **Locate your PLX files**: Find all pipeline library files (typically in your configured pipelines directory)
-2. **Update concept definitions**: Change `Concept =` to `definition =` in all `[concept.ConceptName]` sections
+2. **Update concept definitions**: Change `Concept =` to `description =` in all `[concept.ConceptName]` sections
 3. **Validate syntax**: Run `pipelex validate all -c path/to/your/pipelex/config/folder -c ./pipelex_libraries` to ensure your files are correctly formatted
 
 ### Examples
@@ -75,7 +75,7 @@ refines = "Text"
 **After:**
 ```plx
 [concept.Article]
-definition = "A written composition on a specific topic"
+description = "A written composition on a specific topic"
 refines = "Text"
 ```
 
@@ -92,7 +92,7 @@ refines = "Image"
 **After:**
 ```plx
 [concept.Photo]
-definition = "Photo"
+description = "Photo"
 structure = "ImageContent"
 refines = "Image"
 ```
@@ -113,7 +113,7 @@ pipelex validate all -c path/to/your/pipelex/config/folder
 
 **Error: "ConceptBlueprint validation failed"**
 
-- Check that all `Concept =` entries have been changed to `definition =`
+- Check that all `Concept =` entries have been changed to `description =`
 - Ensure no typos were introduced during migration
 - Verify PLX syntax is still valid
 
@@ -129,13 +129,13 @@ If you need to rollback the migration:
 
 1. Stop using the new version of Pipelex
 2. Restore from the `.backup` files created during migration
-3. Or manually change `definition =` back to `Concept =`
+3. Or manually change `description =` back to `Concept =`
 
 ## Pipes Migration
 
 ### Breaking Change
 
-We changed the syntax for defining pipes in PLX library files. The pipe definition format has been restructured to use explicit `type` and `definition` fields instead of the implicit `PipeClassName = "description"` format.
+We changed the syntax for defining pipes in PLX library files. The pipe definition format has been restructured to use explicit `type` and `description` fields instead of the implicit `PipeClassName = "description"` format.
 
 ### What Changed
 
@@ -149,7 +149,7 @@ SomePipeClass = "Description of what this pipe does"
 ```plx
 [pipe.my_pipe_name]
 type = "SomePipeClass"
-definition = "Description of what this pipe does"
+description = "Description of what this pipe does"
 ```
 
 ### Why This Change
@@ -157,7 +157,7 @@ definition = "Description of what this pipe does"
 This change improves consistency and clarity by:
 
 - Making the pipe class type explicit and separate from its description
-- Aligning pipe definitions with concept definitions (both use `definition`)
+- Aligning pipe definitions with concept definitions (both use `description`)
 - Improving readability and maintainability of PLX files
 - Making it easier to parse and validate pipe configurations
 
@@ -178,7 +178,7 @@ pipelex migrate run
 The migration command will:
 
 - Find all `.toml` files in your configured pipelines directory
-- Convert `PipeClassName = "description"` to `type = "PipeClassName"` and `definition = "description"`
+- Convert `PipeClassName = "description"` to `type = "PipeClassName"` and `description = "description"`
 - Preserve all other formatting and comments
 - Create backups of modified files (with `.backup` extension)
 
@@ -191,7 +191,7 @@ If you prefer to migrate manually:
    - Find all `[pipe.pipe_name]` sections
    - Replace `PipeClassName = "description"` with:
      - `type = "PipeClassName"`
-     - `definition = "description"`
+     - `description = "description"`
 3. **Validate syntax**: Run `pipelex validate all -c path/to/your/pipelex/config/folder -c ./pipelex_libraries` to ensure your files are correctly formatted
 
 ### Examples
@@ -208,7 +208,7 @@ TextSummarizer = "Summarize the given article into key points"
 ```plx
 [pipe.summarize_article]
 type = "TextSummarizer"
-definition = "Summarize the given article into key points"
+description = "Summarize the given article into key points"
 ```
 
 #### Pipe with Additional Configuration
@@ -225,7 +225,7 @@ threshold = 0.8
 ```plx
 [pipe.analyze_sentiment]
 type = "SentimentAnalyzer"
-definition = "Analyze the sentiment of the input text"
+description = "Analyze the sentiment of the input text"
 model = "bert-base-uncased"
 threshold = 0.8
 ```
@@ -243,7 +243,7 @@ SomePipeClass = "Description"
 by this:
 ```
 type = "SomePipeClass"
-definition = "Description"
+description = "Description"
 ```
 Old syntax will be removed in v0.3.0.
 ```

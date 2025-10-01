@@ -18,7 +18,7 @@ def do_migrate(
     dry_run: bool = False,
     backups: bool = True,
 ) -> None:
-    """Migrate TOML files to new syntax (Concept = -> definition = and PipeClassName = -> type/definition).
+    """Migrate TOML files to new syntax (Concept = -> description = and PipeClassName = -> type/description).
 
     The path can be:
     - A Pipelex libraries folder (we'll use its `pipelines` subfolder)
