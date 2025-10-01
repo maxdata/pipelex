@@ -221,7 +221,7 @@ For example, a pipe that processes `Document` can also process `Contract` or `Em
 ```plx
 [pipe.extract_key_points]
 type = "PipeLLM"
-description ="Extract main points from any document"
+description = "Extract main points from any document"
 inputs = { doc = "Document" }  # Can accept Document, Contract, or EmploymentContract
 output = "KeyPoints"
 ```
@@ -308,21 +308,21 @@ Native concepts can be used directly in your pipeline definitions without any ad
 ```plx
 [pipe.analyze_document]
 type = "PipeLLM"
-description ="Analyze a PDF document"
+description = "Analyze a PDF document"
 inputs = { document = "PDF" }
 output = "Text"
 prompt_template = "Analyze this document and provide a summary"
 
 [pipe.process_image]
 type = "PipeLLM"
-description ="Describe an image"
+description = "Describe an image"
 inputs = { photo = "Image" }
 output = "Text"
 prompt_template = "Describe what you see in this image"
 
 [pipe.extract_from_page]
 type = "PipeLLM"
-description ="Extract information from a document page"
+description = "Extract information from a document page"
 inputs = { page_content = "Page" }
 output = "ExtractedInfo"
 prompt_template = "Extract key information from this page content"
@@ -334,15 +334,15 @@ You can create more specific concepts by refining native ones:
 
 ```plx
 [concept.Invoice]
-description ="A commercial document issued by a seller to a buyer"
+description = "A commercial document issued by a seller to a buyer"
 refines = "PDF"
 
 [concept.ProductPhoto]
-description ="A photograph of a product for marketing purposes"
+description = "A photograph of a product for marketing purposes"
 refines = "Image"
 
 [concept.ContractPage]
-description ="A page from a legal contract document"
+description = "A page from a legal contract document"
 refines = "Page"
 ```
 

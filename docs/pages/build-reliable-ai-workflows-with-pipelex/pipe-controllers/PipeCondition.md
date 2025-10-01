@@ -59,7 +59,7 @@ large = "process_large"
 # Define the pipes that PipeCondition can route to
 [pipe.process_small]
 type = "PipeLLM"
-description ="Handle small category"
+description = "Handle small category"
 output = "native.Text"
 prompt_template = """
 Output this only: "small"
@@ -67,7 +67,7 @@ Output this only: "small"
 
 [pipe.process_medium]
 type = "PipeLLM"
-description ="Handle medium category"
+description = "Handle medium category"
 output = "native.Text"
 prompt_template = """
 Output this only: "medium"
@@ -75,7 +75,7 @@ Output this only: "medium"
 
 [pipe.process_large]
 type = "PipeLLM"
-description ="Handle large category"
+description = "Handle large category"
 output = "native.Text"
 prompt_template = """
 Output this only: "large"
@@ -94,7 +94,7 @@ How this works:
 ```plx
 [pipe.route_with_fallback]
 type = "PipeCondition"
-description ="Route with default handling"
+description = "Route with default handling"
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 expression = "classification.type"
@@ -106,7 +106,7 @@ receipt = "process_receipt"
 
 [pipe.process_invoice]
 type = "PipeLLM"
-description ="Process invoice documents"
+description = "Process invoice documents"
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 prompt_template = """
@@ -115,7 +115,7 @@ Process this invoice document...
 
 [pipe.process_receipt]
 type = "PipeLLM"
-description ="Process receipt documents" 
+description = "Process receipt documents" 
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 prompt_template = """
@@ -124,7 +124,7 @@ Process this receipt document...
 
 [pipe.process_unknown]
 type = "PipeLLM"
-description ="Handle unknown document types"
+description = "Handle unknown document types"
 inputs = { classification = "DocumentType" }
 output = "ProcessedDocument"
 prompt_template = """
