@@ -27,8 +27,6 @@ from tests.test_pipelines.pipe_controllers.pipe_condition.pipe_condition_complex
 @pytest.mark.llm
 @pytest.mark.asyncio(loop_scope="class")
 class TestPipeConditionComplex:
-    """Complex integration test for PipeCondition controller with multiple inputs."""
-
     async def test_technical_urgent_routing(self, request: FixtureRequest, pipe_run_mode: PipeRunMode):
         """Test technical document with urgent priority routing."""
         # Create complex input data
@@ -40,7 +38,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="DocumentRequest",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.DocumentRequest",
+                description="test_pipe_condition_complex.DocumentRequest",
                 structure_class_name="DocumentRequest",
             ),
             content=doc_request,
@@ -50,7 +48,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="UserProfile",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.UserProfile",
+                description="test_pipe_condition_complex.UserProfile",
                 structure_class_name="UserProfile",
             ),
             content=user_profile,
@@ -64,7 +62,7 @@ class TestPipeConditionComplex:
                 pipe=get_required_pipe(pipe_code="complex_document_processor"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
@@ -88,7 +86,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="DocumentRequest",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.DocumentRequest",
+                description="test_pipe_condition_complex.DocumentRequest",
                 structure_class_name="DocumentRequest",
             ),
             content=doc_request,
@@ -98,7 +96,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="UserProfile",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.UserProfile",
+                description="test_pipe_condition_complex.UserProfile",
                 structure_class_name="UserProfile",
             ),
             content=user_profile,
@@ -112,7 +110,7 @@ class TestPipeConditionComplex:
                 pipe=get_required_pipe(pipe_code="complex_document_processor"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
@@ -133,7 +131,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="DocumentRequest",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.DocumentRequest",
+                description="test_pipe_condition_complex.DocumentRequest",
                 structure_class_name="DocumentRequest",
             ),
             content=doc_request,
@@ -143,7 +141,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="UserProfile",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.UserProfile",
+                description="test_pipe_condition_complex.UserProfile",
                 structure_class_name="UserProfile",
             ),
             content=user_profile,
@@ -157,7 +155,7 @@ class TestPipeConditionComplex:
                 pipe=get_required_pipe(pipe_code="complex_document_processor"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
@@ -186,7 +184,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="DocumentRequest",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.DocumentRequest",
+                description="test_pipe_condition_complex.DocumentRequest",
                 structure_class_name="DocumentRequest",
             ),
             content=doc_request,
@@ -196,7 +194,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="UserProfile",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.UserProfile",
+                description="test_pipe_condition_complex.UserProfile",
                 structure_class_name="UserProfile",
             ),
             content=user_profile,
@@ -210,7 +208,7 @@ class TestPipeConditionComplex:
                 pipe=get_required_pipe(pipe_code="complex_document_processor"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
@@ -232,7 +230,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="DocumentRequest",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.DocumentRequest",
+                description="test_pipe_condition_complex.DocumentRequest",
                 structure_class_name="DocumentRequest",
             ),
             content=doc_request,
@@ -242,7 +240,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="UserProfile",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.UserProfile",
+                description="test_pipe_condition_complex.UserProfile",
                 structure_class_name="UserProfile",
             ),
             content=user_profile,
@@ -256,7 +254,7 @@ class TestPipeConditionComplex:
                 pipe=get_required_pipe(pipe_code="complex_document_processor"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
@@ -273,7 +271,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="DocumentRequest",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.DocumentRequest",
+                description="test_pipe_condition_complex.DocumentRequest",
                 structure_class_name="DocumentRequest",
             ),
             content=doc_request,
@@ -288,7 +286,7 @@ class TestPipeConditionComplex:
                     pipe=get_required_pipe(pipe_code="complex_document_processor"),
                     pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
                     working_memory=working_memory,
-                    job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                    job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
                 ),
             )
 
@@ -298,7 +296,7 @@ class TestPipeConditionComplex:
         assert "missing required inputs" in str(error)
 
     @pytest.mark.parametrize(
-        "doc_type,priority,user_level,department,complexity,language,expected_output_contains",
+        ("doc_type", "priority", "user_level", "department", "complexity", "language", "expected_output_contains"),
         [
             ("technical", "urgent", "beginner", "technical", "low", "english", "URGENT_TECHNICAL_PROCESSED"),
             ("technical", "normal", "expert", "technical", "high", "english", "EXPERT_TECHNICAL_PROCESSED"),
@@ -322,8 +320,8 @@ class TestPipeConditionComplex:
         language: Literal["english", "spanish", "french", "german", "chinese"],
         expected_output_contains: str,
         request: FixtureRequest,
+        pipe_run_mode: PipeRunMode,
     ):
-        """Test various routing scenarios in dry run mode."""
         doc_request = DocumentRequest(
             document_type=doc_type,
             priority=priority,
@@ -339,7 +337,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="DocumentRequest",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.DocumentRequest",
+                description="test_pipe_condition_complex.DocumentRequest",
                 structure_class_name="DocumentRequest",
             ),
             content=doc_request,
@@ -349,7 +347,7 @@ class TestPipeConditionComplex:
             concept=ConceptFactory.make(
                 concept_code="UserProfile",
                 domain="test_pipe_condition_complex",
-                definition="test_pipe_condition_complex.UserProfile",
+                description="test_pipe_condition_complex.UserProfile",
                 structure_class_name="UserProfile",
             ),
             content=user_profile,
@@ -361,11 +359,13 @@ class TestPipeConditionComplex:
         pipe_output = await get_pipe_router().run(
             pipe_job=PipeJobFactory.make_pipe_job(
                 pipe=get_required_pipe(pipe_code="complex_document_processor"),
-                pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=PipeRunMode.DRY),
+                pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=cast(str, request.node.originalname)),  # type: ignore
+                job_metadata=JobMetadata(job_name=cast("str", request.node.originalname)),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 
         assert pipe_output is not None
         assert pipe_output.main_stuff is not None
+        if pipe_run_mode == PipeRunMode.LIVE:
+            assert expected_output_contains in pipe_output.main_stuff_as_str

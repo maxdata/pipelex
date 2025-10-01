@@ -1,4 +1,4 @@
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -7,11 +7,13 @@ from pipelex.core.concepts.concept_native import NativeConceptEnum
 from pipelex.core.pipes.pipe_run_params import PipeRunMode
 from pipelex.core.pipes.pipe_run_params_factory import PipeRunParamsFactory
 from pipelex.hub import get_pipe_router
-from pipelex.pipe_operators.img_gen.pipe_img_gen import PipeImgGenOutput
 from pipelex.pipe_operators.img_gen.pipe_img_gen_blueprint import PipeImgGenBlueprint
 from pipelex.pipe_operators.img_gen.pipe_img_gen_factory import PipeImgGenFactory
 from pipelex.pipe_works.pipe_job_factory import PipeJobFactory
 from tests.integration.pipelex.test_data import ImageGenTestCases
+
+if TYPE_CHECKING:
+    from pipelex.pipe_operators.img_gen.pipe_img_gen import PipeImgGenOutput
 
 
 @pytest.mark.dry_runnable
@@ -19,7 +21,7 @@ from tests.integration.pipelex.test_data import ImageGenTestCases
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
 class TestPipeImgGen:
-    @pytest.mark.parametrize("topic, image_desc", ImageGenTestCases.IMAGE_DESC)
+    @pytest.mark.parametrize(("topic", "image_desc"), ImageGenTestCases.IMAGE_DESC)
     async def test_pipe_img_gen(
         self,
         pipe_run_mode: PipeRunMode,
@@ -28,7 +30,7 @@ class TestPipeImgGen:
         image_desc: str,
     ):
         pipe_img_gen_blueprint = PipeImgGenBlueprint(
-            definition="Image generation test",
+            description="Image generation test",
             img_gen_prompt=image_desc,
             output=NativeConceptEnum.IMAGE,
             nb_output=1,
@@ -43,7 +45,7 @@ class TestPipeImgGen:
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
         )
         pipe_img_gen_output = cast(
-            PipeImgGenOutput,
+            "PipeImgGenOutput",
             await get_pipe_router().run(
                 pipe_job=pipe_job,
             ),

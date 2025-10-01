@@ -35,7 +35,7 @@ class TestPipeConditionExpression:
             concept=ConceptFactory.make(
                 concept_code="CategoryInput",
                 domain="test_pipe_condition",
-                definition="test_pipe_condition.CategoryInput",
+                description="test_pipe_condition.CategoryInput",
                 structure_class_name="CategoryInput",
             ),
             content=category_input,
@@ -51,7 +51,7 @@ class TestPipeConditionExpression:
                 pipe=get_required_pipe(pipe_code="basic_condition_by_category"),
                 pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
                 working_memory=working_memory,
-                job_metadata=JobMetadata(job_name=request.node.originalname),  # type: ignore
+                job_metadata=JobMetadata(job_name=request.node.originalname),  # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
             ),
         )
 

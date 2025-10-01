@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from pipelex import pretty_print
@@ -29,7 +27,7 @@ class TestPipeOCR:
         concept_1 = ConceptFactory.make_from_blueprint(
             concept_code="PageScan",
             domain="ocr",
-            blueprint=ConceptBlueprint(definition="Lorem Ipsum"),
+            blueprint=ConceptBlueprint(description="Lorem Ipsum"),
             concept_codes_from_the_same_domain=["PageScan"],
         )
         concept_provider.add_new_concept(concept=concept_1)
@@ -38,16 +36,16 @@ class TestPipeOCR:
 
         concept_provider.teardown()
 
+    @pytest.mark.usefixtures("setup")
     @pytest.mark.parametrize("image_url", PipeOcrTestCases.PIPE_OCR_IMAGE_TEST_CASES)
     async def test_pipe_ocr_image(
         self,
         ocr_choice_for_image: str,
         pipe_run_mode: PipeRunMode,
         image_url: str,
-        setup: Any,
     ):
         pipe_ocr_blueprint = PipeOcrBlueprint(
-            definition="OCR test for image processing",
+            description="OCR test for image processing",
             inputs={"page_scan": InputRequirementBlueprint(concept=NativeConceptEnum.IMAGE)},
             output=NativeConceptEnum.TEXT_AND_IMAGES,
             page_images=True,
@@ -85,7 +83,7 @@ class TestPipeOCR:
     ):
         input_name = "arbitrary_name"
         pipe_ocr_blueprint = PipeOcrBlueprint(
-            definition="OCR test for PDF processing",
+            description="OCR test for PDF processing",
             inputs={input_name: InputRequirementBlueprint(concept=NativeConceptEnum.PDF)},
             output=NativeConceptEnum.TEXT_AND_IMAGES,
             ocr=ocr_choice_for_pdf,
