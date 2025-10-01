@@ -164,55 +164,10 @@ You will specifically generate the PipeCompose related to this signature:
 You can ONLY USE THE INPUTS IN THIS PIPE SIGNATURE.
 
 Here are the Jinja2 filters that are supported:
-abs — Returns the absolute value of a number.
-attr — Gets an attribute from an object, returning undefined if missing.
-batch — Groups items into sublists of a given size, optionally filling blanks.
-capitalize — Uppercases the first character and lowercases the rest.
-center — Centers a string within a given width.
 default — Returns a fallback value if the input is undefined (or falsey if enabled).
-dictsort — Sorts a dict and yields (key, value) pairs by key or value.
-escape — HTML-escapes &, <, >, ' and ".
-filesizeformat — Formats bytes as human-readable sizes (kB/MB or KiB/MiB).
-first — Returns the first item of a sequence.
-float — Converts a value to float with an optional default.
-forceescape — Forces HTML escaping even if marked safe.
-format — Applies printf-style string formatting.
-groupby — Groups items by an attribute (sorted first).
-indent — Indents each line of a string by a given width.
-int — Converts a value to int with base and default support.
-items — Iterates over a mapping’s items, empty if undefined.
-join — Concatenates sequence items with an optional separator or attribute.
-last — Returns the last item of a sequence.
+tag - Returns by tagging it with a title.
+format - Apply the given values to a printf-style format string, like string % values.
 length — Returns the number of items (alias: count).
-list — Converts the value to a list (strings become lists of characters).
-lower — Converts a string to lowercase.
-map — Extracts an attribute or applies a filter across a sequence.
-max — Returns the largest item, optionally by attribute.
-min — Returns the smallest item, optionally by attribute.
-pprint — Pretty-prints a value for debugging.
-random — Returns a random item from a sequence.
-reject — Filters out items where a test passes.
-rejectattr — Filters out items based on an attribute test.
-replace — Replaces occurrences of a substring with another.
-reverse — Reverses a string or iterable.
-round — Rounds a number with precision and method (common/ceil/floor).
-safe — Marks a string as safe and prevents auto-escaping.
-select — Keeps only items where a test passes.
-selectattr — Keeps only items whose attribute passes a test.
-slice — Slices items into N columns (lists of lists), with optional fill.
-sort — Sorts an iterable, with reverse, case, and attribute options.
-string — Converts to string while preserving Markup safety.
-striptags — Removes HTML/XML tags and collapses whitespace.
-sum — Sums numbers or an attribute across items, with a start value.
-title — Title-cases the string (each word capitalized).
-tojson — Serializes a value to JSON and marks it safe for HTML.
-trim — Strips leading and trailing characters (default: whitespace).
-truncate — Shortens text to a length with optional word-safe ellipsis.
-unique — Yields unique items in first-seen order, optional attribute.
 upper — Converts a string to uppercase.
-urlencode — URL-encodes a string or builds a query string from pairs.
-urlize — Converts URLs/emails in text into clickable links.
-wordcount — Counts words in a string.
-wordwrap — Wraps text to a given width with options for breaks.
-xmlattr — Builds safe HTML/XML attributes from a dict.
+lower — Converts a string to lowercase.
 """
