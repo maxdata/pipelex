@@ -8,6 +8,7 @@ from pipelex.tools.misc.string_utils import (
     is_pascal_case,
     is_snake_case,
     matches_wildcard_pattern,
+    normalize_to_ascii,
     pascal_case_to_sentence,
     pascal_case_to_snake_case,
     snake_to_capitalize_first_letter,
@@ -17,11 +18,12 @@ from pipelex.tools.misc.string_utils import (
 
 class BadStr:
     def __str__(self) -> str:  # pyright: ignore[reportImplicitOverride] pragma: no cover - used only for raising
-        raise RuntimeError("boom")
+        msg = "boom"
+        raise RuntimeError(msg)
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (None, True),
         ("abc", True),
@@ -36,7 +38,7 @@ def test_is_none_or_has_text(value: str | None, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (None, False),
         ("abc", True),
@@ -51,7 +53,7 @@ def test_is_not_none_and_has_text(value: str | None, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         ("abc", True),
         (0, False),
@@ -66,7 +68,7 @@ def test_can_inject_text(value: object, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "camel, expected",
+    ("camel", "expected"),
     [
         ("thisIsATest", "this_is_a_test"),
         ("HTTPRequest", "http_request"),
@@ -79,7 +81,7 @@ def test_camel_to_snake_case(camel: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "pascal, expected",
+    ("pascal", "expected"),
     [
         ("ThisIsATest", "this_is_a_test"),
         ("HTTPRequest", "http_request"),
@@ -91,7 +93,7 @@ def test_pascal_case_to_snake_case(pascal: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "text, expected",
+    ("text", "expected"),
     [
         ("HelloWorld", "Hello world"),
         ("BOB LowKey", "Bob low key"),
@@ -105,7 +107,7 @@ def test_pascal_case_to_sentence(text: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "snake, expected",
+    ("snake", "expected"),
     [
         ("hello_world", "HelloWorld"),
         ("my_name_is", "MyNameIs"),
@@ -118,7 +120,7 @@ def test_snake_to_pascal_case(snake: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "snake, expected",
+    ("snake", "expected"),
     [
         ("hello_world", "Hello world"),
         ("this_is_a_test", "This is a test"),
@@ -131,7 +133,7 @@ def test_snake_to_capitalize_first_letter(snake: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "word, expected",
+    ("word", "expected"),
     [
         # Valid snake_case
         ("hello", True),
@@ -164,7 +166,7 @@ def test_is_snake_case(word: str, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "word, expected",
+    ("word", "expected"),
     [
         # Valid PascalCase
         ("Hello", True),
@@ -197,11 +199,58 @@ def test_is_pascal_case(word: str, expected: bool) -> None:
     assert is_pascal_case(word) is expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # ASCII strings (should remain unchanged)
+        ("Hello", "Hello"),
+        ("HelloWorld", "HelloWorld"),
+        ("hello_world", "hello_world"),
+        ("Test123", "Test123"),
+        ("my_variable_name", "my_variable_name"),
+        ("", ""),
+        # Accented characters (should be normalized)
+        ("Café", "Cafe"),
+        ("Naïve", "Naive"),
+        ("résumé", "resume"),
+        ("Über", "Uber"),
+        ("crème_brûlée", "creme_brulee"),
+        # Cyrillic lookalikes (should be removed)
+        ("OppositeСoncept", "Oppositeoncept"),  # Cyrillic С (U+0421) removed, leaving Latin letters
+        ("HelloМorld", "Helloorld"),  # Cyrillic М (U+041C) removed
+        ("Concept_Идея", "Concept_"),  # Cyrillic letters removed
+        # Greek lookalikes (should be removed)
+        ("HelloΩorld", "Helloorld"),  # Greek Ω removed
+        # Mixed scenarios
+        ("Hëllo_Wörld123", "Hello_World123"),
+        ("Test_Café_Naïve", "Test_Cafe_Naive"),
+        # Special characters (should be removed, except underscores)
+        ("Hello-World", "HelloWorld"),
+        ("Hello World", "HelloWorld"),
+        ("Hello.World", "HelloWorld"),
+        ("Hello@World", "HelloWorld"),
+        ("Hello$World", "HelloWorld"),
+        ("Hello_World", "Hello_World"),  # Underscores are kept
+        # Numbers
+        ("123Test", "123Test"),
+        # Edge cases
+        ("_", "_"),
+        ("___", "___"),
+        ("123", "123"),
+        ("абвгд", ""),  # All Cyrillic, all removed
+        ("αβγδε", ""),  # All Greek, all removed
+        ("café_résumé_123", "cafe_resume_123"),
+    ],
+)
+def test_normalize_to_ascii(text: str, expected: str) -> None:
+    assert normalize_to_ascii(text) == expected
+
+
 class TestMatchesWildcardPattern:
     """Test class for the matches_wildcard_pattern function."""
 
     @pytest.mark.parametrize(
-        "text, pattern, expected",
+        ("text", "pattern", "expected"),
         [
             # Universal wildcard
             ("any-text", "*", True),
@@ -262,7 +311,6 @@ class TestMatchesWildcardPattern:
         ],
     )
     def test_matches_wildcard_pattern(self, text: str, pattern: str, expected: bool) -> None:
-        """Test wildcard pattern matching with comprehensive test cases."""
         assert matches_wildcard_pattern(text, pattern) is expected
 
     def test_matches_wildcard_pattern_model_routing_examples(self) -> None:

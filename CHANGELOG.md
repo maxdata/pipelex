@@ -1,5 +1,40 @@
 # Changelog
 
+## [v0.11.0] - 2025-10-01
+
+### Highlights
+
+- **New pipe builder** pipeline to generate Pipes based on a brief in natural language: use the cli `pipelex build pipe "Your task"` to build the pipe.
+- **New observer system:** inject your own class to observe and trace all details before and after each pipe run. We also provide a local observer that dumps the payloads to local JSONL files = new-line delilmited json, i.e. one json object per line.
+- **Full refactoring of OCR and Image Generation** to use the same patterns as `LLM` workers and pipes.
+
+### Added
+
+ - Added `claude-4.5-sonnet` to the model deck.
+ - Added a badge on the `README.md` to display the number of tests.
+ - Added new test cases for environment variable functions
+ - Added new documentation for `PipeFunc` on how to register functions.
+ - Added `pipelex show models [BACKEND_NAME]` command to list available models from a specific backend.
+
+### Changed 
+
+ - Renamed `llm_deck` terminology to `model_deck` throughout codebase and documentation, now that it's also used for OCR and Image Generation models
+ - Renamed `is_gha_testing` property to `is_ci_testing` in RuntimeManager
+ - Refactored `all_env_vars_are_set()` function to only accept a list of keys, single string support now uses `is_env_var_set()`
+ - Modified `any_env_var_is_placeholder()` to use new placeholder detection logic
+ - Updated test environment setup to use dynamic placeholder generation instead of hardcoded values
+
+### Fixed
+ - Fixed logic error in `any_env_var_is_placeholder()` function - now correctly returns False when no placeholders are found
+
+### Removed
+ - Removed `get_rooted_path()` and `get_env_rooted_path()` utility functions which were not used
+ - Removed hardcoded placeholder dictionary and `ENV_DUMMY_PLACEHOLDER_VALUE` constant in test setup
+ - Removed function `run_pipe_code` in pipe router because it was not relevant (used mostly in tests)
+ - Remove the use of `PipeCompose` in `PipeCondition`, to only use jinja2 directly, through the `ContentGenerator`
+ - Remove the template libraries from the pipelex libraries.
+ - Removed `claude-3.5-sonnet` and `claude-3.5-sonnet-v2` from the model deck.
+
 ## [v0.10.2] - 2025-09-18
 
 ### Added
@@ -157,9 +192,18 @@ For complete details, see the [Inference Backend Configuration](pages/configurat
 
 - Fixed the `structuring_method` behavior in the `PipeLLM` pipe: Putting it to `preliminary_text`, the `PipeLLM` will always generate text before generating the structure -> Reliability increased by a lot.
 
+### Fixed
+
+- Fixed a bug in the `needed_inputs` method of the `PipeSequence` pipe.
+
 ### Changed
 
+- `dry_run_pipe` now returns a `DryRunOutput` object instead of a `str` with additional information.
 - Updated `cocode` dependency from version `v0.0.10` to `v0.0.15`.
+
+### Added
+
+- Added the `FuncRegistryUtils` class to register functions in the library.
 
 ## [v0.8.1] - 2025-08-27
 
@@ -174,7 +218,7 @@ For complete details, see the [Inference Backend Configuration](pages/configurat
 - Refactored the concepts: Blueprints are now more explicit, and hold only concept strings or code. Pipes hold concept instances.
 - Organized code: Created subfolders for controller and operator pipes.
 - Say goodbye to `PipeLLMPrompt`.
-- Removed the `PipeJinja2` and `PipeLLMPrompt` from the `PipeLLM`.
+- Removed the `PipeCompose` and `PipeLLMPrompt` from the `PipeLLM`.
 
 ### Added
 
@@ -269,7 +313,7 @@ Simplified input memory:
 - Refactored `PipeInputSpec` to use `InputRequirement` and `TypedNamedInputRequirement` classes instead of plain strings for input specifications.
 - Updated `WorkingMemoryFactory` to handle `ImplicitMemory` instead of `CompactMemory`.
 - Replaced `ExecutePipelineException` with `PipelineInputError` in `execute_pipeline` function.
-- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeJinja2`, `PipeLLM`, and `PipeOcr` classes to use `InputRequirement` for input handling.
+- Updated `PipeBatch`, `PipeCondition`, `PipeParallel`, `PipeSequence`, `PipeFunc`, `PipeImgGen`, `PipeCompose`, `PipeLLM`, and `PipeOcr` classes to use `InputRequirement` for input handling.
 - Updated `PipeInputSpec` creation in various test files to use `make_from_dict` method.
 - Updated `pyproject.toml` to exclude `pypdfium2` version `4.30.1`.
 - Updated `Jinja2TemplateCategory` to handle HTML and Markdown templates differently.
@@ -385,7 +429,6 @@ Simplified input memory:
 
 ### Changed
 
-- **OCR Input Standardization**: Changed OCR pipe input parameter naming to consistently use `ocr_input` for both image and PDF inputs, improving consistency across the API
 - **Error Message Improvements**: Updated PipeCondition error messages to reference `expression_template` instead of deprecated `expression_jinja2`
 
 ## [v0.4.11] - 2025-06-30
@@ -566,7 +609,7 @@ Simplified input memory:
   - Codex test targets
   
 ### Changed
-- Domain validation is now less restrictive in pipeline TOML: the `definition` attribute is now `Optional`
+- Domain validation is now less restrictive in pipeline TOML: the `description` attribute is now `Optional`
 
 ## [v0.3.0] - 2025-06-09
 
@@ -588,7 +631,7 @@ Simplified input memory:
 
 ### Changed
 
-- **Refactored Cognitive Workers**: The abstraction for `LLM`, `Imgg`, and `Ocr` workers has been elegantly simplified. The old decorator-based approach (`..._job_func`) has been replaced with a more robust pattern: a public base method now handles pre- and post-execution logic while calling a private abstract method that each worker implements.
+- **Refactored Cognitive Workers**: The abstraction for `LLM`, `ImgGen`, and `Ocr` workers has been elegantly simplified. The old decorator-based approach (`..._job_func`) has been replaced with a more robust pattern: a public base method now handles pre- and post-execution logic while calling a private abstract method that each worker implements.
 - The `b64_image_bytes` field in `PromptImageBytes` was renamed to `base_64` for better consistency.
 
 ### Fixed
@@ -684,15 +727,15 @@ is_reporting_enabled = true
 ### Tests
 
 - TestTemplatePreprocessor
-- TestImggByOpenAIGpt
+- TestImgGenByOpenAIGpt
 - TestImageGeneration
-- TestPipeImgg
+- TestPipeImgGen
 
 
 ## [v0.2.9] - 2025-05-30
 
 - Include `pyproject.toml` inside the project build.
-- Fix `ImggEngineFactory`: image generation (imgg) handle required format is `platform/model_name`
+- Fix `ImgGenEngineFactory`: image generation (imgg) handle required format is `platform/model_name`
 - pipelex cli: Added `list-pipes` method that can list all the available pipes along with their descriptions.
 - Use a minimum version for `uv` instead of a fixed version
 - Implement `AGENTS.md` for Codex

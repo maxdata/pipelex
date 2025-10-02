@@ -4,6 +4,7 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
+from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
 from pipelex.tools.secrets.secrets_provider_abstract import SecretsProviderAbstract
 from pipelex.tools.secrets.secrets_utils import UnknownVarPrefixError, VarFallbackPatternError, VarNotFoundError, substitute_vars
 
@@ -11,15 +12,11 @@ from pipelex.tools.secrets.secrets_utils import UnknownVarPrefixError, VarFallba
 @pytest.fixture
 def mock_secrets_provider(mocker: MockerFixture) -> Any:
     """Mock secrets provider for testing."""
-    mock_provider = mocker.Mock(spec=SecretsProviderAbstract)
-    return mock_provider
+    return mocker.Mock(spec=SecretsProviderAbstract)
 
 
 class TestSubstituteVars:
-    """Test cases for substitute_vars function."""
-
     def test_simple_secret_substitution(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
-        """Test basic secret substitution using default behavior."""
         mock_secrets_provider.get_secret.return_value = "secret_value"
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -29,14 +26,12 @@ class TestSubstituteVars:
         mock_secrets_provider.get_secret.assert_called_once_with(secret_id="API_KEY")
 
     def test_explicit_env_substitution(self, mocker: MockerFixture) -> None:
-        """Test explicit environment variable substitution."""
         mocker.patch.dict(os.environ, {"TEST_VAR": "env_value"})
         result = substitute_vars("Value: ${env:TEST_VAR}")
 
         assert result == "Value: env_value"
 
     def test_explicit_secret_substitution(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
-        """Test explicit secret substitution."""
         mock_secrets_provider.get_secret.return_value = "secret_value"
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -46,7 +41,6 @@ class TestSubstituteVars:
         mock_secrets_provider.get_secret.assert_called_once_with(secret_id="API_KEY")
 
     def test_fallback_env_to_secret(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
-        """Test fallback from env to secret when env var doesn't exist."""
         mock_secrets_provider.get_secret.return_value = "secret_fallback"
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -56,7 +50,6 @@ class TestSubstituteVars:
         mock_secrets_provider.get_secret.assert_called_once_with(secret_id="FALLBACK_KEY")
 
     def test_env_takes_precedence_in_fallback(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
-        """Test that env var takes precedence when both env and secret are available."""
         mocker.patch.dict(os.environ, {"EXISTING_VAR": "env_value"})
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -68,8 +61,6 @@ class TestSubstituteVars:
 
     def test_fallback_secret_to_env(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test fallback from secret to env when secret doesn't exist."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch.dict(os.environ, {"FALLBACK_ENV": "env_fallback"})
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
@@ -92,7 +83,7 @@ class TestSubstituteVars:
 
     def test_multiple_substitutions(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test multiple variable substitutions in the same content."""
-        mock_secrets_provider.get_secret.side_effect = lambda secret_id: f"secret_{secret_id}"  # type: ignore
+        mock_secrets_provider.get_secret.side_effect = lambda secret_id: f"secret_{secret_id}"  # pyright: ignore[reportUnknownLambdaType]
         mocker.patch.dict(os.environ, {"ENV_VAR": "env_value"})
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -114,8 +105,6 @@ class TestSubstituteVars:
 
     def test_missing_secret_raises_error(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test that missing required secret raises error."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -124,8 +113,6 @@ class TestSubstituteVars:
 
     def test_missing_default_secret_raises_error(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test that missing default secret (no prefix) raises error."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -133,9 +120,6 @@ class TestSubstituteVars:
             substitute_vars("Value: ${MISSING_SECRET}")
 
     def test_fallback_both_missing_raises_error(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
-        """Test that when both env and secret are missing, error is raised."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 
@@ -144,8 +128,6 @@ class TestSubstituteVars:
 
     def test_reverse_fallback_both_missing_raises_error(self, mocker: MockerFixture, mock_secrets_provider: Any) -> None:
         """Test that when both secret and env are missing in reverse order, error is raised."""
-        from pipelex.tools.secrets.secrets_errors import SecretNotFoundError
-
         mock_secrets_provider.get_secret.side_effect = SecretNotFoundError("Secret not found")
         mocker.patch("pipelex.tools.secrets.secrets_utils.get_secrets_provider", return_value=mock_secrets_provider)
 

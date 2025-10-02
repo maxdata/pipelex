@@ -32,19 +32,37 @@ If you already have API keys from LLM providers, you can use them directly:
 
 ```bash
 # Add to your .env file
+# To directly use models on OpenAI, you will need to set the following variable
 OPENAI_API_KEY=your-openai-key
+# To directly use models on Anthropic, you will need to set the following variable
 ANTHROPIC_API_KEY=your-anthropic-key
+# To directly use models on Google, you will need to set the following variable
 GOOGLE_API_KEY=your-google-key
-# Or for Azure OpenAI
+# To directly use models on Mistral, you will need to set the following variable
+MISTRAL_API_KEY=your-mistral-key
+# To directly use models on FAL, you will need to set the following variable
+FAL_API_KEY=your-fal-key
+# To directly use models on XAI, you will need to set the following variable
+XAI_API_KEY=your-xai-key
+
+# To use models via Ollama, you will need to set the following variables
+OLLAMA_API_KEY=your-ollama-key
+# To use models via BlackboxAI, you will need to set the following variables
+BLACKBOX_API_KEY=your-blackboxai-key
+# To use models via Azure OpenAI, you will need to set the following variables
 AZURE_API_KEY=your-azure-key
 AZURE_API_BASE=your-azure-endpoint
-# Or for AWS Bedrock
+AZURE_API_VERSION=your-azure-version
+# To use models via AWS Bedrock, you will need to set the following variables
 AWS_ACCESS_KEY_ID=your-aws-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret
+AWS_REGION=your-aws-region
 ```
 
-For complete configuration details, see the [Inference Backend Configuration](../configuration/config-technical/inference-backend-config.md) documentation.
+Adding those env variables is not enough. You also need to configure the inference backend to choose where to route the AI calls.
+See the [Inference Backend Configuration](../configuration/config-technical/inference-backend-config.md#inference-backends) documentation.
 
+For example, if you want to use a gemini model via GOOGLE, enable the google backend in `.pipelex/inference/backends.toml` and set the API key in your env.
 ---
 
 ## Your first LLM call with Pipelex
@@ -64,7 +82,7 @@ domain = "characters"
 [pipe]
 [pipe.create_character]
 type = "PipeLLM"
-definition = "Creates a character."
+description = "Creates a character."
 output = "Text"
 prompt_template = """You are a book writer. Your task is to create a character.
 Think of it and then output the character description."""
@@ -110,7 +128,7 @@ python character.py
 ```plx
 [pipe.create_character]
 type = "PipeLLM"
-definition = "Create a character."
+description = "Create a character."
 output = "Text"
 llm = { llm_handle = "gpt-4o-mini", temperature = 0.9, max_tokens = "auto" }
 prompt_template = """You are a book writer. Your task is to create a character.
@@ -122,7 +140,7 @@ Think of it and then output the character description."""
 ```plx
 [pipe.create_character]
 type = "PipeLLM"
-definition = "Create a character."
+description = "Create a character."
 output = "Text"
 llm = "llm_for_creative_writing"
 prompt_template = """You are a book writer. Your task is to create a character.
@@ -175,7 +193,7 @@ Character = "A character is a fiction story" # <- Define here your output concep
 [pipe]
 [pipe.create_character]
 type = "PipeLLM"
-definition = "Create a character. Get a structured result."
+description = "Create a character. Get a structured result."
 output = "Character"    # <- This is the output concept for your pipe
 prompt_template = """You are a book writer. Your task is to create a character.
 Think of it and then output the character description."""
@@ -232,7 +250,7 @@ CharacterMetadata = "Metadata regarding a character."
 [pipe]
 [pipe.extract_character_1]
 type = "PipeLLM"
-definition = "Get character information from a description."
+description = "Get character information from a description."
 inputs = { character = "Character" }  # <- These are the inputs of your pipe, usable in the prompt_template
 output = "CharacterMetadata"
 prompt_template = """

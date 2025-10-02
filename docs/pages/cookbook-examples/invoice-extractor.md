@@ -27,7 +27,7 @@ async def process_expense_report() -> ListContent[Invoice]:
     return pipe_output.main_stuff_as_list(item_type=Invoice)
 ```
 
-This example also showcases some of the powerful observability features of Pipelex. After the pipeline runs, it generates a cost report and a flowchart of the execution.
+This example also showcases some of the powerful observer features of Pipelex. After the pipeline runs, it generates a cost report and a flowchart of the execution.
 
 ```python
 # Print the cost reporting
@@ -65,7 +65,7 @@ The entire workflow is defined in a PLX file. This declarative approach makes th
 # The main pipeline, a sequence of steps
 [pipe.process_invoice]
 type = "PipeSequence"
-definition = "Process relevant information from an invoice"
+description = "Process relevant information from an invoice"
 inputs = { invoice_pdf = "PDF" }
 output = "Invoice"
 steps = [
@@ -78,7 +78,7 @@ steps = [
 # A sub-pipeline that uses an LLM to extract the data
 [pipe.extract_invoice_data]
 type = "PipeLLM"
-definition = "Extract invoice information from an invoice text transcript"
+description = "Extract invoice information from an invoice text transcript"
 inputs = { "invoice_page.page_view" = "Page", invoice_details = "InvoiceDetails" }
 output = "Invoice"
 # The output is constrained to the "Invoice" model

@@ -18,6 +18,7 @@ Stop reinventing AI workflows from scratch. With Pipelex, your proven methods be
 
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
+    <a href="https://github.com/Pipelex/pipelex/actions/workflows/check-test-count-badge.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Pipelex/pipelex/feature/pipe-builder/.badges/tests.json" alt="Tests"></a>
     <img src="https://img.shields.io/pypi/v/pipelex?logo=pypi&logoColor=white&color=blue&style=flat-square"
      alt="PyPI – latest release">
     <br/>
@@ -61,7 +62,7 @@ Stop reinventing AI workflows from scratch. With Pipelex, your proven methods be
 
 Pipelex makes it easy for developers to define and run repeatable AI workflows. At its core is a clear, declarative pipeline language specifically crafted for knowledge-processing tasks.
 
-Build **pipelines** from modular pipes that snap together. Each pipe can use a different language model (LLM) or software to process knowledge. Pipes consistently deliver **structured, predictable outputs** at each stage.
+Build **pipelines** from modular pipes that snap together. Each pipe can use different AI models - language models (LLMs) for text generation, OCR models for document processing, or image generation models for creating visuals. Pipes consistently deliver **structured, predictable outputs** at each stage.
 
 Pipelex uses its own syntax PLX, based on TOML, making workflows readable and shareable. Business professionals, developers, and AI coding agents can all understand and modify the same pipeline definitions.
 
@@ -73,7 +74,7 @@ PurchaseDocumentText = "Transcript of a receipt, invoice, or order confirmation"
 
 [pipe.extract_buyer]
 type = "PipeLLM"
-definition = "Extract buyer from purchase document"
+description = "Extract buyer from purchase document"
 inputs = { purchase_document_text = "PurchaseDocumentText" }
 output = "Buyer"
 llm = "llm_to_extract_info"
@@ -124,10 +125,10 @@ uv pip install pipelex
 
 The package supports the following additional features:
 
-- `anthropic`: Anthropic/Claude support+
-- `google`: Google models (Vertex) support
-- `mistralai`: Mistral AI support√
-- `bedrock`: AWS Bedrock support
+- `anthropic`: Anthropic/Claude support for text generation
+- `google`: Google models (Vertex) support for text generation
+- `mistralai`: Mistral AI support for text generation and OCR
+- `bedrock`: AWS Bedrock support for text generation
 - `fal`: Image generation with Black Forest Labs "FAL" service
 
 Install all extras:
@@ -139,7 +140,7 @@ pip install "pipelex[anthropic,google,mistralai,bedrock,fal]"
 
 Using `poetry`:
 ```bash
-poetry add "pipelex[anthropic,google,mistralai,bedrock,fal]"
+poetry add "pipelex[anthropic,google,mistralai,bedrock,fal,pypdfium2]"
 ```
 
 Using `uv`:
@@ -163,7 +164,7 @@ Example with the extension you can download now on Cursor, Windsurf or another V
 
 ```plx
 domain = "tech_tweet"
-definition = "A pipeline for optimizing tech tweets using Twitter/X best practices"
+description = "A pipeline for optimizing tech tweets using Twitter/X best practices"
 
 [concept]
 DraftTweet = "A draft version of a tech tweet that needs optimization"
@@ -174,7 +175,7 @@ WritingStyle = "A style of writing"
 [pipe]
 [pipe.analyze_tweet]
 type = "PipeLLM"
-definition = "Analyze the draft tweet and identify areas for improvement"
+description = "Analyze the draft tweet and identify areas for improvement"
 inputs = { draft_tweet = "DraftTweet" }
 output = "TweetAnalysis"
 llm = "llm_for_writing_analysis"
@@ -203,7 +204,7 @@ without providing an actual rewrite
 
 [pipe.optimize_tweet]
 type = "PipeLLM"
-definition = "Optimize the tweet based on the analysis"
+description = "Optimize the tweet based on the analysis"
 inputs = { draft_tweet = "DraftTweet", tweet_analysis = "TweetAnalysis", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
 llm = "llm_for_social_post_writing"
@@ -238,7 +239,7 @@ Keep the core meaning of the original tweet.
 
 [pipe.optimize_tweet_sequence]
 type = "PipeSequence"
-definition = "Analyze and optimize a tech tweet in sequence"
+description = "Analyze and optimize a tech tweet in sequence"
 inputs = { draft_tweet = "DraftTweet", writing_style = "WritingStyle" }
 output = "OptimizedTweet"
 steps = [

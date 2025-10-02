@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 import os
 import shutil
-from typing import Annotated, List
+from importlib.metadata import metadata
+from typing import Annotated
 
 import typer
 
@@ -10,9 +9,11 @@ from pipelex.exceptions import PipelexCLIError
 from pipelex.libraries.library_config import LibraryConfig
 from pipelex.tools.config.manager import config_manager
 
+PACKAGE_NAME = __name__.split(".", maxsplit=1)[0]
+PACKAGE_VERSION = metadata(PACKAGE_NAME)["Version"]
+
 
 def do_init_libraries(directory: str = ".", overwrite: bool = False) -> None:
-    """Initialize pipelex libraries in a pipelex_libraries folder in the specified directory."""
     try:
         target_dir = os.path.join(directory, "pipelex_libraries")
         os.makedirs(directory, exist_ok=True)
@@ -25,7 +26,8 @@ def do_init_libraries(directory: str = ".", overwrite: bool = False) -> None:
         else:
             typer.echo(f"✅ Successfully initialized pipelex libraries at '{target_dir}' (only created non-existing files)")
     except Exception as exc:
-        raise PipelexCLIError(f"Failed to initialize libraries at '{directory}': {exc}") from exc
+        msg = f"Failed to initialize libraries at '{directory}': {exc}"
+        raise PipelexCLIError(msg) from exc
 
 
 def do_init_config(reset: bool = False) -> None:
@@ -36,8 +38,8 @@ def do_init_config(reset: bool = False) -> None:
     os.makedirs(target_config_dir, exist_ok=True)
 
     try:
-        copied_files: List[str] = []
-        existing_files: List[str] = []
+        copied_files: list[str] = []
+        existing_files: list[str] = []
 
         def copy_directory_structure(src_dir: str, dst_dir: str, relative_path: str = "") -> None:
             """Recursively copy directory structure, handling existing files."""
@@ -49,12 +51,11 @@ def do_init_config(reset: bool = False) -> None:
                 if os.path.isdir(src_item):
                     os.makedirs(dst_item, exist_ok=True)
                     copy_directory_structure(src_item, dst_item, relative_item)
+                elif os.path.exists(dst_item) and not reset:
+                    existing_files.append(relative_item)
                 else:
-                    if os.path.exists(dst_item) and not reset:
-                        existing_files.append(relative_item)
-                    else:
-                        shutil.copy2(src_item, dst_item)
-                        copied_files.append(relative_item)
+                    shutil.copy2(src_item, dst_item)
+                    copied_files.append(relative_item)
 
         copy_directory_structure(config_template_dir, target_config_dir)
 
@@ -73,7 +74,8 @@ def do_init_config(reset: bool = False) -> None:
             typer.echo(f"✅ Configuration directory {target_config_dir} is already up to date")
 
     except Exception as exc:
-        raise PipelexCLIError(f"Failed to initialize configuration: {exc}") from exc
+        msg = f"Failed to initialize configuration: {exc}"
+        raise PipelexCLIError(msg) from exc
 
 
 # Typer group for init commands

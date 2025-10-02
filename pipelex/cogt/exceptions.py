@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pipelex.tools.exceptions import FatalError, RootException
 from pipelex.types import StrEnum
 
@@ -32,11 +30,23 @@ class LLMWorkerError(CogtError):
     pass
 
 
-class LLMPresetNotFoundError(CogtError):
+class LLMChoiceNotFoundError(CogtError):
+    pass
+
+
+class OcrChoiceNotFoundError(CogtError):
+    pass
+
+
+class ImgGenChoiceNotFoundError(CogtError):
     pass
 
 
 class LLMSettingsValidationError(CogtError):
+    pass
+
+
+class ImgGenSettingsValidationError(CogtError):
     pass
 
 
@@ -96,26 +106,26 @@ class PromptImageFormatError(CogtError):
     pass
 
 
-class ImggPromptError(CogtError):
+class ImgGenPromptError(CogtError):
     pass
 
 
-class ImggParameterError(CogtError):
+class ImgGenParameterError(CogtError):
     pass
 
 
-class ImggGenerationError(CogtError):
+class ImgGenGenerationError(CogtError):
     pass
 
 
-class ImggGeneratedTypeError(ImggGenerationError):
+class ImgGenGeneratedTypeError(ImgGenGenerationError):
     pass
 
 
 class MissingDependencyError(CogtError):
     """Raised when a required dependency is not installed."""
 
-    def __init__(self, dependency_name: str, extra_name: str, message: Optional[str] = None):
+    def __init__(self, dependency_name: str, extra_name: str, message: str | None = None):
         self.dependency_name = dependency_name
         self.extra_name = extra_name
         error_msg = f"Required dependency '{dependency_name}' is not installed."
