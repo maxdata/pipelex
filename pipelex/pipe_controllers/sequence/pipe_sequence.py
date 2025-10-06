@@ -6,10 +6,9 @@ from typing_extensions import override
 from pipelex import log
 from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.pipes.pipe_input import PipeInput
-from pipelex.core.pipes.pipe_input_factory import PipeInputFactory
+from pipelex.core.pipes.input_requirements import InputRequirements
+from pipelex.core.pipes.input_requirements_factory import InputRequirementsFactory
 from pipelex.core.pipes.pipe_output import PipeOutput
-from pipelex.core.pipes.pipe_run_params import PipeRunMode, PipeRunParams
 from pipelex.exceptions import (
     PipeRunParamsError,
     StaticValidationError,
@@ -20,6 +19,7 @@ from pipelex.pipe_controllers.parallel.pipe_parallel import PipeParallel
 from pipelex.pipe_controllers.pipe_controller import PipeController
 from pipelex.pipe_controllers.sequence.exceptions import PipeSequenceError
 from pipelex.pipe_controllers.sub_pipe import SubPipe
+from pipelex.pipe_run.pipe_run_params import PipeRunMode, PipeRunParams
 from pipelex.pipeline.job_metadata import JobMetadata
 from pipelex.types import Self
 
@@ -29,18 +29,18 @@ class PipeSequence(PipeController):
     sequential_sub_pipes: list[SubPipe]
 
     @override
-    def needed_inputs(self, visited_pipes: set[str] | None = None) -> PipeInput:
+    def needed_inputs(self, visited_pipes: set[str] | None = None) -> InputRequirements:
         if visited_pipes is None:
             visited_pipes = set()
 
         # If we've already visited this pipe, stop recursion
         if self.code in visited_pipes:
-            return PipeInputFactory.make_empty()
+            return InputRequirementsFactory.make_empty()
 
         # Add this pipe to visited set for recursive calls
         visited_pipes_with_current = visited_pipes | {self.code}
 
-        needed_inputs = PipeInputFactory.make_empty()
+        needed_inputs = InputRequirementsFactory.make_empty()
         generated_outputs: set[str] = set()
 
         for sequential_sub_pipe in self.sequential_sub_pipes:

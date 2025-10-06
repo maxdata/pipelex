@@ -27,8 +27,8 @@ from pipelex.exceptions import PipelexConfigError, PipelexSetupError
 from pipelex.hub import PipelexHub, get_observer_provider, set_pipelex_hub
 from pipelex.libraries.library_manager_factory import LibraryManagerFactory
 from pipelex.observer.local_observer import LocalObserver
-from pipelex.pipe_works.pipe_router import PipeRouter
-from pipelex.pipe_works.pipe_router_protocol import PipeRouterProtocol
+from pipelex.pipe_run.pipe_router import PipeRouter
+from pipelex.pipe_run.pipe_router_protocol import PipeRouterProtocol
 from pipelex.pipeline.activity.activity_manager import ActivityManager
 from pipelex.pipeline.activity.activity_manager_protocol import (
     ActivityManagerNoOp,
@@ -121,9 +121,9 @@ class Pipelex(metaclass=MetaSingleton):
         domain_library = DomainLibrary.make_empty()
         concept_library = ConceptLibrary.make_empty()
         pipe_library = PipeLibrary.make_empty()
-        self.pipelex_hub.set_domain_provider(domain_provider=domain_library)
-        self.pipelex_hub.set_concept_provider(concept_provider=concept_library)
-        self.pipelex_hub.set_pipe_provider(pipe_provider=pipe_library)
+        self.pipelex_hub.set_domain_library(domain_library=domain_library)
+        self.pipelex_hub.set_concept_library(concept_library=concept_library)
+        self.pipelex_hub.set_pipe_library(pipe_library=pipe_library)
 
         self.library_manager = LibraryManagerFactory.make(
             domain_library=domain_library,

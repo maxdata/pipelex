@@ -6,7 +6,9 @@ from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
 from pipelex.core.concepts.concept_native import NativeConceptManager
 from pipelex.core.domains.domain import SpecialDomain
 from pipelex.core.domains.domain_blueprint import DomainBlueprint
+from pipelex.core.stuffs.image_field_search import search_for_nested_image_fields
 from pipelex.core.stuffs.stuff_content import StuffContent
+from pipelex.exceptions import PipelexUnexpectedError
 from pipelex.tools.class_registry_utils import ClassRegistryUtils
 from pipelex.tools.misc.string_utils import pascal_case_to_sentence
 
@@ -93,3 +95,11 @@ class Concept(BaseModel):
         if KajsonManager.get_class_registry().has_class(name=structure_class_name):
             log.warning(f"Concept class '{structure_class_name}' is registered but it's not a subclass of StuffContent")
         return False
+
+    def search_for_nested_image_fields_in_structure_class(self) -> list[str]:
+        """Recursively search for image fields in a structure class."""
+        structure_class = KajsonManager.get_class_registry().get_required_subclass(name=self.structure_class_name, base_class=StuffContent)
+        if not issubclass(structure_class, StuffContent):
+            msg = f"Concept class '{self.structure_class_name}' is not a subclass of StuffContent"
+            raise PipelexUnexpectedError(msg)
+        return search_for_nested_image_fields(content_class=structure_class)

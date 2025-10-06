@@ -1,11 +1,11 @@
 from typing_extensions import override
 
 from pipelex.core.concepts.concept_factory import ConceptFactory
+from pipelex.core.pipes.input_requirements import InputRequirements
+from pipelex.core.pipes.input_requirements_factory import InputRequirementsFactory
 from pipelex.core.pipes.pipe_factory import PipeFactoryProtocol
-from pipelex.core.pipes.pipe_input import PipeInput
-from pipelex.core.pipes.pipe_input_factory import PipeInputFactory
 from pipelex.exceptions import PipeDefinitionError
-from pipelex.hub import get_concept_provider
+from pipelex.hub import get_required_concept
 from pipelex.pipe_operators.compose.pipe_compose import PipeCompose
 from pipelex.pipe_operators.compose.pipe_compose_blueprint import PipeComposeBlueprint
 from pipelex.tools.templating.jinja2_parsing import check_jinja2_parsing
@@ -42,12 +42,12 @@ class PipeComposeFactory(PipeFactoryProtocol[PipeComposeBlueprint, PipeCompose])
             domain=domain,
             code=pipe_code,
             description=blueprint.description,
-            inputs=PipeInputFactory.make_from_blueprint(
+            inputs=InputRequirementsFactory.make_from_blueprint(
                 domain=domain,
                 blueprint=blueprint.inputs or {},
                 concept_codes_from_the_same_domain=concept_codes_from_the_same_domain,
             ),
-            output=get_concept_provider().get_required_concept(
+            output=get_required_concept(
                 concept_string=ConceptFactory.make_concept_string_with_domain(
                     domain=output_domain_and_code.domain,
                     concept_code=output_domain_and_code.concept_code,
@@ -64,7 +64,7 @@ class PipeComposeFactory(PipeFactoryProtocol[PipeComposeBlueprint, PipeCompose])
     def make_pipe_compose_from_template_str(
         cls,
         domain: str,
-        inputs: PipeInput | None = None,
+        inputs: InputRequirements | None = None,
         template_str: str | None = None,
         template_name: str | None = None,
     ) -> PipeCompose:
@@ -78,14 +78,14 @@ class PipeComposeFactory(PipeFactoryProtocol[PipeComposeBlueprint, PipeCompose])
                 domain=domain,
                 code="adhoc_pipe_compose_from_template_str",
                 jinja2=preprocessed_template,
-                inputs=inputs or PipeInputFactory.make_empty(),
+                inputs=inputs or InputRequirementsFactory.make_empty(),
             )
         elif template_name:
             return PipeCompose(
                 domain=domain,
                 code="adhoc_pipe_compose_from_template_name",
                 jinja2_name=template_name,
-                inputs=inputs or PipeInputFactory.make_empty(),
+                inputs=inputs or InputRequirementsFactory.make_empty(),
             )
         else:
             msg = "Could not make a PipeCompose because neither template_str nor template_name were provided"
