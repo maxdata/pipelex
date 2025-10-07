@@ -128,7 +128,7 @@ class TestConcept:
         valid_definition = "Lorem Ipsum"
 
         for native_concept_code in NativeConceptCode.values_list():
-            native_concept = ConceptFactory.make_native_concept_from_enum(native_concept_code=native_concept_code)
+            native_concept = ConceptFactory.make_native_concept(native_concept_code=native_concept_code)
             assert Concept.is_native_concept(native_concept) is True
 
         assert (
@@ -315,11 +315,11 @@ class TestConcept:
             concept_codes_from_the_same_domain=["Code1"],
         )
 
-        concept_5 = ConceptFactory.make_native_concept_from_enum(
+        concept_5 = ConceptFactory.make_native_concept(
             native_concept_code=NativeConceptCode.PAGE,
         )
 
-        concept_6 = ConceptFactory.make_native_concept_from_enum(
+        concept_6 = ConceptFactory.make_native_concept(
             native_concept_code=NativeConceptCode.IMAGE,
         )
 

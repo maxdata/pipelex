@@ -8,19 +8,19 @@ from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.core.pipes.input_requirement_blueprint import InputRequirementBlueprint
 from pipelex.core.stuffs.page_content import PageContent
 from pipelex.hub import get_concept_library, get_pipe_router
-from pipelex.pipe_operators.ocr.pipe_ocr_blueprint import PipeOcrBlueprint
-from pipelex.pipe_operators.ocr.pipe_ocr_factory import PipeOcrFactory
+from pipelex.pipe_operators.extract.pipe_extract_blueprint import PipeExtractBlueprint
+from pipelex.pipe_operators.extract.pipe_extract_factory import PipeExtractFactory
 from pipelex.pipe_run.pipe_job_factory import PipeJobFactory
 from pipelex.pipe_run.pipe_run_params import PipeRunMode
 from pipelex.pipe_run.pipe_run_params_factory import PipeRunParamsFactory
-from tests.integration.pipelex.test_data import PipeOcrTestCases
+from tests.integration.pipelex.test_data import PipeExtractTestCases
 
 
 @pytest.mark.dry_runnable
-@pytest.mark.ocr
+@pytest.mark.extract
 @pytest.mark.inference
 @pytest.mark.asyncio(loop_scope="class")
-class TestPipeOCR:
+class TestPipeExtract:
     @pytest.fixture(scope="class", autouse=True)
     def setup(self):
         concept_library = get_concept_library()
@@ -37,14 +37,14 @@ class TestPipeOCR:
         concept_library.teardown()
 
     @pytest.mark.usefixtures("setup")
-    @pytest.mark.parametrize("image_url", PipeOcrTestCases.PIPE_OCR_IMAGE_TEST_CASES)
-    async def test_pipe_ocr_image(
+    @pytest.mark.parametrize("image_url", PipeExtractTestCases.PIPE_OCR_IMAGE_TEST_CASES)
+    async def test_pipe_extract_image(
         self,
-        ocr_choice_for_image: str,
+        extract_choice_for_image: str,
         pipe_run_mode: PipeRunMode,
         image_url: str,
     ):
-        pipe_ocr_blueprint = PipeOcrBlueprint(
+        pipe_extract_blueprint = PipeExtractBlueprint(
             description="OCR test for image processing",
             inputs={"page_scan": InputRequirementBlueprint(concept=NativeConceptCode.IMAGE)},
             output=NativeConceptCode.TEXT_AND_IMAGES,
@@ -52,14 +52,14 @@ class TestPipeOCR:
             page_image_captions=False,
             page_views=True,
             page_views_dpi=72,
-            ocr=ocr_choice_for_image,
+            ocr=extract_choice_for_image,
         )
 
         pipe_job = PipeJobFactory.make_pipe_job(
-            pipe=PipeOcrFactory.make_from_blueprint(
+            pipe=PipeExtractFactory.make_from_blueprint(
                 domain="generic",
                 pipe_code="adhoc_for_test_pipe_ocr_image",
-                blueprint=pipe_ocr_blueprint,
+                blueprint=pipe_extract_blueprint,
             ),
             pipe_run_params=PipeRunParamsFactory.make_run_params(pipe_run_mode=pipe_run_mode),
             working_memory=WorkingMemoryFactory.make_from_image(
@@ -67,26 +67,26 @@ class TestPipeOCR:
                 name="page_scan",
             ),
         )
-        pipe_ocr_output = await get_pipe_router().run(
+        pipe_extract_output = await get_pipe_router().run(
             pipe_job=pipe_job,
         )
 
-        ocr_text = pipe_ocr_output.main_stuff_as_list(item_type=PageContent)
-        pretty_print(ocr_text, title="ocr_text")
+        list_result = pipe_extract_output.main_stuff_as_list(item_type=PageContent)
+        pretty_print(list_result, title="list_result")
 
-    @pytest.mark.parametrize("pdf_url", PipeOcrTestCases.PIPE_OCR_PDF_TEST_CASES)
+    @pytest.mark.parametrize("pdf_url", PipeExtractTestCases.PIPE_OCR_PDF_TEST_CASES)
     async def test_pipe_ocr_pdf(
         self,
-        ocr_choice_for_pdf: str,
+        extract_choice_for_pdf: str,
         pipe_run_mode: PipeRunMode,
         pdf_url: str,
     ):
         input_name = "arbitrary_name"
-        pipe_ocr_blueprint = PipeOcrBlueprint(
+        pipe_ocr_blueprint = PipeExtractBlueprint(
             description="OCR test for PDF processing",
             inputs={input_name: InputRequirementBlueprint(concept=NativeConceptCode.PDF)},
             output=NativeConceptCode.TEXT_AND_IMAGES,
-            ocr=ocr_choice_for_pdf,
+            ocr=extract_choice_for_pdf,
             page_images=True,
             page_image_captions=False,
             page_views=True,
@@ -94,7 +94,7 @@ class TestPipeOCR:
         )
 
         pipe_job = PipeJobFactory.make_pipe_job(
-            pipe=PipeOcrFactory.make_from_blueprint(
+            pipe=PipeExtractFactory.make_from_blueprint(
                 domain="generic",
                 pipe_code="adhoc_for_test_pipe_ocr_pdf",
                 blueprint=pipe_ocr_blueprint,
@@ -105,8 +105,8 @@ class TestPipeOCR:
                 name=input_name,
             ),
         )
-        pipe_ocr_output = await get_pipe_router().run(
+        pipe_extract_output = await get_pipe_router().run(
             pipe_job=pipe_job,
         )
-        ocr_text = pipe_ocr_output.main_stuff_as_list(item_type=PageContent)
-        pretty_print(ocr_text, title="ocr_text")
+        extracted_text = pipe_extract_output.main_stuff_as_list(item_type=PageContent)
+        pretty_print(extracted_text, title="extracted_text")

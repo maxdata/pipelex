@@ -48,17 +48,17 @@ class PipeTestCases:
     # Create simple Stuff objects
     SIMPLE_STUFF_TEXT = StuffFactory.make_stuff(
         name="text",
-        concept=ConceptFactory.make_native_concept_from_enum(native_concept_code=NativeConceptCode.TEXT),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
         content=TextContent(text="Describe a t-shirt in 2 sentences"),
     )
     SIMPLE_STUFF_IMAGE = StuffFactory.make_stuff(
         name="image",
-        concept=ConceptFactory.make_native_concept_from_enum(native_concept_code=NativeConceptCode.IMAGE),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.IMAGE),
         content=ImageContent(url=URL_IMG_FASHION_PHOTO_1),
     )
     SIMPLE_STUFF_PDF = StuffFactory.make_stuff(
         name="document",
-        concept=ConceptFactory.make_native_concept_from_enum(native_concept_code=NativeConceptCode.PDF),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.PDF),
         content=PDFContent(url=PDFTestCases.DOCUMENT_URLS[0]),
     )
     COMPLEX_STUFF = StuffFactory.make_stuff(
@@ -74,7 +74,7 @@ class PipeTestCases:
 
     STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_1 = SomeContentWithImageAttribute(image_attribute=ImageContent(url=URL_IMG_FASHION_PHOTO_1))
     STUFF_WITH_IMAGE_ATTRIBUTE = StuffFactory.make_stuff(
-        concept=ConceptFactory.make_native_concept_from_enum(native_concept_code=NativeConceptCode.IMAGE),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.IMAGE),
         content=STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_1,
         name="stuff_with_image",
     )
@@ -83,7 +83,7 @@ class PipeTestCases:
         sub_object=STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_1,
     )
     STUFF_WITH_IMAGE_ATTRIBUTE_IN_SUB_OBJECT = StuffFactory.make_stuff(
-        concept=ConceptFactory.make_native_concept_from_enum(native_concept_code=NativeConceptCode.IMAGE),
+        concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.IMAGE),
         content=STUFF_CONTENT_WITH_IMAGE_ATTRIBUTE_IN_SUB_OBJECT,
         name="stuff_with_image_in_sub_object",
     )
@@ -154,7 +154,7 @@ class PipeTestCases:
         (
             "Extract page contents from PDF",
             SIMPLE_STUFF_PDF,
-            "ocr_page_contents_from_pdf",
+            "extract_page_contents_from_pdf",
         ),
     ]
     FAILURE_PIPES: ClassVar[list[tuple[str, type[Exception], str]]] = [
@@ -174,7 +174,7 @@ class LibraryTestCases:
     ]
 
 
-class PipeOcrTestCases:
+class PipeExtractTestCases:
     PIPE_OCR_IMAGE_TEST_CASES: ClassVar[list[str]] = [
         ImageTestCases.IMAGE_FILE_PATH_PNG,
         ImageTestCases.IMAGE_URL_PNG,

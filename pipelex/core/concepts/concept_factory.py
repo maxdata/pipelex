@@ -69,7 +69,7 @@ class ConceptFactory:
         )
 
     @classmethod
-    def make_native_concept_from_enum(cls, native_concept_code: NativeConceptCode) -> Concept:
+    def make_native_concept(cls, native_concept_code: NativeConceptCode) -> Concept:
         structure_class_name = native_concept_code.structure_class_name
         match native_concept_code:
             case NativeConceptCode.DYNAMIC:
@@ -138,7 +138,7 @@ class ConceptFactory:
 
     @classmethod
     def make_all_native_concepts(cls) -> list[Concept]:
-        return [cls.make_native_concept_from_enum(native_concept_code=native_concept) for native_concept in NativeConceptCode.values_list()]
+        return [cls.make_native_concept(native_concept_code=native_concept) for native_concept in NativeConceptCode.values_list()]
 
     @classmethod
     def make_domain_and_concept_code_from_concept_string_or_code(

@@ -156,7 +156,7 @@ class PipeCondition(PipeController):
                 # so we'll use a generic placeholder that will be validated later
                 needed_inputs.add_requirement(
                     variable_name=var_name,
-                    concept=ConceptFactory.make_native_concept_from_enum(
+                    concept=ConceptFactory.make_native_concept(
                         native_concept_code=NativeConceptCode.ANYTHING,
                     ),
                 )

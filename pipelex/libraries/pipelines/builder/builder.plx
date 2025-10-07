@@ -80,7 +80,7 @@ Available pipe operators:
 - PipeImgGen: A pipe that uses an AI model to generate an image.
   VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
   That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
-- PipeOcr: A pipe that uses an OCR technology to extract text from an image or a pdf.
+- PipeExtract: A pipe that uses an OCR technology to extract text from an image or a pdf.
   VERY IMPORTANT: THE INPUT OF THE PIPEOCR MUST BE either an image or a pdf or a concept which refines one of them.
 
 
@@ -101,7 +101,7 @@ inputs = { plan_draft = "PlanDraft", brief = "UserBrief" }
 output = "ConceptDrafts"
 llm = "llm_to_engineer"
 prompt_template = """
-We are working on writing an AI pipeleine to fulfill this brief:
+We are working on writing an AI pipeline to fulfill this brief:
 @brief
 
 We have already written a plan for the pipeline. It's built using pipes, each with its own inputs (one or more) and output (single).
@@ -206,7 +206,7 @@ Available pipe operators:
 - PipeImgGen: A pipe that uses an AI model to generate an image.
   VERY IMPORTANT: IF YOU DECIDE TO CREATE A PipeImgGen, YOU ALSO HAVE TO CREATE A PIPELLM THAT WILL WRITE THE PROMPT, AND THAT NEEDS TO PRECEED THE PIPEIMGEN, based on the necessary elements.
   That means that in the MAIN pipeline, the prompt MUST NOT be considered as an input. It should be the output of a step that generates the prompt.
-- PipeOcr: A pipe that extracts text from an image or a pdf. PipeOcr must have a exactly one input which must be either an `Image` or a `PDF`.
+- PipeExtract: A pipe that extracts text from an image or a pdf. PipeExtract must have a exactly one input which must be either an `Image` or a `PDF`.
 
 Be smart about splitting the workflow into steps (sequence or parallel):
 - You can use an LLM to extract or analyze several things at the same time, they can be output as a single concept which will be structured with attributes etc.

@@ -6,10 +6,10 @@ from typing_extensions import override
 from pipelex import log
 from pipelex.cogt.content_generation.content_generator_dry import ContentGeneratorDry
 from pipelex.cogt.content_generation.content_generator_protocol import ContentGeneratorProtocol
-from pipelex.cogt.models.model_deck_check import check_ocr_choice_with_deck
-from pipelex.cogt.ocr.ocr_input import OcrInput
-from pipelex.cogt.ocr.ocr_job_components import OcrJobConfig, OcrJobParams
-from pipelex.cogt.ocr.ocr_setting import OcrChoice, OcrSetting
+from pipelex.cogt.extract.extract_input import ExtractInput
+from pipelex.cogt.extract.extract_job_components import ExtractJobConfig, ExtractJobParams
+from pipelex.cogt.extract.extract_setting import ExtractChoice, ExtractSetting
+from pipelex.cogt.models.model_deck_check import check_extract_choice_with_deck
 from pipelex.config import StaticValidationReaction, get_config
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory import WorkingMemory
@@ -39,13 +39,13 @@ from pipelex.tools.pdf.pypdfium2_renderer import pypdfium2_renderer
 from pipelex.types import Self
 
 
-class PipeOcrOutput(PipeOutput):
+class PipeExtractOutput(PipeOutput):
     pass
 
 
-class PipeOcr(PipeOperator[PipeOcrOutput]):
-    type: Literal["PipeOcr"] = "PipeOcr"
-    ocr_choice: OcrChoice | None
+class PipeExtract(PipeOperator[PipeExtractOutput]):
+    type: Literal["PipeExtract"] = "PipeExtract"
+    extract_choice: ExtractChoice | None
     should_caption_images: bool
     should_include_images: bool
     should_include_page_views: bool
@@ -62,8 +62,8 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
     @override
     def validate_with_libraries(self):
         self._validate_inputs()
-        if self.ocr_choice:
-            check_ocr_choice_with_deck(ocr_choice=self.ocr_choice)
+        if self.extract_choice:
+            check_extract_choice_with_deck(extract_choice=self.extract_choice)
 
     @override
     def required_variables(self) -> set[str]:
@@ -72,7 +72,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
     @override
     def validate_output(self):
         if self.output != get_native_concept(native_concept=NativeConceptCode.PAGE):
-            msg = f"PipeOcr output should be a Page concept, but is {self.output.concept_string}"
+            msg = f"PipeExtract output should be a Page concept, but is {self.output.concept_string}"
             raise PipeDefinitionError(msg)
 
     def _validate_inputs(self):
@@ -136,7 +136,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
                 pipe_code=self.code,
                 variable_names=[input_name],
                 provided_concept_code=requirement.concept.code,
-                explanation="For PipeOcr you must provide either a pdf or an image or a concept that refines one of them",
+                explanation="For PipeExtract you must provide either a pdf or an image or a concept that refines one of them",
             )
             match reactions.get(StaticValidationErrorType.INADEQUATE_INPUT_CONCEPT, default_reaction):
                 case StaticValidationReaction.IGNORE:
@@ -158,7 +158,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
         pipe_run_params: PipeRunParams,
         output_name: str | None = None,
         content_generator: ContentGeneratorProtocol | None = None,
-    ) -> PipeOcrOutput:
+    ) -> PipeExtractOutput:
         content_generator = content_generator or get_content_generator()
 
         image_uri: str | None = None
@@ -170,30 +170,30 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
             pdf_stuff = working_memory.get_stuff_as_pdf(name=self.pdf_stuff_name)
             pdf_uri = pdf_stuff.url
         else:
-            msg = "PipeOcr should have a non-None image_stuff_name or pdf_stuff_name"
+            msg = "PipeExtract should have a non-None image_stuff_name or pdf_stuff_name"
             raise PipeDefinitionError(msg)
 
-        ocr_choice: OcrChoice = self.ocr_choice or get_model_deck().ocr_choice_default
-        ocr_setting: OcrSetting = get_model_deck().get_ocr_setting(ocr_choice=ocr_choice)
+        extract_choice: ExtractChoice = self.extract_choice or get_model_deck().extract_choice_default
+        extract_setting: ExtractSetting = get_model_deck().get_extract_setting(extract_choice=extract_choice)
 
-        ocr_job_params = OcrJobParams(
+        extract_job_params = ExtractJobParams(
             should_include_images=self.should_include_images,
             should_caption_images=self.should_caption_images,
             should_include_page_views=self.should_include_page_views,
             page_views_dpi=self.page_views_dpi,
-            max_nb_images=ocr_setting.max_nb_images,
-            image_min_size=ocr_setting.image_min_size,
+            max_nb_images=extract_setting.max_nb_images,
+            image_min_size=extract_setting.image_min_size,
         )
-        ocr_input = OcrInput(
+        extract_input = ExtractInput(
             image_uri=image_uri,
             pdf_uri=pdf_uri,
         )
-        ocr_output = await content_generator.make_ocr_extract_pages(
-            ocr_input=ocr_input,
-            ocr_handle=ocr_setting.ocr_handle,
+        extract_output = await content_generator.make_extract_pages(
+            extract_input=extract_input,
+            extract_handle=extract_setting.extract_handle,
             job_metadata=job_metadata,
-            ocr_job_params=ocr_job_params,
-            ocr_job_config=OcrJobConfig(),
+            extract_job_params=extract_job_params,
+            extract_job_config=ExtractJobConfig(),
         )
 
         # Build the output stuff, which is a list of page contents
@@ -202,15 +202,15 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
             log.debug(f"should_include_page_views: {self.should_include_page_views}, pdf_uri: {pdf_uri}, image_uri: {image_uri}")
             if pdf_uri:
                 page_view_contents.extend(
-                    ImageContent.make_from_extracted_image(extracted_image=page.page_view) for page in ocr_output.pages.values() if page.page_view
+                    ImageContent.make_from_extracted_image(extracted_image=page.page_view) for page in extract_output.pages.values() if page.page_view
                 )
                 log.debug(f"page_view_contents: {page_view_contents}")
                 needs_to_generate_page_views: bool
                 if len(page_view_contents) == 0:
                     log.debug("No page views found in the OCR output")
                     needs_to_generate_page_views = True
-                elif len(page_view_contents) < len(ocr_output.pages):
-                    log.warning(f"Only {len(page_view_contents)} page found in the OCR output, but {len(ocr_output.pages)} pages")
+                elif len(page_view_contents) < len(extract_output.pages):
+                    log.warning(f"Only {len(page_view_contents)} page found in the OCR output, but {len(extract_output.pages)} pages")
                     needs_to_generate_page_views = True
                 else:
                     log.debug("All page views found in the OCR output")
@@ -223,7 +223,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
                 page_view_contents = [ImageContent(url=image_uri)]
 
         page_contents: list[PageContent] = []
-        for page_index, page in ocr_output.pages.items():
+        for page_index, page in extract_output.pages.items():
             images = [ImageContent.make_from_extracted_image(extracted_image=img) for img in page.extracted_images]
             log.debug(f"images: {images}, page_view_contents: {page_view_contents}, index: {page_index}")
             page_view = page_view_contents[page_index - 1] if self.should_include_page_views else None
@@ -250,7 +250,7 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
             name=output_name,
         )
 
-        return PipeOcrOutput(
+        return PipeExtractOutput(
             working_memory=working_memory,
             pipeline_run_id=job_metadata.pipeline_run_id,
         )
@@ -262,10 +262,10 @@ class PipeOcr(PipeOperator[PipeOcrOutput]):
         working_memory: WorkingMemory,
         pipe_run_params: PipeRunParams,
         output_name: str | None = None,
-    ) -> PipeOcrOutput:
-        log.debug(f"PipeOcr: dry run operator pipe: {self.code}")
+    ) -> PipeExtractOutput:
+        log.debug(f"PipeExtract: dry run operator pipe: {self.code}")
         if pipe_run_params.run_mode != PipeRunMode.DRY:
-            msg = f"Running pipe '{self.code}' (PipeOcr) _dry_run_operator_pipe() in non-dry mode is not allowed."
+            msg = f"Running pipe '{self.code}' (PipeExtract) _dry_run_operator_pipe() in non-dry mode is not allowed."
             raise PipeDefinitionError(msg)
 
         content_generator_dry = ContentGeneratorDry()
