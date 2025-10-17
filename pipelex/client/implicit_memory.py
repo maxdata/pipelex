@@ -28,10 +28,10 @@ class MyConcept(StructuredContent):
 ####################################################################################################
 
 # 1.1: Content is a string.
-stuff_data = "my text"
+stuff_data11 = "my text"
 
 # Stuff should be
-stuff = Stuff(
+stuff11 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
@@ -39,24 +39,24 @@ stuff = Stuff(
 )
 
 # 1.2: Content is a list of strings
-stuff_data = {"concept": "concept_string", "content": "my text"}
+stuff_data12 = ["test1", "test2", "test3"]
 
 # Concept string needs to be compatible strictly with the concept native.Text. Otherwise it should raise an error.
 
-stuff = Stuff(
+stuff12 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
-    content=TextContent(text="my_text"),
+    content=ListContent(items=[TextContent(text="test1"), TextContent(text="test2"), TextContent(text="test3")]),
 )
 
 # 1.3: Content is a StuffContent object.
-stuff_data = MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
+stuff_data13 = MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
 
 # It should look in all the library for the concept with the same name.
 # If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error.
 
-stuff = Stuff(
+stuff13 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),
@@ -64,13 +64,13 @@ stuff = Stuff(
 )
 
 # 1.4:
-stuff_data = [MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))]
+stuff_data14 = [MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))]
 
 # It should look in all the library for the concept with the same name.
 # If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error.
 # EVERY item of the list should be of the same type. Otherwise it should raise an error.
 
-stuff = Stuff(
+stuff14 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),
@@ -92,11 +92,14 @@ stuff = Stuff(
 
 # 2.1: Content is a string
 
-stuff_data = {"concept": "concept_string", "content": "my text"}
+stuff_data21 = {
+    "concept": "concept_string",
+    "content": "my text"
+}
 
 # Here, the concept can either be Text, native.Text or any other concept. But if its any other concept, it should be stricly compatible with the concept native.Text.
 
-stuff = Stuff(
+stuff21 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT), # Or else
@@ -104,11 +107,14 @@ stuff = Stuff(
 )
 
 # 2.2: Content is a list of strings
-stuff_data = {"concept": "concept_string", "content": ["text1", "text2", "text3"]}
+stuff_data22 = {
+    "concept": "concept_string",
+    "content": ["text1", "text2", "text3"]
+}
 
 # Here, the concept can either be Text, native.Text or any other concept. But if its any other concept, it should be stricly compatible with the concept native.Text.
 
-stuff = Stuff(
+stuff22 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT), # Or else
@@ -116,14 +122,17 @@ stuff = Stuff(
 )
 
 # 2.3: Content is a StuffContent object
-stuff_data = {"concept": "concept_string", "content": MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))}
+stuff_data23 = {
+    "concept": "concept_string",
+    "content": MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
+}
 
 # For the concept mentioned: If no domain is specified, it should look in all the library for the concept with the same name.
 # If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error and ask the user to specify the domain.
 # If the domain is specified or found, it should check that the structure corresponds with the given content.
 # Otherwise it should raise an error.
 
-stuff = Stuff(
+stuff23 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),
@@ -131,12 +140,15 @@ stuff = Stuff(
 )
 
 # 2.4: Content is a list of StuffContent objects
-stuff_data = {
+stuff_data24 = {
     "concept": "concept_string",
-    "content": [MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))],
+    "content": [
+        MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), 
+        MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
+    ],
 }
 
-stuff = Stuff(
+stuff24 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),
@@ -146,14 +158,23 @@ stuff = Stuff(
 )
 
 # 2.5: Content is a dict
-stuff_data = {"concept": "concept_string", "content": {"arg1": "something", "arg2": 1, "arg3": {"arg4": "something else else"}}}
+stuff_data25 = {
+    "concept": "concept_string",
+    "content": {
+        "arg1": "something",
+        "arg2": 1,
+        "arg3": {
+            "arg4": "something else else"
+        }
+    }
+}
 
 # For the concept mentioned: If no domain is specified, it should look in all the library for the concept with the same name.
 # If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error and ask the user to specify the domain.
 # If the domain is specified or found, it should check that the structure corresponds with the given content by validating the model.
 # Otherwise it should raise an error.
 
-stuff = Stuff(
+stuff25 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),
@@ -161,11 +182,23 @@ stuff = Stuff(
 )
 
 # 2.6: Content is a list of dict
-stuff_data = {
+stuff_data26 = {
     "concept": "concept_string",
     "content": [
-        {"arg1": "something", "arg2": 1, "arg3": {"arg4": "something else else"}},
-        {"arg1": "something else", "arg2": 2, "arg3": {"arg4": "something else else else"}},
+        {
+            "arg1": "something",
+            "arg2": 1,
+            "arg3": {
+                "arg4": "something else else"
+            }
+        },
+        {
+            "arg1": "something else",
+            "arg2": 2,
+            "arg3": {
+                "arg4": "something else else else"
+            }
+        }
     ],
 }
 
@@ -174,7 +207,7 @@ stuff_data = {
 # If the domain is specified or found, it should check that the structure corresponds with the given content by validating the model.
 # Otherwise it should raise an error.
 
-stuff = Stuff(
+stuff26 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),
