@@ -200,7 +200,7 @@ class StuffFactory:
                     )
 
                 # Case 1.4: list[StuffContent] → ListContent[StuffContent]
-                if isinstance(first_item, StuffContent):
+                elif isinstance(first_item, StuffContent):  # pyright: ignore[reportUnnecessaryIsInstance]
                     # Get the concept from the first item's class name
                     content_class_name = type(first_item).__name__
 
@@ -229,9 +229,9 @@ class StuffFactory:
                         name=name,
                         code=code,
                     )
-
-                msg = f"Cannot create Stuff from list of {type(first_item)}"
-                raise StuffFactoryError(msg)
+                else:
+                    msg = f"Cannot create Stuff from list of {type(first_item)}. Type should be {StuffContentOrData}."
+                    raise StuffFactoryError(msg)
 
         # ==================== CASE 2: Dict with 'concept' AND 'content' keys ====================
         if not isinstance(stuff_content_or_data, dict):

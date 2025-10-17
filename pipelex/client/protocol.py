@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Protocol
+from typing import Any, Protocol, Sequence
 
 from pydantic import BaseModel
 from typing_extensions import runtime_checkable
@@ -12,22 +12,22 @@ from pipelex.types import StrEnum
 # StuffContentOrData represents all possible formats for implicit memory input:
 # Case 1: Direct content (no 'concept' key)
 #   - 1.1: str (simple string)
-#   - 1.2: list[str] (list of strings)
+#   - 1.2: Sequence[str] (list of strings)
 #   - 1.3: StuffContent (a StuffContent object)
-#   - 1.4: list[StuffContent] (list of StuffContent objects)
+#   - 1.4: Sequence[StuffContent] (list of StuffContent objects, covariant)
 # Case 2: Dict with 'concept' AND 'content' keys
 #   - 2.1: {"concept": str, "content": str}
-#   - 2.2: {"concept": str, "content": list[str]}
+#   - 2.2: {"concept": str, "content": Sequence[str]}
 #   - 2.3: {"concept": str, "content": StuffContent}
-#   - 2.4: {"concept": str, "content": list[StuffContent]}
+#   - 2.4: {"concept": str, "content": Sequence[StuffContent]}
 #   - 2.5: {"concept": str, "content": dict[str, Any]}
-#   - 2.6: {"concept": str, "content": list[dict[str, Any]]}
+#   - 2.6: {"concept": str, "content": Sequence[dict[str, Any]]}
 DictStuffContent = dict[str, Any]
 StuffContentOrData = (
     str  # Case 1.1
-    | list[str]  # Case 1.2
+    | Sequence[str]  # Case 1.2
     | StuffContent  # Case 1.3
-    | list[StuffContent]  # Case 1.4
+    | Sequence[StuffContent]  # Case 1.4 (covariant - accepts list[TextContent], etc.)
     | DictStuffContent  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 )
 ImplicitMemory = dict[str, StuffContentOrData]
