@@ -5,7 +5,7 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import BaseModel
 
 from pipelex import log
-from pipelex.client.protocol import CompactMemory, ImplicitMemory
+from pipelex.client.protocol import ImplicitMemory
 from pipelex.core.concepts.concept import ConceptBlueprint, SpecialDomain
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory import MAIN_STUFF_NAME, StuffDict, WorkingMemory
@@ -123,18 +123,6 @@ class WorkingMemoryFactory(BaseModel):
         return WorkingMemory(root={})
 
     @classmethod
-    def make_from_compact_memory(
-        cls,
-        compact_memory: CompactMemory,
-        search_domains: list[str] | None = None,
-    ) -> WorkingMemory:
-        implicit_memory = cast("ImplicitMemory", compact_memory)
-        return cls.make_from_implicit_memory(
-            implicit_memory=implicit_memory,
-            search_domains=search_domains,
-        )
-
-    @classmethod
     def make_from_implicit_memory(
         cls,
         implicit_memory: ImplicitMemory,
@@ -152,7 +140,7 @@ class WorkingMemoryFactory(BaseModel):
         """
         working_memory = cls.make_empty()
 
-        for stuff_key, stuff_content_or_data in implicit_memory.items():
+        for stuff_key, compact_stuff_content in implicit_memory.items():
             stuff = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
                 name=stuff_key,
                 stuff_content_or_data=stuff_content_or_data,
