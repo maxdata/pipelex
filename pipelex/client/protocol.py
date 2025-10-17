@@ -9,10 +9,29 @@ from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from pipelex.types import StrEnum
 
-StuffContentOrData = dict[str, Any] | StuffContent | list[Any] | str
+# StuffContentOrData represents all possible formats for implicit memory input:
+# Case 1: Direct content (no 'concept' key)
+#   - 1.1: str (simple string)
+#   - 1.2: list[str] (list of strings)
+#   - 1.3: StuffContent (a StuffContent object)
+#   - 1.4: list[StuffContent] (list of StuffContent objects)
+# Case 2: Dict with 'concept' AND 'content' keys
+#   - 2.1: {"concept": str, "content": str}
+#   - 2.2: {"concept": str, "content": list[str]}
+#   - 2.3: {"concept": str, "content": StuffContent}
+#   - 2.4: {"concept": str, "content": list[StuffContent]}
+#   - 2.5: {"concept": str, "content": dict[str, Any]}
+#   - 2.6: {"concept": str, "content": list[dict[str, Any]]}
+DictStuffContent = dict[str, Any]
+StuffContentOrData = (
+    str  # Case 1.1
+    | list[str]  # Case 1.2
+    | StuffContent  # Case 1.3
+    | list[StuffContent]  # Case 1.4
+    | DictStuffContent  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
+)
 ImplicitMemory = dict[str, StuffContentOrData]
-CompactMemory = dict[str, dict[str, Any]]
-COMPACT_MEMORY_KEY = "compact_memory"
+DictMemory = dict[str, DictStuffContent]  # Special case of ImplicitMemory
 
 
 class PipelineState(StrEnum):
@@ -45,14 +64,14 @@ class PipelineRequest(BaseModel):
     """Request for executing a pipeline.
 
     Attributes:
-        input_memory (CompactMemory | None): In the format of WorkingMemory.to_compact_memory()
+        inputs (ImplicitMemory | None): Inputs in the format of WorkingMemory.to_implicit_memory()
         output_name (str | None): Name of the output slot to write to
         output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
         dynamic_output_concept_code (str | None): Override for the dynamic output concept code
 
     """
 
-    input_memory: CompactMemory | None = None
+    inputs: ImplicitMemory | None = None
     output_name: str | None = None
     output_multiplicity: PipeOutputMultiplicity | None = None
     dynamic_output_concept_code: str | None = None
@@ -62,47 +81,20 @@ class PipelineResponse(ApiResponse):
     """Response for pipeline execution requests.
 
     Attributes:
-        pipeline_run_id (str): Unique identifier for the pipeline run
         created_at (str): Timestamp when the pipeline was created
         pipeline_state (PipelineState): Current state of the pipeline
         finished_at (str | None): Timestamp when the pipeline finished, if completed
-        pipe_output (CompactMemory | None): Output data from the pipeline execution as raw dict, if available
-
-        Example of pipe_output:
-        "pipe_output": {
-            "input_memory": {
-                "text": {
-                    "concept_code": "native.Text",
-                    "content": "Some text........"
-                },
-                "question": {
-                    "concept_code": "answer.Question",
-                    "content": {
-                        "text": "What are aerodynamic features?"
-                    }
-                },
-                "main_stuff": {
-                    "concept_code": "retrieve.RetrievedExcerpt",
-                    "content": {
-                        "items": [
-                            {
-                                "text": "What we're seeing isn't just an incremental...",
-                                "justification": "This excerpt directly mentions the 'aerodynamic profile' of ...."
-                            },
-                            ...
-                        ]
-                    }
-                }
-            }
-        }
-
+        pipeline_run_id (str): Unique identifier for the pipeline run
+        pipe_output (DictMemory | None): Output data from the pipeline execution as raw dict, if available
+        main_stuff_name (str): Name of the main stuff in the pipeline output
     """
 
-    pipeline_run_id: str
     created_at: str
     pipeline_state: PipelineState
     finished_at: str | None = None
-    pipe_output: CompactMemory | None = None
+    pipeline_run_id: str
+    pipe_output: DictMemory | None = None
+    main_stuff_name: str
 
 
 @runtime_checkable
@@ -126,7 +118,7 @@ class PipelexProtocol(Protocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        input_memory: CompactMemory | None = None,
+        inputs: ImplicitMemory | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
@@ -136,7 +128,7 @@ class PipelexProtocol(Protocol):
         Args:
             pipe_code (str): The code identifying the pipeline to execute
             working_memory (WorkingMemory | None): Memory context passed to the pipeline
-            input_memory (CompactMemory | None): Input memory passed to the pipeline
+            inputs (ImplicitMemory | None): Inputs passed to the pipeline
             output_name (str | None): Target output slot name
             output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
             dynamic_output_concept_code (str | None): Override for dynamic output concept
@@ -155,7 +147,7 @@ class PipelexProtocol(Protocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        input_memory: CompactMemory | None = None,
+        inputs: ImplicitMemory | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
@@ -165,7 +157,7 @@ class PipelexProtocol(Protocol):
         Args:
             pipe_code (str): The code identifying the pipeline to execute
             working_memory (WorkingMemory | None): Memory context passed to the pipeline
-            input_memory (CompactMemory | None): Input memory passed to the pipeline
+            inputs (ImplicitMemory | None): Inputs passed to the pipeline
             output_name (str | None): Target output slot name
             output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
             dynamic_output_concept_code (str | None): Override for dynamic output concept

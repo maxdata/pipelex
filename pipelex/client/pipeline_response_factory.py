@@ -2,6 +2,7 @@ from typing import Any
 
 from pipelex.client.api_serializer import ApiSerializer
 from pipelex.client.protocol import PipelineResponse, PipelineState
+from pipelex.core.memory.working_memory import MAIN_STUFF_NAME
 from pipelex.core.pipes.pipe_output import PipeOutput
 
 
@@ -10,7 +11,7 @@ class PipelineResponseFactory:
 
     @staticmethod
     def make_from_pipe_output(
-        pipe_output: PipeOutput | None = None,
+        pipe_output: PipeOutput,
         pipeline_run_id: str = "",
         created_at: str = "",
         pipeline_state: PipelineState = PipelineState.COMPLETED,
@@ -35,9 +36,7 @@ class PipelineResponseFactory:
             PipelineResponse with the pipe output serialized to reduced format
 
         """
-        compact_output = None
-        if pipe_output is not None:
-            compact_output = ApiSerializer.serialize_pipe_output_for_api(pipe_output=pipe_output)
+        compact_output = ApiSerializer.serialize_pipe_output_for_api(pipe_output=pipe_output)
 
         return PipelineResponse(
             pipeline_run_id=pipeline_run_id,
@@ -45,6 +44,7 @@ class PipelineResponseFactory:
             pipeline_state=pipeline_state,
             finished_at=finished_at,
             pipe_output=compact_output,
+            main_stuff_name=pipe_output.working_memory.aliases.get(MAIN_STUFF_NAME, MAIN_STUFF_NAME),
             status=status,
             message=message,
             error=error,

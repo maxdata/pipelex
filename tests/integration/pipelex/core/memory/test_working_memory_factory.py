@@ -8,19 +8,19 @@ from pipelex.core.stuffs.text_and_images_content import TextAndImagesContent
 from pipelex.core.stuffs.text_content import TextContent
 
 if TYPE_CHECKING:
-    from pipelex.client.protocol import CompactMemory
+    from pipelex.client.protocol import ImplicitMemory
 
 
 class TestWorkingMemoryFactory:
     def test_make_from_compact_memory_with_text_content(self):
-        compact_memory: CompactMemory = {
+        implicit_memory: ImplicitMemory = {
             "text_item": {
                 "concept_code": NativeConceptCode.TEXT,
                 "content": "Hello, world!",
             },
         }
 
-        working_memory = WorkingMemoryFactory.make_from_compact_memory(compact_memory)
+        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
 
         assert working_memory is not None
         assert "text_item" in working_memory.root
@@ -32,7 +32,7 @@ class TestWorkingMemoryFactory:
 
     def test_make_from_compact_memory_with_complex_nested_content(self):
         """Test deserialization of compact memory with complex nested structured content."""
-        compact_memory: CompactMemory = {
+        implicit_memory: ImplicitMemory = {
             "complex_page": {
                 "concept_code": NativeConceptCode.PAGE,
                 "content": {
@@ -60,7 +60,7 @@ class TestWorkingMemoryFactory:
             },
         }
 
-        working_memory = WorkingMemoryFactory.make_from_compact_memory(compact_memory)
+        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
 
         assert working_memory is not None
         assert "complex_page" in working_memory.root
@@ -113,16 +113,16 @@ class TestWorkingMemoryFactory:
 
     def test_make_from_compact_memory_empty(self):
         """Test deserialization of empty compact memory."""
-        compact_memory: CompactMemory = {}
+        implicit_memory: ImplicitMemory = {}
 
-        working_memory = WorkingMemoryFactory.make_from_compact_memory(compact_memory)
+        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
 
         assert working_memory is not None
         assert len(working_memory.root) == 0
 
     def test_make_from_compact_memory_multiple_items(self):
         """Test deserialization of compact memory with multiple items."""
-        compact_memory: CompactMemory = {
+        implicit_memory: ImplicitMemory = {
             "text1": {
                 "concept_code": NativeConceptCode.TEXT,
                 "content": "First text",
@@ -133,7 +133,7 @@ class TestWorkingMemoryFactory:
             },
         }
 
-        working_memory = WorkingMemoryFactory.make_from_compact_memory(compact_memory)
+        working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=implicit_memory)
 
         assert working_memory is not None
         assert len(working_memory.root) == 2

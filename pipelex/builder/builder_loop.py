@@ -24,7 +24,7 @@ class BuilderLoop:
         pretty_print(f"Building and fixing with {pipe_code}")
         pipe_output = await execute_pipeline(
             pipe_code=pipe_code,
-            input_memory=input_memory,
+            inputs=input_memory,
         )
         pretty_print(pipe_output, title="Pipe Output")
 

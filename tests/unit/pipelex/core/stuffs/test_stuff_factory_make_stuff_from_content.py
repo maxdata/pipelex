@@ -58,11 +58,11 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mock_make = mocker.patch.object(StuffFactory, "make_stuff_using_concept_name_and_search_domains", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=list_content,
             search_domains=TestData.SEARCH_DOMAINS,
-            stuff_code=TestData.STUFF_CODE,
+            code=TestData.STUFF_CODE,
         )
 
         assert result == mock_stuff
@@ -76,8 +76,8 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
 
     def test_listcontent_with_empty_items_raises_error(self):
         """Test ListContent with empty items raises StuffFactoryError."""
-        with pytest.raises(StuffFactoryError, match="ListContent in compact memory has no items"):
-            StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        with pytest.raises(StuffFactoryError, match="Cannot create Stuff 'test_stuff' from empty list"):
+            StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=TestData.STUFF_NAME,
                 stuff_content_or_data=TestData.EMPTY_LIST_CONTENT,
                 search_domains=TestData.SEARCH_DOMAINS,
@@ -91,7 +91,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mocker.patch.object(StuffFactory, "make_stuff_using_concept_name_and_search_domains", side_effect=original_error)
 
         with pytest.raises(StuffFactoryError, match="Could not make stuff for ListContent 'test_stuff': Original error"):
-            StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+            StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=TestData.STUFF_NAME,
                 stuff_content_or_data=list_content,
                 search_domains=TestData.SEARCH_DOMAINS,
@@ -107,11 +107,11 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mocker.patch.object(StuffFactory, "make_stuff", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=text_content,
             search_domains=TestData.SEARCH_DOMAINS,
-            stuff_code=TestData.STUFF_CODE,
+            code=TestData.STUFF_CODE,
         )
 
         assert result == mock_stuff
@@ -124,7 +124,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mock_make = mocker.patch.object(StuffFactory, "make_stuff_using_concept_name_and_search_domains", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=custom_content,
             search_domains=TestData.SEARCH_DOMAINS,
@@ -146,11 +146,11 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mock_make = mocker.patch.object(StuffFactory, "make_stuff_using_concept_name_and_search_domains", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=test_list,
             search_domains=TestData.SEARCH_DOMAINS,
-            stuff_code=TestData.STUFF_CODE,
+            code=TestData.STUFF_CODE,
         )
 
         assert result == mock_stuff
@@ -163,7 +163,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
     def test_list_with_empty_items_raises_error(self):
         """Test plain list with empty items raises StuffFactoryError."""
         with pytest.raises(StuffFactoryError, match="List in compact memory has no items"):
-            StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+            StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=TestData.STUFF_NAME,
                 stuff_content_or_data=[],
                 search_domains=TestData.SEARCH_DOMAINS,
@@ -177,7 +177,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mocker.patch.object(StuffFactory, "make_stuff_using_concept_name_and_search_domains", side_effect=original_error)
 
         with pytest.raises(StuffFactoryError, match="Could not make stuff for list of StuffContent 'test_stuff': Original error"):
-            StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+            StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=TestData.STUFF_NAME,
                 stuff_content_or_data=test_list,
                 search_domains=TestData.SEARCH_DOMAINS,
@@ -192,7 +192,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mocker.patch.object(StuffFactory, "make_stuff", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=TestData.TEXT_STRING,
             search_domains=TestData.SEARCH_DOMAINS,
@@ -220,11 +220,11 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mocker.patch.object(StuffFactory, "make_stuff", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=TestData.NATIVE_TEXT_DICT,
             search_domains=TestData.SEARCH_DOMAINS,
-            stuff_code=TestData.STUFF_CODE,
+            code=TestData.STUFF_CODE,
         )
 
         assert result == mock_stuff
@@ -244,11 +244,11 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mocker.patch.object(StuffFactory, "make_stuff", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=test_dict,
             search_domains=TestData.SEARCH_DOMAINS,
-            stuff_code=TestData.STUFF_CODE,
+            code=TestData.STUFF_CODE,
         )
 
         assert result == mock_stuff
@@ -268,11 +268,11 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mocker.patch.object(StuffFactory, "make_stuff", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=TestData.CUSTOM_CONCEPT_DICT,
             search_domains=TestData.SEARCH_DOMAINS,
-            stuff_code=TestData.STUFF_CODE,
+            code=TestData.STUFF_CODE,
         )
 
         assert result == mock_stuff
@@ -296,7 +296,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mocker.patch.object(StuffFactory, "make_stuff", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=TestData.CUSTOM_CONCEPT_CODE_DICT,
             search_domains=TestData.SEARCH_DOMAINS,
@@ -307,7 +307,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
     def test_dict_missing_concept_raises_error(self):
         """Test dictionary missing concept field raises StuffFactoryError."""
         with pytest.raises(StuffFactoryError, match="Stuff content data dict is badly formed: no concept code"):
-            StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+            StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=TestData.STUFF_NAME,
                 stuff_content_or_data=TestData.MISSING_CONCEPT_DICT,
                 search_domains=TestData.SEARCH_DOMAINS,
@@ -316,7 +316,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
     def test_dict_missing_content_raises_error(self):
         """Test dictionary missing content field raises StuffFactoryError."""
         with pytest.raises(StuffFactoryError, match="Stuff content data dict is badly formed: 'content'"):
-            StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+            StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=TestData.STUFF_NAME,
                 stuff_content_or_data=TestData.MISSING_CONTENT_DICT,
                 search_domains=TestData.SEARCH_DOMAINS,
@@ -331,7 +331,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mocker.patch.object(StuffFactory, "make_stuff", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=TestData.TEXT_STRING,
             search_domains=TestData.SEARCH_DOMAINS,
@@ -346,7 +346,7 @@ class TestMakeStuffFromStuffContentUsingSearchDomains:
         mock_stuff = mocker.Mock(spec=Stuff)
         mock_make = mocker.patch.object(StuffFactory, "make_stuff_using_concept_name_and_search_domains", return_value=mock_stuff)
 
-        result = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,
             stuff_content_or_data=list_content,
             search_domains=[],

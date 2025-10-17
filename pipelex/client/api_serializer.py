@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from pipelex.client.protocol import CompactMemory
+from pipelex.client.protocol import DictMemory
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.pipes.pipe_output import PipeOutput
@@ -21,19 +21,20 @@ class ApiSerializer:
     FIELDS_TO_SKIP = ("__class__", "__module__")
 
     @classmethod
-    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> CompactMemory:
+    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> DictMemory:
         """Convert WorkingMemory to API-ready format using kajson with proper datetime handling.
 
         Args:
             working_memory: The WorkingMemory to serialize
 
         Returns:
-            Dict ready for API transmission with datetime strings and no __class__/__module__
+            ImplicitMemory ready for API transmission with datetime strings and no __class__/__module__.
+            Its
 
         """
-        compact_memory: CompactMemory = {}
+        dict_memory: DictMemory = {}
         if working_memory is None:
-            return compact_memory
+            return dict_memory
 
         for stuff_name, stuff in working_memory.root.items():
             if NativeConceptCode.is_text_concept(concept_code=stuff.concept.code):
@@ -51,12 +52,12 @@ class ApiSerializer:
                     "content": clean_content,
                 }
 
-            compact_memory[stuff_name] = item_dict
+            dict_memory[stuff_name] = item_dict
 
-        return compact_memory
+        return dict_memory
 
     @classmethod
-    def serialize_pipe_output_for_api(cls, pipe_output: PipeOutput) -> CompactMemory:
+    def serialize_pipe_output_for_api(cls, pipe_output: PipeOutput) -> DictMemory:
         """Convert PipeOutput to API-ready format.
 
         Args:
@@ -66,7 +67,7 @@ class ApiSerializer:
             Dict ready for API transmission
 
         """
-        return {"compact_memory": cls.serialize_working_memory_for_api(pipe_output.working_memory)}
+        return {"dict_memory": cls.serialize_working_memory_for_api(pipe_output.working_memory)}
 
     @classmethod
     def _clean_and_format_content(cls, content: Any) -> Any:

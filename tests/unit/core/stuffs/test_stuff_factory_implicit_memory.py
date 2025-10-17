@@ -1,0 +1,462 @@
+import os
+from typing import Any
+
+import pytest
+from pydantic import Field
+
+from pipelex import log
+from pipelex.client.protocol import StuffContentOrData
+from pipelex.core.concepts.concept_blueprint import ConceptBlueprint
+from pipelex.core.concepts.concept_factory import ConceptFactory
+from pipelex.core.concepts.concept_native import NativeConceptCode
+from pipelex.core.stuffs.list_content import ListContent
+from pipelex.core.stuffs.structured_content import StructuredContent
+from pipelex.core.stuffs.stuff import Stuff
+from pipelex.core.stuffs.stuff_factory import StuffFactory
+from pipelex.core.stuffs.text_content import TextContent
+from pipelex.hub import get_concept_library
+from pipelex.system.registries.class_registry_utils import ClassRegistryUtils
+
+
+class MySubClass(StructuredContent):
+    arg4: str = Field(description="Test argument 4")
+
+
+class MyConcept(StructuredContent):
+    arg1: str = Field(description="Test argument 1")
+    arg2: int = Field(description="Test argument 2")
+    arg3: MySubClass = Field(description="Test argument 3")
+
+
+@pytest.fixture
+def setup_test_concept():
+    # Register the class in the class registry
+    ClassRegistryUtils.register_classes_in_file(
+        file_path=os.path.join(os.path.dirname(__file__), "test_stuff_factory_implicit_memory.py"),
+        base_class=StructuredContent,
+        is_include_imported=False,
+    )
+
+    # Create and register the test concept
+    concept_library = get_concept_library()
+
+    # Create the concept
+    concept = ConceptFactory.make(
+        concept_code="MyConcept",
+        domain="test_domain",
+        description="Test concept for unit tests",
+        structure_class_name="MyConcept",
+    )
+    # Register it in the library
+    concept_library.add_new_concept(concept=concept)
+
+    # Create a concept that is not native.Text but initiable by str
+    concept_not_native_text = ConceptFactory.make_from_blueprint(
+        domain="test_domain",
+        concept_code="MyConceptNotNativeText",
+        blueprint=ConceptBlueprint(
+            description="Test concept for unit tests",
+        ),
+    )
+    concept_library.add_new_concept(concept=concept_not_native_text)
+
+    yield concept
+
+    # Cleanup after test
+    concept_library.remove_concepts_by_codes(concept_codes=["MyConcept", "MyConceptNotNativeText"])
+
+
+class TestStuffFactoryImplicitMemory:
+    """Test Case 1: Direct content without 'concept' key.
+
+    This covers cases where stuff_content_or_data is directly:
+    - A string (1.1)
+    - A list of strings (1.2)
+    - A StuffContent object (1.3)
+    - A list of StuffContent objects (1.4)
+    """
+
+    @pytest.mark.parametrize(
+        ("test_name", "stuff_content_or_data", "stuff_name", "stuff_code", "expected_stuff"),
+        [
+            # Case 1.1: Content is a string
+            pytest.param(
+                "case-1.1-string",
+                "Lorem Ipsum",
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_name="stuff_name",
+                    stuff_code="stuff_code",
+                    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+                    content=TextContent(text="Lorem Ipsum"),
+                ),
+            ),
+            # Case 1.2: Content is a list of strings
+            pytest.param(
+                "case-1.2-list-of-strings",
+                ["Lorem Ipsum 1", "Lorem Ipsum 2", "Lorem Ipsum 3"],
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_name="stuff_name",
+                    stuff_code="stuff_code",
+                    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+                    content=ListContent(
+                        items=[
+                            TextContent(text="Lorem Ipsum 1"),
+                            TextContent(text="Lorem Ipsum 2"),
+                            TextContent(text="Lorem Ipsum 3"),
+                        ]
+                    ),
+                ),
+            ),
+            # Case 1.3: Content is a StuffContent object
+            pytest.param(
+                "case-1.3-stuff-content-object",
+                MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_code="stuff_code",
+                    stuff_name="stuff_name",
+                    concept=ConceptFactory.make(
+                        concept_code="MyConcept",
+                        domain="test_domain",
+                        description="Test concept for unit tests",
+                        structure_class_name="MyConcept",
+                    ),
+                    content=MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                ),
+            ),
+            # Case 1.4: Content is a list of StuffContent objects
+            pytest.param(
+                "case-1.4-list-of-stuff-content-objects",
+                [
+                    MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                    MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2")),
+                ],
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_name="stuff_name",
+                    stuff_code="stuff_code",
+                    concept=ConceptFactory.make(
+                        concept_code="MyConcept",
+                        domain="test_domain",
+                        description="Test concept for unit tests",
+                        structure_class_name="MyConcept",
+                    ),
+                    content=ListContent(
+                        items=[
+                            MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                            MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2")),
+                        ]
+                    ),
+                ),
+            ),
+        ],
+    )
+    def test_case1_direct_content(
+        self,
+        setup_test_concept: Any,
+        test_name: str,
+        stuff_content_or_data: StuffContentOrData,
+        stuff_name: str,
+        stuff_code: str,
+        expected_stuff: Stuff,
+    ):
+        log.info(f"Test Case 1: Direct content without concept key. {test_name}")
+        log.debug(f"setup_test_concept: {setup_test_concept}")
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
+            name=stuff_name,
+            code=stuff_code,
+            stuff_content_or_data=stuff_content_or_data,
+        )
+        assert result == expected_stuff
+
+    @pytest.mark.parametrize(
+        ("test_name", "stuff_content_or_data", "stuff_name", "stuff_code", "expected_stuff"),
+        [
+            # Case 2.1: Content is a string
+            pytest.param(
+                "case-2.1-dict-with-string-content",
+                {"concept": "Text", "content": "my text"},
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_name="stuff_name",
+                    stuff_code="stuff_code",
+                    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+                    content=TextContent(text="my text"),
+                ),
+            ),
+            # Case 2.1b: Content is a string with native prefix
+            pytest.param(
+                "case-2.1b-dict-with-string-content-native-prefix",
+                {"concept": "native.Text", "content": "my text"},
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_code="stuff_code",
+                    stuff_name="stuff_name",
+                    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+                    content=TextContent(text="my text"),
+                ),
+            ),
+            # case 2.1c: Content is a string but the concept is not native.Text, but a concept initiable by str
+            pytest.param(
+                "case-2.1c-dict-with-string-content-not-native-text",
+                {"concept": "test_domain.MyConceptNotNativeText", "content": "my text"},
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_code="stuff_code",
+                    stuff_name="stuff_name",
+                    concept=ConceptFactory.make_from_blueprint(
+                        domain="test_domain",
+                        concept_code="MyConceptNotNativeText",
+                        blueprint=ConceptBlueprint(
+                            description="Test concept for unit tests",
+                        ),
+                    ),
+                    content=TextContent(text="my text"),
+                ),
+            ),
+            # Case 2.2: Content is a list of strings
+            pytest.param(
+                "case-2.2-dict-with-list-of-strings",
+                {"concept": "Text", "content": ["text1", "text2", "text3"]},
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_name="stuff_name",
+                    stuff_code="stuff_code",
+                    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+                    content=ListContent(
+                        items=[
+                            TextContent(text="text1"),
+                            TextContent(text="text2"),
+                            TextContent(text="text3"),
+                        ]
+                    ),
+                ),
+            ),
+            # case 2.2b: Content is a list of strings but the concept is not native.Text, but a concept initiable by str
+            pytest.param(
+                "case-2.2b-dict-with-list-of-strings-not-native-text",
+                {"concept": "test_domain.MyConceptNotNativeText", "content": ["text1", "text2", "text3"]},
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_code="stuff_code",
+                    stuff_name="stuff_name",
+                    concept=ConceptFactory.make_from_blueprint(
+                        domain="test_domain",
+                        concept_code="MyConceptNotNativeText",
+                        blueprint=ConceptBlueprint(
+                            description="Test concept for unit tests",
+                        ),
+                    ),
+                    content=ListContent(
+                        items=[
+                            TextContent(text="text1"),
+                            TextContent(text="text2"),
+                            TextContent(text="text3"),
+                        ]
+                    ),
+                ),
+            ),
+            # Case 2.3: Content is a StuffContent object
+            pytest.param(
+                "case-2.3-dict-with-stuff-content-object",
+                {
+                    "concept": "test_domain.MyConcept",
+                    "content": MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                },
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_code="stuff_code",
+                    stuff_name="stuff_name",
+                    concept=ConceptFactory.make(
+                        concept_code="MyConcept",
+                        domain="test_domain",
+                        description="Test concept for unit tests",
+                        structure_class_name="MyConcept",
+                    ),
+                    content=MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                ),
+            ),
+            # Case 2.4: Content is a list of StuffContent objects
+            pytest.param(
+                "case-2.4-dict-with-list-of-stuff-content-objects",
+                {
+                    "concept": "test_domain.MyConcept",
+                    "content": [
+                        MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                        MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2")),
+                    ],
+                },
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_name="stuff_name",
+                    stuff_code="stuff_code",
+                    concept=ConceptFactory.make(
+                        concept_code="MyConcept",
+                        domain="test_domain",
+                        description="Test concept for unit tests",
+                        structure_class_name="MyConcept",
+                    ),
+                    content=ListContent(
+                        items=[
+                            MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                            MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2")),
+                        ]
+                    ),
+                ),
+            ),
+            # Case 2.5: Content is a dict
+            pytest.param(
+                "case-2.5-dict-with-dict-content",
+                {
+                    "concept": "test_domain.MyConcept",
+                    "content": {
+                        "arg1": "something",
+                        "arg2": 1,
+                        "arg3": {"arg4": "something else else"},
+                    },
+                },
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_code="stuff_code",
+                    stuff_name="stuff_name",
+                    concept=ConceptFactory.make(
+                        concept_code="MyConcept",
+                        domain="test_domain",
+                        description="Test concept for unit tests",
+                        structure_class_name="MyConcept",
+                    ),
+                    content=MyConcept(arg1="something", arg2=1, arg3=MySubClass(arg4="something else else")),
+                ),
+            ),
+            # Case 2.6: Content is a list of dicts
+            pytest.param(
+                "case-2.6-dict-with-list-of-dicts",
+                {
+                    "concept": "test_domain.MyConcept",
+                    "content": [
+                        {
+                            "arg1": "something",
+                            "arg2": 1,
+                            "arg3": {"arg4": "something else else"},
+                        },
+                        {
+                            "arg1": "something else",
+                            "arg2": 2,
+                            "arg3": {"arg4": "something else else else"},
+                        },
+                    ],
+                },
+                "stuff_name",
+                "stuff_code",
+                Stuff(
+                    stuff_name="stuff_name",
+                    stuff_code="stuff_code",
+                    concept=ConceptFactory.make(
+                        concept_code="MyConcept",
+                        domain="test_domain",
+                        description="Test concept for unit tests",
+                        structure_class_name="MyConcept",
+                    ),
+                    content=ListContent(
+                        items=[
+                            MyConcept(arg1="something", arg2=1, arg3=MySubClass(arg4="something else else")),
+                            MyConcept(arg1="something else", arg2=2, arg3=MySubClass(arg4="something else else else")),
+                        ]
+                    ),
+                ),
+            ),
+        ],
+    )
+    def test_case2_dict_with_concept_and_content(
+        self,
+        setup_test_concept: Any,
+        test_name: str,
+        stuff_content_or_data: StuffContentOrData,
+        stuff_name: str,
+        stuff_code: str,
+        expected_stuff: Stuff,
+    ):
+        """Test Case 2: Dict with concept and content keys."""
+        log.info(f"Test Case 2: Dict with concept and content keys. {test_name}")
+        log.debug(f"setup_test_concept: {setup_test_concept}")
+        result = StuffFactory.make_stuff_from_stuff_content_or_data(
+            name=stuff_name,
+            code=stuff_code,
+            stuff_content_or_data=stuff_content_or_data,
+        )
+        assert result == expected_stuff
+
+
+# class TestStuffFactoryImplicitMemoryEdgeCases:
+#     """Test edge cases and error conditions."""
+
+#     def test_empty_list_raises_error(self):
+#         """Test that empty list raises appropriate error."""
+#         with pytest.raises(Exception) as exc_info:
+#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+#                 name="test_stuff",
+#                 stuff_content_or_data=[],
+#                 search_domains=["test_domain"],
+#             )
+#         assert "no items" in str(exc_info.value).lower()
+
+#     def test_dict_without_concept_raises_error(self):
+#         """Test that dict without concept key raises appropriate error."""
+#         with pytest.raises(Exception) as exc_info:
+#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+#                 name="test_stuff",
+#                 stuff_content_or_data={"content": "some content"},
+#                 search_domains=["test_domain"],
+#             )
+#         assert "concept" in str(exc_info.value).lower()
+
+#     def test_dict_without_content_raises_error(self):
+#         """Test that dict without content key raises appropriate error."""
+#         with pytest.raises(Exception) as exc_info:
+#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+#                 name="test_stuff",
+#                 stuff_content_or_data={"concept": "Text"},
+#                 search_domains=["test_domain"],
+#             )
+#         assert "content" in str(exc_info.value).lower()
+
+#     def test_concept_not_found_raises_error(self, setup_test_concept):
+#         """Test that non-existent concept raises appropriate error."""
+#         with pytest.raises(Exception) as exc_info:
+#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+#                 name="test_stuff",
+#                 stuff_content_or_data={
+#                     "concept": "NonExistentConcept",
+#                     "content": {"some": "data"},
+#                 },
+#                 search_domains=["test_domain"],
+#             )
+#         # Should raise error about concept not found
+
+#     def test_list_with_mixed_types_raises_error(self, setup_test_concept):
+#         """Test that list with mixed StuffContent types raises error."""
+#         # This should ideally raise an error or at least log a warning
+#         # The current implementation might not catch this, but it should
+#         with pytest.raises(Exception):
+#             StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+#                 name="test_stuff",
+#                 stuff_content_or_data=[
+#                     MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+#                     TextContent(text="different type"),  # Different type!
+#                 ],
+#                 search_domains=["test_domain"],
+#             )

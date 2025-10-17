@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from pipelex import pretty_print
 from pipelex.client.client import PipelexClient
-from pipelex.client.protocol import COMPACT_MEMORY_KEY, PipelineState
+from pipelex.client.protocol import PipelineState
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.domains.domain import SpecialDomain
@@ -116,7 +116,7 @@ class TestPipelexApiClient:
             assert pipeline_reponse.pipeline_state == PipelineState.COMPLETED
             assert pipeline_reponse.pipe_output is not None
 
-            working_memory = pipeline_reponse.pipe_output[COMPACT_MEMORY_KEY]
+            working_memory = pipeline_reponse.pipe_output["dict_memory"]
 
             # Verify question structure
             assert working_memory["question"] == {

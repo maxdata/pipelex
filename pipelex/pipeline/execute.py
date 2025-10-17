@@ -23,7 +23,7 @@ from pipelex.system.environment import get_optional_env
 async def execute_pipeline(
     pipe_code: str,
     working_memory: WorkingMemory | None = None,
-    input_memory: ImplicitMemory | None = None,
+    inputs: ImplicitMemory | None = None,
     search_domains: list[str] | None = None,
     output_name: str | None = None,
     output_multiplicity: PipeOutputMultiplicity | None = None,
@@ -42,8 +42,8 @@ async def execute_pipeline(
         The code of the pipe to execute.
     working_memory:
         Optional ``WorkingMemory`` instance passed to the pipe.
-    input_memory:
-        Optional compact memory to pass to the pipe.
+    inputs:
+        Optional implicit memory to pass to the pipe.
     output_name:
         Name of the output slot to write to.
     output_multiplicity:
@@ -69,13 +69,13 @@ async def execute_pipeline(
     if pipe.domain not in search_domains:
         search_domains.insert(0, pipe.domain)
 
-    # Can be either working_memory or compact_memory or neither, but not both
-    if working_memory and input_memory:
-        msg = f"Cannot pass both working_memory and input_memory to `execute_pipeline` {pipe_code=}"
+    # Can be either working_memory or implicit_memory or neither, but not both
+    if working_memory and inputs:
+        msg = f"Cannot pass both working_memory and inputs to `execute_pipeline` {pipe_code=}"
         raise PipelineInputError(msg)
-    if input_memory:
+    if inputs:
         working_memory = WorkingMemoryFactory.make_from_implicit_memory(
-            implicit_memory=input_memory,
+            implicit_memory=inputs,
             search_domains=search_domains,
         )
 

@@ -124,6 +124,30 @@ class ConceptLibrary(RootModel[ConceptLibraryRoot], ConceptLibraryAbstract):
         return is_image_class or refines_image
 
     @override
+    def get_required_concept_from_concept_string_or_code(self, concept_string_or_code: str, search_domains: list[str] | None = None) -> Concept:
+        if "." in concept_string_or_code:
+            return self.get_required_concept(concept_string=concept_string_or_code)
+        elif NativeConceptCode.is_native_concept(concept_code=concept_string_or_code):
+            return self.get_native_concept(native_concept=NativeConceptCode(concept_string_or_code))
+        else:
+            if search_domains is None:
+                msg = f"Concept '{concept_string_or_code}' not found in the library and no search domains were provided"
+                raise ConceptLibraryConceptNotFoundError(msg)
+            found_concepts: list[Concept] = []
+            for domain in search_domains:
+                if found_concept := self.get_required_concept(
+                    concept_string=ConceptFactory.make_concept_string_with_domain(domain=domain, concept_code=concept_string_or_code),
+                ):
+                    found_concepts.append(found_concept)
+            if len(found_concepts) == 0:
+                msg = f"Concept '{concept_string_or_code}' not found in the library and no search domains were provided"
+                raise ConceptLibraryConceptNotFoundError(msg)
+            if len(found_concepts) > 1:
+                msg = f"Multiple concepts found for '{concept_string_or_code}': {found_concepts}. Please specify the domain."
+                raise ConceptLibraryConceptNotFoundError(msg)
+            return found_concepts[0]
+
+    @override
     def search_for_concept_in_domains(self, concept_code: str, search_domains: list[str]) -> Concept | None:
         ConceptBlueprint.validate_concept_code(concept_code=concept_code)
         for domain in search_domains:

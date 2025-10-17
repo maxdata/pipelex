@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any
 
 import shortuuid
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -132,7 +132,7 @@ class WorkingMemoryFactory(BaseModel):
 
         Args:
             implicit_memory: Dictionary in the format from API serialization
-            search_domains: List of search domains to use when making stuff
+            search_domains: List of domains to search for concepts
 
         Returns:
             WorkingMemory object reconstructed from the implicit format
@@ -140,15 +140,13 @@ class WorkingMemoryFactory(BaseModel):
         """
         working_memory = cls.make_empty()
 
-        for stuff_key, compact_stuff_content in implicit_memory.items():
-            stuff = StuffFactory.make_stuff_from_stuff_content_using_search_domains(
+        for stuff_key, stuff_content_or_data in implicit_memory.items():
+            stuff = StuffFactory.make_stuff_from_stuff_content_or_data(
                 name=stuff_key,
                 stuff_content_or_data=stuff_content_or_data,
-                search_domains=search_domains or [],
+                search_domains=search_domains,
             )
-
             working_memory.add_new_stuff(name=stuff_key, stuff=stuff)
-
         return working_memory
 
     @classmethod

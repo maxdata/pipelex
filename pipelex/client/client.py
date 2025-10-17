@@ -5,7 +5,7 @@ from typing_extensions import override
 
 from pipelex.client.pipeline_request_factory import PipelineRequestFactory
 from pipelex.client.pipeline_response_factory import PipelineResponseFactory
-from pipelex.client.protocol import CompactMemory, PipelexProtocol, PipelineResponse
+from pipelex.client.protocol import ImplicitMemory, PipelexProtocol, PipelineResponse
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.memory.working_memory_factory import WorkingMemoryFactory
 from pipelex.exceptions import ClientAuthenticationError
@@ -81,17 +81,17 @@ class PipelexClient(PipelexProtocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        input_memory: CompactMemory | None = None,
+        inputs: ImplicitMemory | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
     ) -> PipelineResponse:
-        if working_memory and input_memory:
-            msg = f"working_memory and input_memory cannot be provided together to the API execute_pipeline {pipe_code=}"
+        if working_memory and inputs:
+            msg = f"working_memory and inputs cannot be provided together to the API execute_pipeline {pipe_code=}"
             raise ValueError(msg)
 
-        if input_memory is not None:
-            working_memory = WorkingMemoryFactory.make_from_compact_memory(input_memory)
+        if inputs is not None:
+            working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=inputs)
 
         pipeline_request = PipelineRequestFactory.make_from_working_memory(
             working_memory=working_memory,
@@ -107,17 +107,17 @@ class PipelexClient(PipelexProtocol):
         self,
         pipe_code: str,
         working_memory: WorkingMemory | None = None,
-        input_memory: CompactMemory | None = None,
+        inputs: ImplicitMemory | None = None,
         output_name: str | None = None,
         output_multiplicity: PipeOutputMultiplicity | None = None,
         dynamic_output_concept_code: str | None = None,
     ) -> PipelineResponse:
-        if working_memory and input_memory:
-            msg = f"working_memory and input_memory cannot be provided together to the API start_pipeline {pipe_code=}"
+        if working_memory and inputs:
+            msg = f"working_memory and inputs cannot be provided together to the API start_pipeline {pipe_code=}"
             raise ValueError(msg)
 
-        if input_memory is not None:
-            working_memory = WorkingMemoryFactory.make_from_compact_memory(input_memory)
+        if inputs is not None:
+            working_memory = WorkingMemoryFactory.make_from_implicit_memory(implicit_memory=inputs)
 
         pipeline_request = PipelineRequestFactory.make_from_working_memory(
             working_memory=working_memory,

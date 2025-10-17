@@ -1,11 +1,9 @@
-from unittest import suite
-from pipelex.core.stuffs.stuff import Stuff
 from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.concepts.concept_native import NativeConceptCode
-from pipelex.core.stuffs.text_content import TextContent
 from pipelex.core.stuffs.list_content import ListContent
 from pipelex.core.stuffs.structured_content import StructuredContent
-from pipelex.core.stuffs.json_content import JSONContent
+from pipelex.core.stuffs.stuff import Stuff
+from pipelex.core.stuffs.text_content import TextContent
 
 
 class MySubClass(StructuredContent):
@@ -82,7 +80,7 @@ stuff14 = Stuff(
 )
 
 ####################################################################################################
-## CASE 2: Here, we HAVE the key "concept_string" AND the key "content". 
+## CASE 2: Here, we HAVE the key "concept_string" AND the key "content".
 # The value of the "content" key can Either be a:
 # 2.1: a string.
 # 2.2: a list of strings.
@@ -94,43 +92,37 @@ stuff14 = Stuff(
 
 # 2.1: Content is a string
 
-stuff_data21 = {
-    "concept": "concept_string",
-    "content": "my text"
-}
+stuff_data21 = {"concept": "concept_string", "content": "my text"}
 
-# Here, the concept can either be Text, native.Text or any other concept. But if its any other concept, it should be stricly compatible with the concept native.Text.
+# Here, the concept can either be Text, native.Text or any other concept. But if its any other concept,
+# it should be stricly compatible with the concept native.Text.
 
 stuff21 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
-    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT), # Or else
+    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),  # Or else
     content=TextContent(text="my text"),
 )
 
 # 2.2: Content is a list of strings
-stuff_data22 = {
-    "concept": "concept_string",
-    "content": ["text1", "text2", "text3"]
-}
+stuff_data22 = {"concept": "concept_string", "content": ["text1", "text2", "text3"]}
 
-# Here, the concept can either be Text, native.Text or any other concept. But if its any other concept, it should be stricly compatible with the concept native.Text.
+# Here, the concept can either be Text, native.Text or any other concept. But if its any other concept,
+#  it should be stricly compatible with the concept native.Text.
 
 stuff22 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
-    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT), # Or else
+    concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),  # Or else
     content=ListContent(items=[TextContent(text="text1"), TextContent(text="text2"), TextContent(text="text3")]),
 )
 
 # 2.3: Content is a StuffContent object
-stuff_data23 = {
-    "concept": "concept_string",
-    "content": MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
-}
+stuff_data23 = {"concept": "concept_string", "content": MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))}
 
 # For the concept mentioned: If no domain is specified, it should look in all the library for the concept with the same name.
-# If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error and ask the user to specify the domain.
+# If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error
+# and ask the user to specify the domain.
 # If the domain is specified or found, it should check that the structure corresponds with the given content.
 # Otherwise it should raise an error.
 
@@ -144,10 +136,7 @@ stuff23 = Stuff(
 # 2.4: Content is a list of StuffContent objects
 stuff_data24 = {
     "concept": "concept_string",
-    "content": [
-        MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), 
-        MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
-    ],
+    "content": [MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))],
 }
 
 stuff24 = Stuff(
@@ -160,19 +149,11 @@ stuff24 = Stuff(
 )
 
 # 2.5: Content is a dict
-stuff_data25 = {
-    "concept": "concept_string",
-    "content": {
-        "arg1": "something",
-        "arg2": 1,
-        "arg3": {
-            "arg4": "something else else"
-        }
-    }
-}
+stuff_data25 = {"concept": "concept_string", "content": {"arg1": "something", "arg2": 1, "arg3": {"arg4": "something else else"}}}
 
 # For the concept mentioned: If no domain is specified, it should look in all the library for the concept with the same name.
-# If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error and ask the user to specify the domain.
+# If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error
+# and ask the user to specify the domain.
 # If the domain is specified or found, it should check that the structure corresponds with the given content by validating the model.
 # Otherwise it should raise an error.
 
@@ -187,25 +168,14 @@ stuff25 = Stuff(
 stuff_data26 = {
     "concept": "concept_string",
     "content": [
-        {
-            "arg1": "something",
-            "arg2": 1,
-            "arg3": {
-                "arg4": "something else else"
-            }
-        },
-        {
-            "arg1": "something else",
-            "arg2": 2,
-            "arg3": {
-                "arg4": "something else else else"
-            }
-        }
+        {"arg1": "something", "arg2": 1, "arg3": {"arg4": "something else else"}},
+        {"arg1": "something else", "arg2": 2, "arg3": {"arg4": "something else else else"}},
     ],
 }
 
 # For the concept mentioned: If no domain is specified, it should look in all the library for the concept with the same name.
-# If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error and ask the user to specify the domain.
+# If no search domains are provided and we find 2 or more concepts with the same name, it
+# should raise an error and ask the user to specify the domain.
 # If the domain is specified or found, it should check that the structure corresponds with the given content by validating the model.
 # Otherwise it should raise an error.
 

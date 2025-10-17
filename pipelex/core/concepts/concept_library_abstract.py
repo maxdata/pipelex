@@ -61,3 +61,7 @@ class ConceptLibraryAbstract(ABC):
     @abstractmethod
     def get_native_concept(self, native_concept: NativeConceptCode) -> Concept:
         pass
+
+    @abstractmethod
+    def get_required_concept_from_concept_string_or_code(self, concept_string_or_code: str, search_domains: list[str] | None = None) -> Concept:
+        pass
