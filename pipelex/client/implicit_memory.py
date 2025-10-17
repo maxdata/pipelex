@@ -64,7 +64,7 @@ stuff13 = Stuff(
     content=MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
 )
 
-# 1.4:
+# 1.4: content is a list of StuffContent objects.
 stuff_data14 = [MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))]
 
 # It should look in all the library for the concept with the same name.
