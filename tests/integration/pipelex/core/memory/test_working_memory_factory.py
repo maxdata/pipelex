@@ -15,7 +15,7 @@ class TestWorkingMemoryFactory:
     def test_make_from_compact_memory_with_text_content(self):
         implicit_memory: ImplicitMemory = {
             "text_item": {
-                "concept_code": NativeConceptCode.TEXT,
+                "concept": NativeConceptCode.TEXT,
                 "content": "Hello, world!",
             },
         }
@@ -34,7 +34,7 @@ class TestWorkingMemoryFactory:
         """Test deserialization of compact memory with complex nested structured content."""
         implicit_memory: ImplicitMemory = {
             "complex_page": {
-                "concept_code": NativeConceptCode.PAGE,
+                "concept": NativeConceptCode.PAGE,
                 "content": {
                     "text_and_images": {
                         "text": {
@@ -124,11 +124,11 @@ class TestWorkingMemoryFactory:
         """Test deserialization of compact memory with multiple items."""
         implicit_memory: ImplicitMemory = {
             "text1": {
-                "concept_code": NativeConceptCode.TEXT,
+                "concept": NativeConceptCode.TEXT,
                 "content": "First text",
             },
             "text2": {
-                "concept_code": NativeConceptCode.TEXT,
+                "concept": NativeConceptCode.TEXT,
                 "content": "Second text",
             },
         }
