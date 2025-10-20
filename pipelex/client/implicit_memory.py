@@ -23,6 +23,7 @@ class MyConcept(StructuredContent):
 # 1.2: stuff_data is a list of strings.
 # 1.3: stuff_data is a StuffContent object.
 # 1.4: stuff_data is a list of StuffContent objects.
+# 1.5: stuff_data is a ListContent of StuffContent objects.
 ####################################################################################################
 
 # 1.1: Content is a string.
@@ -71,6 +72,30 @@ stuff_data14 = [MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), My
 # If no concept is found, it should raise an error.
 
 stuff14 = Stuff(
+    stuff_code="stuff_code",
+    stuff_name="stuff_name",
+    concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),
+    content=ListContent(
+        items=[MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))]
+    ),
+)
+
+# 1.5: content is a ListContent of StuffContent objects.
+stuff_data15: ListContent[MyConcept] = ListContent(
+    items=[MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")), MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))]
+)
+
+# It should check that every item in the list is a subclass of StuffContent.
+# If not, it should raise an error.
+# If every item is of the same type, it should create a Stuff with the concept of the first item.
+# If every item is not of the same type, it should raise an error.
+# If the ListContent is empty, it should raise an error.
+# If no concept is found, it should raise an error. To find the concept, it should look in all the library for the concept with the same name.
+# If no search domains are provided and we find 2 or more concepts with the same name, it should raise an error.
+# If the domain is specified or found, it should check that the structure corresponds with the given content.
+# Otherwise it should raise an error.
+
+stuff15 = Stuff(
     stuff_code="stuff_code",
     stuff_name="stuff_name",
     concept=ConceptFactory.make(concept_code="MyConcept", domain="domain", description="description", structure_class_name=MyConcept.__name__),

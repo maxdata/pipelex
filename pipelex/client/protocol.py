@@ -17,6 +17,7 @@ from pipelex.types import StrEnum
 #   - 1.2: Sequence[str] (list of strings)
 #   - 1.3: StuffContent (a StuffContent object)
 #   - 1.4: Sequence[StuffContent] (list of StuffContent objects, covariant)
+#   - 1.5: ListContent[StuffContent] (a ListContent object containing StuffContent items)
 # Case 2: Dict with 'concept' AND 'content' keys
 #   - 2.1: {"concept": str, "content": str}
 #   - 2.2: {"concept": str, "content": Sequence[str]}
@@ -28,7 +29,7 @@ DictStuffContent = dict[str, Any]
 StuffContentOrData = (
     str  # Case 1.1
     | Sequence[str]  # Case 1.2
-    | StuffContent  # Case 1.3
+    | StuffContent  # Case 1.3 (also covers Case 1.5 as ListContent is a StuffContent)
     | Sequence[StuffContent]  # Case 1.4 (covariant - accepts list[TextContent], etc.)
     | DictStuffContent  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 )

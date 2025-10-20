@@ -52,11 +52,10 @@ class TestData:
 
 class TestMakeStuffFromStuffContentUsingSearchDomains:
     def test_listcontent_with_valid_items(self, mocker: MockerFixture):
-        """Test ListContent with valid items."""
         list_content: ListContent[TextContent] = ListContent(items=TestData.TEXT_LIST_ITEMS)
 
         mock_stuff = mocker.Mock(spec=Stuff)
-        mock_make = mocker.patch.object(StuffFactory, "make_stuff_using_concept_name_and_search_domains", return_value=mock_stuff)
+        mock_make = mocker.patch.object(StuffFactory, "make_stuff_from_stuff_content_or_data", return_value=mock_stuff)
 
         result = StuffFactory.make_stuff_from_stuff_content_or_data(
             name=TestData.STUFF_NAME,

@@ -96,6 +96,33 @@ TEST_CASES: list[tuple[str, StuffContentOrData, str, str, Stuff]] = [
             ),
         ),
     ),
+    (
+        "case-1.5-list-content-of-stuff-content-objects",
+        ListContent(
+            items=[
+                MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2")),
+            ]
+        ),
+        "stuff_name",
+        "stuff_code",
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make(
+                concept_code="MyConcept",
+                domain="test_domain",
+                description="Test concept for unit tests",
+                structure_class_name="MyConcept",
+            ),
+            content=ListContent(
+                items=[
+                    MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+                    MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2")),
+                ]
+            ),
+        ),
+    ),
     # Case 2.1: Content is a string
     (
         "case-2.1-dict-with-string-content",

@@ -136,6 +136,7 @@ The `inputs` field uses **ImplicitMemory** format - a smart, flexible way to pro
 - 1.2: List of strings → `["text1", "text2"]`
 - 1.3: StuffContent object → `MyClass(arg1="value")`
 - 1.4: List of StuffContent objects → `[MyClass(...), MyClass(...)]`
+- 1.5: ListContent of StuffContent objects → `ListContent(items=[MyClass(...), MyClass(...)])`
 
 **Case 2: Explicit Format** - Use `{"concept": "...", "content": "..."}` for control
 - 2.1: String with concept → `{"concept": "Text", "content": "my text"}`
@@ -216,6 +217,34 @@ inputs = {
 **Requirements:**
 - All items must be of the same type
 - Concept resolution follows the same rules as 1.3
+
+### 1.5: ListContent of StuffContent Objects
+
+Provide a `ListContent` object containing StuffContent items (Python clients):
+
+```python
+# Python client example
+from pipelex.core.stuffs.list_content import ListContent
+
+inputs = {
+    "invoice_list": ListContent(items=[
+        MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
+        MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2"))
+    ])
+}
+```
+
+**Key Differences from Case 1.4:**
+- Case 1.4 uses a plain Python list: `[item1, item2]`
+- Case 1.5 uses a `ListContent` wrapper: `ListContent(items=[item1, item2])`
+
+**Requirements:**
+- All items within the `ListContent` must be subclasses of `StuffContent`
+- All items must be of the same type
+- The `ListContent` cannot be empty
+- Concept resolution follows the same rules as 1.3 (inferred from the first item's class name)
+
+**Use Case:** This format is useful when you already have data wrapped in a `ListContent` object from a previous pipeline execution or when working with Pipelex's internal data structures.
 
 ---
 

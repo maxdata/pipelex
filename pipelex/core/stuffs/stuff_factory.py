@@ -134,6 +134,7 @@ class StuffFactory:
             1.2: list[str] → ListContent[TextContent] with Text concept
             1.3: StuffContent → Use the StuffContent, infer concept from class name
             1.4: list[StuffContent] → ListContent[StuffContent], infer concept from first item
+            1.5: ListContent[StuffContent] → Use the ListContent, infer concept from first item
 
         Case 2: Dict with 'concept' AND 'content' keys
             2.1/2.1b: {"concept": "Text"/"native.Text", "content": str} → TextContent with Text concept
@@ -247,6 +248,49 @@ class StuffFactory:
                     msg = f"Cannot create Stuff from list of {type(first_item)}. Type should be {StuffContentOrData}."
                     raise StuffFactoryError(msg)
 
+            # Case 1.5: ListContent[StuffContent] → Use the ListContent, infer concept from first item
+            if isinstance(stuff_content_or_data, ListContent):
+                list_content_15 = cast("ListContent[StuffContent]", stuff_content_or_data)
+
+                if len(list_content_15.items) == 0:
+                    msg = f"Cannot create Stuff '{name}' from empty ListContent"
+                    raise StuffFactoryError(msg)
+
+                first_item = list_content_15.items[0]
+                content_class_name = type(first_item).__name__
+
+                # Check all items are of the same type
+                for item in list_content_15.items:
+                    if not isinstance(item, type(first_item)):
+                        msg = (
+                            f"Trying to create a Stuff '{name}' from a ListContent of '{type(first_item).__name__}' "
+                            f"but the items are not of the same type. Especially, items {item} is of type {type(item).__name__}. "
+                            "Every items of the list should be an identical type."
+                        )
+                        raise StuffFactoryError(msg)
+
+                # Check if it's a native concept
+                if "Content" in content_class_name and NativeConceptCode.is_native_concept(concept_code=content_class_name.split("Content")[0]):
+                    concept = get_native_concept(native_concept=NativeConceptCode(content_class_name.split("Content")[0]))
+                else:
+                    try:
+                        concept = concept_library.get_required_concept_from_concept_string_or_code(
+                            concept_string_or_code=content_class_name, search_domains=search_domains
+                        )
+                    except ConceptLibraryConceptNotFoundError as exc:
+                        msg = (
+                            f"Trying to create a Stuff '{name}' from a ListContent but "
+                            f"the concept of name '{content_class_name}' is not found in the library"
+                        )
+                        raise StuffFactoryError(msg) from exc
+
+                return cls.make_stuff(
+                    concept=concept,
+                    content=list_content_15,
+                    name=name,
+                    code=code,
+                )
+
         # ==================== CASE 2: Dict with 'concept' AND 'content' keys ====================
         if not isinstance(stuff_content_or_data, dict):
             msg = f"Unexpected type for stuff_content_or_data: {type(stuff_content_or_data)}.Type should be {StuffContentOrData}."
@@ -335,16 +379,16 @@ class StuffFactory:
 
         # Case 2.2/2.2b/2.4/2.5/2.6: content is a list
         if isinstance(content, list):
-            list_content = cast("list[Any]", content)
-            if len(list_content) == 0:
+            list_content_2 = cast("list[Any]", content)
+            if len(list_content_2) == 0:
                 msg = "Cannot create Stuff from empty list in content"
                 raise StuffFactoryError(msg)
 
-            first_item = list_content[0]
+            first_item = list_content_2[0]
 
             # Case 2.2/2.2b: list[str]
             if isinstance(first_item, str):
-                for item in list_content:
+                for item in list_content_2:
                     if not isinstance(item, str):
                         msg = (
                             f"Trying to create a Stuff '{name}' in the inputs of your pipe, from a list of strings but the item {item} "
@@ -354,7 +398,7 @@ class StuffFactory:
 
                 text_concept = get_native_concept(native_concept=NativeConceptCode.TEXT)
                 if concept_library.is_compatible(tested_concept=concept, wanted_concept=text_concept, strict=True):
-                    items = [TextContent(text=item) for item in list_content]
+                    items = [TextContent(text=item) for item in list_content_2]
                     return cls.make_stuff(
                         concept=concept,
                         content=ListContent(items=items),
@@ -367,7 +411,7 @@ class StuffFactory:
 
             # Case 2.4: list[StuffContent]
             if isinstance(first_item, StuffContent):
-                for item in list_content:
+                for item in list_content_2:
                     if not isinstance(item, type(first_item)):
                         msg = (
                             f"Trying to create a Stuff '{name}' in the inputs of your pipe, from a list of StuffContent "
@@ -378,14 +422,14 @@ class StuffFactory:
 
                 return cls.make_stuff(
                     concept=concept,
-                    content=ListContent(items=cast("list[StuffContent]", list_content)),
+                    content=ListContent(items=cast("list[StuffContent]", list_content_2)),
                     name=name,
                     code=code,
                 )
 
             # Case 2.6: list[dict]
             if isinstance(first_item, dict):
-                for item_dict in list_content:
+                for item_dict in list_content_2:
                     if not isinstance(item_dict, dict):
                         msg = (
                             f"Trying to create a Stuff '{name}' in the inputs of your pipe, from a list of dicts but "
@@ -396,7 +440,7 @@ class StuffFactory:
 
                 # Create StuffContent objects from dicts
                 stuff_items: list[StuffContent] = []
-                for item_dict in list_content:
+                for item_dict in list_content_2:
                     stuff_content = StuffContentFactory.make_stuff_content_from_concept_with_fallback(
                         concept=concept,
                         value=item_dict,
