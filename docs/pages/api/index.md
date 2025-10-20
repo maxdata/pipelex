@@ -134,16 +134,17 @@ The `inputs` field uses **ImplicitMemory** format - a smart, flexible way to pro
 **Case 1: Direct Content** - Provide the value directly (simplest)
 - 1.1: String → `"my text"`
 - 1.2: List of strings → `["text1", "text2"]`
-- 1.3: StuffContent object → `MyClass(arg1="value")`
-  - 1.3a: Regular StuffContent → Infer concept from class name
-  - 1.3b: ListContent[StuffContent] → Infer concept from first item's class (subcase)
+- 1.3: StructuredContent object → `MyClass(arg1="value")`
 - 1.4: List of StuffContent objects → `[MyClass(...), MyClass(...)]`
+- 1.5: ListContent of StuffContent objects → `ListContent(items=[MyClass(...), MyClass(...)])`
+
+**Note:** Cases 1.3 and 1.5 are at the same level - both handle content types that inherit from `StuffContent`, but for different purposes (custom classes vs. list wrappers).
 
 **Case 2: Explicit Format** - Use `{"concept": "...", "content": "..."}` for control
 - 2.1: String with concept → `{"concept": "Text", "content": "my text"}`
 - 2.2: List of strings with concept → `{"concept": "Text", "content": ["text1", "text2"]}`
-- 2.3: StuffContent object with concept → `{"concept": "Invoice", "content": InvoiceObject}`
-- 2.4: List of StuffContent objects with concept → `{"concept": "Invoice", "content": [...]}`
+- 2.3: StructuredContent object with concept → `{"concept": "Invoice", "content": InvoiceObject}`
+- 2.4: List of StructuredContent objects with concept → `{"concept": "Invoice", "content": [...]}`
 - 2.5: Dictionary (structured data) → `{"concept": "Invoice", "content": {"field": "value"}}`
 - 2.6: List of dictionaries → `{"concept": "Invoice", "content": [{...}, {...}]}`
 
@@ -185,16 +186,24 @@ Provide multiple text items as a list:
 
 **Note:** The concept must be compatible with `native.Text` or an error will be raised.
 
-### 1.3: StuffContent Object
+### 1.3: StructuredContent Object
 
 Provide a structured object directly (for Python clients):
 
 ```python
 # Python client example
+from my_project.domain.domain_struct import MyConcept, MySubClass
+
 inputs = {
     "invoice_data": MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
 }
 ```
+
+**What is StructuredContent?**
+- `StructuredContent` is the base class for user-defined data structures in Pipelex
+- You create your own classes by inheriting from `StructuredContent`
+- These classes are defined in your project's Python files
+- Learn more: [Python StructuredContent Classes](../build-reliable-ai-workflows-with-pipelex/define_your_concepts.md#3-python-structuredcontent-classes)
 
 **Concept Resolution:**
 - The system searches all available domains for a concept matching the class name
@@ -203,27 +212,30 @@ inputs = {
 
 ### 1.4: List of StuffContent Objects
 
-Provide multiple structured objects:
+Provide multiple content objects in a plain Python list:
 
 ```python
 # Python client example
 inputs = {
     "invoice_list": [
         MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4")),
-        MyConcept(arg1="arg1", arg2=1, arg3=MySubClass(arg4="arg4"))
+        MyConcept(arg1="arg1_2", arg2=2, arg3=MySubClass(arg4="arg4_2"))
     ]
 }
 ```
 
+**What it accepts:**
+- Lists of `StructuredContent` objects (user-defined classes)
+- Lists of native content objects (`TextContent`, `ImageContent`, etc.)
+
 **Requirements:**
 - All items must be of the same type
 - Concept resolution follows the same rules as 1.3
+- Creates a new `ListContent` wrapper internally
 
-### 1.3b: ListContent of StuffContent Objects (Subcase of 1.3)
+### 1.5: ListContent of StuffContent Objects
 
-Since `ListContent` is itself a `StuffContent`, this is a special subcase of 1.3 where the content is inferred from the items inside rather than from the `ListContent` class itself.
-
-Provide a `ListContent` object containing StuffContent items (Python clients):
+Provide an existing `ListContent` wrapper object (Python clients):
 
 ```python
 # Python client example
@@ -237,20 +249,21 @@ inputs = {
 }
 ```
 
-**Key Differences from Case 1.4:**
-- Case 1.4 uses a plain Python list: `[item1, item2]` → Creates a new `ListContent` wrapper
-- Case 1.3b uses an existing `ListContent` wrapper: `ListContent(items=[item1, item2])` → Uses the wrapper directly
+**Key Difference from Case 1.4:**
+- Case 1.4: Plain Python list `[item1, item2]` → **Creates** a new `ListContent` wrapper
+- Case 1.5: Already wrapped `ListContent(items=[item1, item2])` → **Uses** the wrapper directly
 
-**Why is this a subcase of 1.3?**
-- `ListContent` is a subclass of `StuffContent`
-- But we don't infer the concept from "ListContent" itself
-- Instead, we look inside and infer from the first item's class
+**Why Case 1.5 is Separate from Case 1.3:**
+- `StructuredContent` and `ListContent` are **sibling classes** (both inherit from `StuffContent`)
+- Case 1.3 handles user-defined structured data classes
+- Case 1.5 handles list container wrappers
+- They're at the same inheritance level, not parent-child
 
 **Requirements:**
-- All items within the `ListContent` must be subclasses of `StuffContent`
+- All items within the `ListContent` must be `StuffContent` objects (this includes both `StructuredContent` and native content like `TextContent`, `ImageContent`)
 - All items must be of the same type
 - The `ListContent` cannot be empty
-- Concept resolution follows Case 1.3 rules (inferred from the first item's class name, not from ListContent)
+- Concept is inferred from the first item's class name (not from "ListContent")
 
 **Use Case:** This format is useful when you already have data wrapped in a `ListContent` object from a previous pipeline execution or when working with Pipelex's internal data structures.
 
@@ -292,7 +305,7 @@ Use the explicit format `{"concept": "...", "content": "..."}` when you need pre
 
 **Result:** `ListContent` with multiple `TextContent` items
 
-### 2.3: StuffContent Object with Concept
+### 2.3: Structured Object with Concept
 
 ```json
 {
@@ -325,7 +338,7 @@ When you specify a concept name without a domain prefix:
 
 This explicitly tells Pipelex to use the `Invoice` concept from the `accounting` domain.
 
-### 2.4: List of StuffContent Objects
+### 2.4: List of Structured Objects
 
 ```json
 {
@@ -616,10 +629,221 @@ When you provide `plx_content`:
 - `404 Not Found`: Pipeline not found
 - `500 Internal Server Error`: Server error
 
--
+### Common Errors
+
+**Concept Not Found**
+```json
+{
+  "status": "error",
+  "error": "Concept 'UnknownConcept' not found in the library"
+}
+```
+
+**Ambiguous Concept**
+```json
+{
+  "status": "error",
+  "error": "Ambiguous concept: Found 'Invoice' in domains: accounting, billing. Use 'domain.Invoice' format."
+}
+```
+
+**Invalid Input Type**
+```json
+{
+  "status": "error",
+  "error": "Trying to create a Stuff from a list of strings but the items are not of the same type"
+}
+```
+
+---
+
+## Best Practices
+
+### Input Design
+
+1. **Use Direct Format for Simple Inputs**
+   ```json
+   // ✅ Good
+   { "text": "Hello" }
+   
+   // ❌ Unnecessary
+   { "text": { "concept": "Text", "content": "Hello" } }
+   ```
+
+2. **Be Explicit with Custom Concepts**
+   ```json
+   // ✅ Good - clear and unambiguous
+   { "invoice": { "concept": "accounting.Invoice", "content": {...} } }
+   ```
+
+3. **Validate Before Sending**
+   - Ensure all required fields are present
+   - Match field types to concept structure
+   - Use domain prefixes when concepts might be ambiguous
+
+### Performance Tips
+
+1. **Batch Processing**: Use list inputs when processing multiple items
+2. **Reuse Connections**: Keep the client instance for multiple requests
+3. **Handle Async Properly**: Use proper async/await patterns in Python
+
+### Security
+
+1. **Protect API Keys**: Never commit API keys to version control
+2. **Use Environment Variables**: Store credentials securely
+   ```python
+   import os
+   api_token = os.getenv("PIPELEX_API_TOKEN")
+   ```
+
+---
+
+## Client Libraries
+
+### Python
+
+#### Installation
+
+```bash
+pip install pipelex
+```
+
+#### Basic Usage (Direct Text Input)
+
+```python
+from pipelex.client import PipelexClient
+
+client = PipelexClient(api_token="YOUR_API_KEY")
+
+# Simple text input - no need for concept/content structure
+response = await client.execute_pipeline(
+    pipe_code="analyze_sentiment",
+    inputs={
+        "text": "This is amazing!"
+    }
+)
+
+print(response.pipe_output.working_memory)
+```
+
+#### Structured Input
+
+```python
+from pipelex.client import PipelexClient
+
+client = PipelexClient(api_token="YOUR_API_KEY")
+
+# Explicit concept and structured content
+response = await client.execute_pipeline(
+    pipe_code="extract_invoice",
+    inputs={
+        "document": {
+            "concept": "PDF",
+            "content": {
+                "url": "https://example.com/invoice.pdf"
+            }
+        }
+    }
+)
+
+# Access the main output
+invoice = response.pipe_output.working_memory.root["invoice"]
+print(f"Invoice Number: {invoice['content']['invoice_number']}")
+```
+
+#### Multiple Inputs with Mixed Formats
+
+```python
+from pipelex.client import PipelexClient
+
+client = PipelexClient(api_token="YOUR_API_KEY")
+
+response = await client.execute_pipeline(
+    pipe_code="contract_analysis",
+    inputs={
+        # Direct text input
+        "contract_text": "This is the contract text...",
+        
+        # Structured input with explicit concept
+        "analysis_config": {
+            "concept": "AnalysisConfig",
+            "content": {
+                "priority": "high",
+                "focus_areas": ["liability", "termination"]
+            }
+        },
+        
+        # Direct list input
+        "reference_docs": ["doc1", "doc2", "doc3"]
+    }
+)
+
+print(response.pipeline_state)
+print(response.main_stuff_name)
+```
+
+#### Using StructuredContent Objects (Advanced)
+
+```python
+from pipelex.client import PipelexClient
+from my_project.invoices.invoice_struct import Invoice, InvoiceLineItem
+
+client = PipelexClient(api_token="YOUR_API_KEY")
+
+# Create StructuredContent objects directly
+invoice_data = Invoice(
+    invoice_number="INV-001",
+    amount=1250.00,
+    line_items=[
+        InvoiceLineItem(description="Service A", amount=500.00),
+        InvoiceLineItem(description="Service B", amount=750.00)
+    ]
+)
+
+# Pass StructuredContent object directly (Case 1.3)
+response = await client.execute_pipeline(
+    pipe_code="validate_invoice",
+    inputs={
+        "invoice": invoice_data
+    }
+)
+```
+
+#### Using Domain-Prefixed Concepts
+
+```python
+from pipelex.client import PipelexClient
+
+client = PipelexClient(api_token="YOUR_API_KEY")
+
+response = await client.execute_pipeline(
+    pipe_code="multi_domain_processing",
+    inputs={
+        "accounting_invoice": {
+            "concept": "accounting.Invoice",  # From accounting domain
+            "content": {
+                "invoice_number": "INV-001",
+                "amount": 1250.00
+            }
+        },
+        "billing_invoice": {
+            "concept": "billing.Invoice",  # From billing domain
+            "content": {
+                "customer_id": "CUST-123",
+                "period": "2025-10"
+            }
+        }
+    }
+)
+```
+
+---
+
+## Support
 
 For questions or issues:
-- Discord: https://go.pipelex.com/discord
-- GitHub: https://github.com/pipelex/pipelex
-- Email: support@pipelex.ai
 
+- **Documentation**: [https://docs.pipelex.ai](https://docs.pipelex.ai)
+- **Discord Community**: [https://go.pipelex.com/discord](https://go.pipelex.com/discord)
+- **GitHub**: [https://github.com/pipelex/pipelex](https://github.com/pipelex/pipelex)
+- **Email**: [support@pipelex.ai](mailto:support@pipelex.ai)

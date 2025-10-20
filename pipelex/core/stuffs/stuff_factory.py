@@ -10,6 +10,7 @@ from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.concepts.concept_library import ConceptLibraryConceptNotFoundError
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.stuffs.list_content import ListContent
+from pipelex.core.stuffs.structured_content import StructuredContent
 from pipelex.core.stuffs.stuff import Stuff
 from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.core.stuffs.text_content import TextContent
@@ -132,10 +133,12 @@ class StuffFactory:
         Case 1: Direct content (no 'concept' key)
             1.1: str → TextContent with Text concept
             1.2: list[str] → ListContent[TextContent] with Text concept
-            1.3: StuffContent → Use the StuffContent, infer concept from class name
-                1.3a: Regular StuffContent → Infer concept from the class itself
-                1.3b (was 1.5): ListContent[StuffContent] → Infer concept from first item's class
+            1.3: StructuredContent → Use the StructuredContent, infer concept from class name
             1.4: list[StuffContent] → ListContent[StuffContent], infer concept from first item
+            1.5: ListContent[StuffContent] → Use the ListContent, infer concept from first item
+
+        Note: StructuredContent (1.3) and ListContent (1.5) are separate cases at the same level.
+              Both inherit from StuffContent but handle different content types.
 
         Case 2: Dict with 'concept' AND 'content' keys
             2.1/2.1b: {"concept": "Text"/"native.Text", "content": str} → TextContent with Text concept
@@ -159,58 +162,79 @@ class StuffFactory:
                     code=code,
                 )
 
-            # Case 1.3: StuffContent object → Infer concept from class name
-            if issubclass(type(stuff_content_or_data), StuffContent):
-                stuff_content = cast("StuffContent", stuff_content_or_data)
+            # Case 1.5: ListContent[StuffContent] → Use the ListContent, infer concept from first item
+            # Must check BEFORE Case 1.3 because ListContent is also a StuffContent
+            if isinstance(stuff_content_or_data, ListContent):
+                list_content = cast("ListContent[StuffContent]", stuff_content_or_data)
 
-                # Case 1.3b: Special handling for ListContent (subcase of 1.3)
-                if isinstance(stuff_content_or_data, ListContent):
-                    list_content = cast("ListContent[StuffContent]", stuff_content_or_data)
+                if len(list_content.items) == 0:
+                    msg = f"Cannot create Stuff '{name}' from empty ListContent"
+                    raise StuffFactoryError(msg)
 
-                    if len(list_content.items) == 0:
-                        msg = f"Cannot create Stuff '{name}' from empty ListContent"
-                        raise StuffFactoryError(msg)
+                first_item = list_content.items[0]
 
-                    first_item = list_content.items[0]
+                # Check that items are StuffContent
+                if not isinstance(first_item, StuffContent):  # pyright: ignore[reportUnnecessaryIsInstance]
+                    msg = (
+                        f"Trying to create a Stuff '{name}' from a ListContent but "
+                        f"the items are not StuffContent. First item is of type {type(first_item).__name__}. "
+                        "ListContent items must be subclasses of StuffContent."
+                    )
+                    raise StuffFactoryError(msg)
 
-                    # Check that items are StuffContent
-                    if not isinstance(first_item, StuffContent):  # pyright: ignore[reportUnnecessaryIsInstance]
+                # Check all items are of the same type
+                for item in list_content.items:
+                    if not isinstance(item, type(first_item)):
                         msg = (
-                            f"Trying to create a Stuff '{name}' from a ListContent but "
-                            f"the items are not StuffContent. First item is of type {type(first_item).__name__}. "
-                            "ListContent items must be subclasses of StuffContent."
+                            f"Trying to create a Stuff '{name}' from a ListContent of '{type(first_item).__name__}' "
+                            f"but the items are not of the same type. Especially, items {item} is of type {type(item).__name__}. "
+                            "Every items of the list should be an identical type."
                         )
                         raise StuffFactoryError(msg)
 
-                    # Check all items are of the same type
-                    for item in list_content.items:
-                        if not isinstance(item, type(first_item)):
-                            msg = (
-                                f"Trying to create a Stuff '{name}' from a ListContent of '{type(first_item).__name__}' "
-                                f"but the items are not of the same type. Especially, items {item} is of type {type(item).__name__}. "
-                                "Every items of the list should be an identical type."
-                            )
-                            raise StuffFactoryError(msg)
+                # Get concept from first item's class name
+                content_class_name = type(first_item).__name__
 
-                    # Get concept from first item's class name
-                    content_class_name = type(first_item).__name__
+                # Check if it's a native concept
+                if "Content" in content_class_name and NativeConceptCode.is_native_concept(concept_code=content_class_name.split("Content")[0]):
+                    concept = get_native_concept(native_concept=NativeConceptCode(content_class_name.split("Content")[0]))
                 else:
-                    # Case 1.3a: Regular StuffContent → Get concept from the StuffContent class name itself
-                    content_class_name = stuff_content_or_data.__class__.__name__
+                    try:
+                        concept = concept_library.get_required_concept_from_concept_string_or_code(
+                            concept_string_or_code=content_class_name, search_domains=search_domains
+                        )
+                    except ConceptLibraryConceptNotFoundError as exc:
+                        msg = (
+                            f"Trying to create a Stuff '{name}' from a ListContent but "
+                            f"the concept of name '{content_class_name}' is not found in the library"
+                        )
+                        raise StuffFactoryError(msg) from exc
+
+                return cls.make_stuff(
+                    concept=concept,
+                    content=list_content,
+                    name=name,
+                    code=code,
+                )
+
+            # Case 1.3: StuffContent object (includes both native and StructuredContent) → Infer concept from class name
+            if isinstance(stuff_content_or_data, StuffContent):
+                stuff_content = stuff_content_or_data
+                content_class_name = stuff_content_or_data.__class__.__name__
 
                 # Check if it's a native concept
                 if "Content" in content_class_name and NativeConceptCode.is_native_concept(concept_code=content_class_name.split("Content")[0]):
                     # It's a native concept like TextContent, ImageContent, etc.
                     concept = get_native_concept(native_concept=NativeConceptCode(content_class_name.split("Content")[0]))
                 else:
+                    # It's a StructuredContent, try to find the concept
                     try:
-                        # It's a custom StuffContent, try to find the concept
                         concept = concept_library.get_required_concept_from_concept_string_or_code(
                             concept_string_or_code=content_class_name, search_domains=search_domains
                         )
                     except ConceptLibraryConceptNotFoundError as exc:
                         msg = (
-                            f"Trying to create a Stuff '{name}' from a custom StuffContent '{content_class_name}' "
+                            f"Trying to create a Stuff '{name}' from a StuffContent '{content_class_name}' "
                             f"but the concept of name '{content_class_name}' is not found in the library"
                         )
                         raise StuffFactoryError(msg) from exc
@@ -272,8 +296,10 @@ class StuffFactory:
                                 concept_string_or_code=content_class_name, search_domains=search_domains
                             )
                         except ConceptLibraryConceptNotFoundError as exc:
-                            msg = f"Trying to create a Stuff '{name}' from a list of StuffContent but"
-                            "the concept of name '{content_class_name}' is not found in the library"
+                            msg = (
+                                f"Trying to create a Stuff '{name}' from a list of StuffContent but "
+                                f"the concept of name '{content_class_name}' is not found in the library"
+                            )
                             raise StuffFactoryError(msg) from exc
 
                     return cls.make_stuff(
@@ -339,8 +365,8 @@ class StuffFactory:
             )
             raise StuffFactoryError(msg)
 
-        # Case 2.3: content is a StuffContent object
-        if isinstance(content, StuffContent):
+        # Case 2.3: content is a StructuredContent object
+        if isinstance(content, StructuredContent):
             if concept.structure_class_name != content.__class__.__name__:
                 msg = (
                     f"Trying to create a Stuff '{name}' in the inputs of your pipe, from a dict that should represent a StuffContentOrData "
@@ -404,12 +430,12 @@ class StuffFactory:
                 msg = f"Concept '{concept_string}' is not compatible with list of text content"
                 raise StuffFactoryError(msg)
 
-            # Case 2.4: list[StuffContent]
-            if isinstance(first_item, StuffContent):
+            # Case 2.4: list[StructuredContent]
+            if isinstance(first_item, StructuredContent):
                 for item in list_content_2:
                     if not isinstance(item, type(first_item)):
                         msg = (
-                            f"Trying to create a Stuff '{name}' in the inputs of your pipe, from a list of StuffContent "
+                            f"Trying to create a Stuff '{name}' in the inputs of your pipe, from a list of StructuredContent "
                             "but the items are not of the same type. Every items of the list should be a identical type. "
                             f"If its a '{type(first_item).__name__}', everything should be a '{type(first_item).__name__}'."
                         )
@@ -417,7 +443,7 @@ class StuffFactory:
 
                 return cls.make_stuff(
                     concept=concept,
-                    content=ListContent(items=cast("list[StuffContent]", list_content_2)),
+                    content=ListContent(items=cast("list[StructuredContent]", list_content_2)),
                     name=name,
                     code=code,
                 )
