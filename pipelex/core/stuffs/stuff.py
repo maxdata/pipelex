@@ -191,3 +191,18 @@ Forbidden fields are: 'stuff_name', 'content_class', 'concept_code', 'stuff_code
     def as_mermaid(self) -> MermaidContent:
         """Get content as MermaidContent if applicable."""
         return self.content_as(MermaidContent)
+
+
+class DictStuff(CustomBaseModel):
+    """Stuff with content as dict[str, Any] instead of StuffContent.
+
+    This is used for serialization where the content needs to be a plain dict.
+    Has the exact same structure as Stuff but with dict content.
+    """
+
+    model_config = ConfigDict(extra="ignore", strict=True)
+
+    stuff_code: str
+    stuff_name: str | None = None
+    concept: Concept
+    content: dict[str, Any]

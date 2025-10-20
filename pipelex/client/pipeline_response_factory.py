@@ -1,22 +1,48 @@
 from typing import Any
 
-from pipelex.client.api_serializer import ApiSerializer
-from pipelex.client.protocol import PipelineResponse, PipelineState
-from pipelex.core.memory.working_memory import MAIN_STUFF_NAME
+from pipelex.client.protocol import PipelineResponse, PipelineState, SerializedPipeOutput, SerializedWorkingMemory
+from pipelex.core.memory.working_memory import MAIN_STUFF_NAME, WorkingMemory
 from pipelex.core.pipes.pipe_output import PipeOutput
+from pipelex.core.stuffs.stuff import DictStuff
 
 
 class PipelineResponseFactory:
     """Factory class for creating PipelineResponse objects from PipeOutput."""
 
     @staticmethod
+    def _serialize_working_memory_with_dict_stuffs(working_memory: WorkingMemory) -> SerializedWorkingMemory:
+        """Convert WorkingMemory to dict with DictStuff objects (content as dict).
+
+        Keeps the WorkingMemory structure but converts each Stuff.content to dict.
+
+        Args:
+            working_memory: The WorkingMemory to serialize
+
+        Returns:
+            Dict with root containing DictStuff objects (serialized) and aliases
+        """
+        dict_stuffs_root: dict[str, DictStuff] = {}
+
+        # Convert each Stuff → DictStuff by dumping only the content
+        for stuff_name, stuff in working_memory.root.items():
+            dict_stuff = DictStuff(
+                stuff_code=stuff.stuff_code,
+                stuff_name=stuff.stuff_name,
+                concept=stuff.concept,
+                content=stuff.content.model_dump(serialize_as_any=True),
+            )
+            dict_stuffs_root[stuff_name] = dict_stuff
+
+        return SerializedWorkingMemory(root=dict_stuffs_root, aliases=working_memory.aliases)
+
+    @staticmethod
     def make_from_pipe_output(
         pipe_output: PipeOutput,
+        status: str,
         pipeline_run_id: str = "",
         created_at: str = "",
         pipeline_state: PipelineState = PipelineState.COMPLETED,
         finished_at: str | None = None,
-        status: str | None = "success",
         message: str | None = None,
         error: str | None = None,
     ) -> PipelineResponse:
@@ -36,14 +62,15 @@ class PipelineResponseFactory:
             PipelineResponse with the pipe output serialized to reduced format
 
         """
-        compact_output = ApiSerializer.serialize_pipe_output_for_api(pipe_output=pipe_output)
-
         return PipelineResponse(
             pipeline_run_id=pipeline_run_id,
             created_at=created_at,
             pipeline_state=pipeline_state,
             finished_at=finished_at,
-            pipe_output=compact_output,
+            pipe_output=SerializedPipeOutput(
+                working_memory=PipelineResponseFactory._serialize_working_memory_with_dict_stuffs(pipe_output.working_memory),
+                pipeline_run_id=pipe_output.pipeline_run_id,
+            ),
             main_stuff_name=pipe_output.working_memory.aliases.get(MAIN_STUFF_NAME, MAIN_STUFF_NAME),
             status=status,
             message=message,

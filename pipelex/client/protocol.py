@@ -2,10 +2,11 @@ from abc import abstractmethod
 from typing import Any, Protocol, Sequence
 
 from pydantic import BaseModel
-from typing_extensions import runtime_checkable
+from pydantic.functional_validators import SkipValidation
+from typing_extensions import Annotated, runtime_checkable
 
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.pipes.pipe_output import PipeOutput
+from pipelex.core.stuffs.stuff import DictStuff
 from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 from pipelex.types import StrEnum
@@ -31,8 +32,18 @@ StuffContentOrData = (
     | Sequence[StuffContent]  # Case 1.4 (covariant - accepts list[TextContent], etc.)
     | DictStuffContent  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 )
-DictMemory = dict[str, DictStuffContent]  # Special case of ImplicitMemory (Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6)
-ImplicitMemory = dict[str, StuffContentOrData]
+DictMemory = dict[str, DictStuffContent]  # Serialized dict format (no StuffContent objects)
+ImplicitMemory = dict[str, StuffContentOrData]  # Can include both dict and StuffContent
+
+
+class SerializedWorkingMemory(BaseModel):
+    root: dict[str, DictStuff]
+    aliases: dict[str, str]
+
+
+class SerializedPipeOutput(BaseModel):
+    working_memory: SerializedWorkingMemory
+    pipeline_run_id: str
 
 
 class PipelineState(StrEnum):
@@ -50,13 +61,13 @@ class ApiResponse(BaseModel):
     """Base response class for Pipelex API calls.
 
     Attributes:
-        status (str | None): Status of the API call ("success", "error", etc.)
+        status (str): Application-level status ("success", "error")
         message (str | None): Optional message providing additional information
         error (str | None): Optional error message when status is not "success"
 
     """
 
-    status: str | None = None
+    status: str = "success"
     message: str | None = None
     error: str | None = None
 
@@ -65,14 +76,15 @@ class PipelineRequest(BaseModel):
     """Request for executing a pipeline.
 
     Attributes:
-        inputs (ImplicitMemory | None): Inputs in the format of WorkingMemory.to_implicit_memory()
+        inputs (ImplicitMemory | None): Inputs in ImplicitMemory format - Pydantic validation is skipped
+            to preserve the flexible format (dicts, strings, StuffContent objects, etc.)
         output_name (str | None): Name of the output slot to write to
         output_multiplicity (PipeOutputMultiplicity | None): Output multiplicity setting
         dynamic_output_concept_code (str | None): Override for the dynamic output concept code
 
     """
 
-    inputs: ImplicitMemory | None = None
+    inputs: Annotated[ImplicitMemory | None, SkipValidation] = None
     output_name: str | None = None
     output_multiplicity: PipeOutputMultiplicity | None = None
     dynamic_output_concept_code: str | None = None
@@ -82,18 +94,21 @@ class PipelineResponse(ApiResponse):
     """Response for pipeline execution requests.
 
     Attributes:
+        pipeline_run_id (str): Unique identifier for the pipeline run
         created_at (str): Timestamp when the pipeline was created
         pipeline_state (PipelineState): Current state of the pipeline
         finished_at (str | None): Timestamp when the pipeline finished, if completed
-        pipeline_run_id (str): Unique identifier for the pipeline run
-        pipe_output (DictMemory | None): Output data from the pipeline execution as raw dict, if available
-        main_stuff_name (str): Name of the main stuff in the pipeline output
+        pipe_output (SerializedPipeOutput | None): Output data from the pipeline execution (working_memory dict + pipeline_run_id)
+        main_stuff_name (str | None): Name of the main stuff in the pipeline output
+
     """
 
+    pipeline_run_id: str
     created_at: str
-    finished_at: str | None = None
     pipeline_state: PipelineState
-    pipe_output: PipeOutput | None = None
+    finished_at: str | None = None
+    pipe_output: SerializedPipeOutput | None = None
+    main_stuff_name: str | None = None
 
 
 @runtime_checkable

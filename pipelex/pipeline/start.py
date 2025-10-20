@@ -20,7 +20,7 @@ async def start_pipeline(
     output_multiplicity: PipeOutputMultiplicity | None = None,
     dynamic_output_concept_code: str | None = None,
     pipe_run_mode: PipeRunMode = PipeRunMode.LIVE,
-) -> asyncio.Task[PipeOutput]:
+) -> tuple[str, asyncio.Task[PipeOutput]]:
     """Start a pipeline in the background.
 
     This function mirrors *execute_pipeline* but returns immediately with the
@@ -88,4 +88,4 @@ async def start_pipeline(
     # Launch execution without awaiting the result.
     task: asyncio.Task[PipeOutput] = asyncio.create_task(get_pipe_router().run(pipe_job))
 
-    return task
+    return pipeline_run_id, task

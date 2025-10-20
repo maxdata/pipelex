@@ -2,15 +2,11 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
-from pipelex.client.protocol import DictMemory
-from pipelex.core.concepts.concept_native import NativeConceptCode
+from pipelex.client.protocol import DictMemory, ImplicitMemory
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.core.pipes.pipe_output import PipeOutput
-
-if TYPE_CHECKING:
-    from pipelex.core.stuffs.text_content import TextContent
 
 
 class ApiSerializer:
@@ -21,7 +17,7 @@ class ApiSerializer:
     FIELDS_TO_SKIP = ("__class__", "__module__")
 
     @classmethod
-    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> DictMemory:
+    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> ImplicitMemory:
         """Convert WorkingMemory to API-ready format using kajson with proper datetime handling.
 
         Args:
@@ -29,32 +25,22 @@ class ApiSerializer:
 
         Returns:
             ImplicitMemory ready for API transmission with datetime strings and no __class__/__module__.
-            Its
 
         """
-        dict_memory: DictMemory = {}
+        implicit_memory: ImplicitMemory = {}
         if working_memory is None:
-            return dict_memory
+            return implicit_memory
 
         for stuff_name, stuff in working_memory.root.items():
-            if NativeConceptCode.is_text_concept(concept_code=stuff.concept.code):
-                stuff_content = cast("TextContent", stuff.content)
-                item_dict: dict[str, Any] = {
-                    "concept_code": stuff.concept.code,
-                    "content": stuff_content.text,
-                }
-            else:
-                content_dict = stuff.content.model_dump(serialize_as_any=True)
-                clean_content = cls._clean_and_format_content(content_dict)
+            content_dict = stuff.content.model_dump(serialize_as_any=True)
+            clean_content = cls._clean_and_format_content(content_dict)
 
-                item_dict = {
-                    "concept_code": stuff.concept.code,
-                    "content": clean_content,
-                }
+            implicit_memory[stuff_name] = {
+                "concept": stuff.concept.code,
+                "content": clean_content,
+            }
 
-            dict_memory[stuff_name] = item_dict
-
-        return dict_memory
+        return implicit_memory
 
     @classmethod
     def serialize_pipe_output_for_api(cls, pipe_output: PipeOutput) -> DictMemory:

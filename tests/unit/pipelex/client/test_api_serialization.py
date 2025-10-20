@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from pydantic import BaseModel
@@ -143,7 +143,7 @@ class TestApiSerialization:
         assert len(implicit_memory) == 1
         assert "sample_text" in implicit_memory
 
-        text_blueprint = implicit_memory["sample_text"]
+        text_blueprint = cast("dict[str, Any]", implicit_memory["sample_text"])
         assert text_blueprint["concept_code"] == NativeConceptCode.TEXT
         assert isinstance(text_blueprint["content"], str)
         assert text_blueprint["content"] == "Sample text content"
@@ -154,7 +154,7 @@ class TestApiSerialization:
         assert len(implicit_memory) == 1
         assert "pi_value" in implicit_memory
 
-        number_blueprint = implicit_memory["pi_value"]
+        number_blueprint = cast("dict[str, Any]", implicit_memory["pi_value"])
         assert number_blueprint["concept_code"] == NativeConceptCode.NUMBER
         assert isinstance(number_blueprint["content"], dict)
         assert number_blueprint["content"]["number"] == 3.14159

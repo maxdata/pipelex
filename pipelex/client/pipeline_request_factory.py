@@ -1,7 +1,7 @@
 from typing import Any
 
 from pipelex.client.api_serializer import ApiSerializer
-from pipelex.client.protocol import ImplicitMemory, PipelineRequest
+from pipelex.client.protocol import PipelineRequest
 from pipelex.core.memory.working_memory import WorkingMemory
 from pipelex.pipe_run.pipe_run_params import PipeOutputMultiplicity
 
@@ -29,7 +29,7 @@ class PipelineRequestFactory:
 
         """
         return PipelineRequest(
-            inputs=ImplicitMemory(ApiSerializer.serialize_working_memory_for_api(working_memory=working_memory)),
+            inputs=ApiSerializer.serialize_working_memory_for_api(working_memory=working_memory),
             output_name=output_name,
             output_multiplicity=output_multiplicity,
             dynamic_output_concept_code=dynamic_output_concept_code,
