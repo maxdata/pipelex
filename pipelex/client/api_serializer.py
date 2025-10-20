@@ -4,9 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-from pipelex.client.protocol import PipelineInputs
 from pipelex.core.memory.working_memory import WorkingMemory
-from pipelex.core.stuffs.stuff import DictStuff
 
 
 class ApiSerializer:
@@ -17,7 +15,7 @@ class ApiSerializer:
     FIELDS_TO_SKIP = ("__class__", "__module__")
 
     @classmethod
-    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> PipelineInputs:
+    def serialize_working_memory_for_api(cls, working_memory: WorkingMemory | None = None) -> dict[str, dict[str, Any]]:
         """Convert WorkingMemory to API-ready format using kajson with proper datetime handling.
 
         Args:
@@ -25,9 +23,10 @@ class ApiSerializer:
 
         Returns:
             PipelineInputs ready for API transmission with datetime strings and no __class__/__module__.
+            Returns plain dicts with {"concept": str, "content": dict | list} structure for JSON serialization.
 
         """
-        pipeline_inputs: PipelineInputs = {}
+        pipeline_inputs: dict[str, dict[str, Any]] = {}
         if working_memory is None:
             return pipeline_inputs
 
@@ -35,10 +34,11 @@ class ApiSerializer:
             content_dict = stuff.content.model_dump(serialize_as_any=True)
             clean_content = cls._clean_and_format_content(content_dict)
 
-            pipeline_inputs[stuff_name] = DictStuff(
-                concept=stuff.concept.code,
-                content=clean_content,
-            )
+            # Create plain dict instead of DictStuff instance for JSON serialization
+            pipeline_inputs[stuff_name] = {
+                "concept": stuff.concept.code,
+                "content": clean_content,
+            }
 
         return pipeline_inputs
 
