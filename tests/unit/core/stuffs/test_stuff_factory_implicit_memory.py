@@ -75,14 +75,13 @@ class TestStuffFactoryImplicitMemory:
       - StuffContent object - custom (1.3 / 1.3a)
       - ListContent of StuffContent objects (1.3b, formerly 1.5)
       - List of StuffContent objects (1.4)
-    - Case 2: Dict with 'concept' AND 'content' keys
+    - Case 2: Dict with 'concept' AND 'content' keys (plain dict or DictStuff)
       - String content (2.1, 2.1b, 2.1c)
       - List of strings (2.2, 2.2b)
       - StuffContent object (2.3)
       - List of StuffContent objects (2.4)
       - Dict content (2.5)
       - List of dicts (2.6)
-      - DictStuff with all fields (2.7)
     """
 
     @pytest.mark.parametrize(

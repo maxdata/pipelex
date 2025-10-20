@@ -5,7 +5,7 @@ from pipelex.core.concepts.concept_factory import ConceptFactory
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.stuffs.list_content import ListContent
 from pipelex.core.stuffs.structured_content import StructuredContent
-from pipelex.core.stuffs.stuff import Stuff
+from pipelex.core.stuffs.stuff import DictStuff, Stuff
 from pipelex.core.stuffs.text_content import TextContent
 
 
@@ -367,85 +367,104 @@ TEST_CASES: list[tuple[str, StuffContentOrData, str | None, str, Stuff]] = [
             ),
         ),
     ),
-    # Case 2.7: DictStuff with all fields (stuff_code, stuff_name, concept, content)
-    # Note: name argument must match stuff_name in dict if both are provided
+    # Case 2.7: DictStuff instance with simple dict content
     (
-        "case-2.7-dict-stuff-with-stuff-name",
-        {
-            "stuff_code": "custom_code",
-            "stuff_name": "custom_name",
-            "concept": "test_domain.MyConcept",
-            "content": {
-                "arg1": "something",
-                "arg2": 1,
-                "arg3": {"arg4": "something else"},
+        "case-2.7-dictstuff-instance-simple",
+        DictStuff(
+            concept="test_domain.MyConcept",
+            content={
+                "arg1": "from DictStuff",
+                "arg2": 999,
+                "arg3": {"arg4": "nested in DictStuff"},
             },
-        },
-        "custom_name",  # Must match the stuff_name in the dict
-        "ignored_code",
+        ),
+        "stuff_name",
+        "stuff_code",
         Stuff(
-            stuff_code="custom_code",
-            stuff_name="custom_name",
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
             concept=ConceptFactory.make(
                 concept_code="MyConcept",
                 domain="test_domain",
                 description="Test concept for unit tests",
                 structure_class_name="MyConcept",
             ),
-            content=MyConcept(arg1="something", arg2=1, arg3=MySubClass(arg4="something else")),
+            content=MyConcept(arg1="from DictStuff", arg2=999, arg3=MySubClass(arg4="nested in DictStuff")),
         ),
     ),
-    # Case 2.7a: DictStuff with stuff_name, but name argument is None
+    # Case 2.8: DictStuff instance with native concept
     (
-        "case-2.7a-dict-stuff-with-stuff-name-no-arg",
-        {
-            "stuff_code": "custom_code_a",
-            "stuff_name": "custom_name_a",
-            "concept": "test_domain.MyConcept",
-            "content": {
-                "arg1": "something",
-                "arg2": 1,
-                "arg3": {"arg4": "something else"},
-            },
-        },
-        None,  # name argument is None, so dict's stuff_name is used
-        "ignored_code",
+        "case-2.8-dictstuff-instance-native",
+        DictStuff(
+            concept="Text",
+            content={"text": "Hello from DictStuff"},
+        ),
+        "stuff_name",
+        "stuff_code",
         Stuff(
-            stuff_code="custom_code_a",
-            stuff_name="custom_name_a",
-            concept=ConceptFactory.make(
-                concept_code="MyConcept",
-                domain="test_domain",
-                description="Test concept for unit tests",
-                structure_class_name="MyConcept",
-            ),
-            content=MyConcept(arg1="something", arg2=1, arg3=MySubClass(arg4="something else")),
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+            content=TextContent(text="Hello from DictStuff"),
         ),
     ),
-    # Case 2.7b: DictStuff without stuff_name (only 3 keys)
+    # Case 2.9: DictStuff instance with list of dicts
     (
-        "case-2.7b-dict-stuff-without-stuff-name",
-        {
-            "stuff_code": "custom_code_2",
-            "concept": "test_domain.MyConcept",
-            "content": {
-                "arg1": "arg1_value",
-                "arg2": 42,
-                "arg3": {"arg4": "arg4_value"},
-            },
-        },
-        "fallback_name",
-        "ignored_code",
+        "case-2.9-dictstuff-instance-list-dicts",
+        DictStuff(
+            concept="test_domain.MyConcept",
+            content=[
+                {
+                    "arg1": "item1",
+                    "arg2": 10,
+                    "arg3": {"arg4": "sub1"},
+                },
+                {
+                    "arg1": "item2",
+                    "arg2": 20,
+                    "arg3": {"arg4": "sub2"},
+                },
+            ],
+        ),
+        "stuff_name",
+        "stuff_code",
         Stuff(
-            stuff_code="custom_code_2",
-            stuff_name="fallback_name",
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
             concept=ConceptFactory.make(
                 concept_code="MyConcept",
                 domain="test_domain",
                 description="Test concept for unit tests",
                 structure_class_name="MyConcept",
             ),
-            content=MyConcept(arg1="arg1_value", arg2=42, arg3=MySubClass(arg4="arg4_value")),
+            content=ListContent(
+                items=[
+                    MyConcept(arg1="item1", arg2=10, arg3=MySubClass(arg4="sub1")),
+                    MyConcept(arg1="item2", arg2=20, arg3=MySubClass(arg4="sub2")),
+                ]
+            ),
+        ),
+    ),
+    # Case 2.10: DictStuff instance with list of strings (Text concept)
+    (
+        "case-2.10-dictstuff-instance-list-strings",
+        DictStuff(
+            concept="Text",
+            content=["text1", "text2", "text3"],
+        ),
+        "stuff_name",
+        "stuff_code",
+        Stuff(
+            stuff_name="stuff_name",
+            stuff_code="stuff_code",
+            concept=ConceptFactory.make_native_concept(native_concept_code=NativeConceptCode.TEXT),
+            content=ListContent(
+                items=[
+                    TextContent(text="text1"),
+                    TextContent(text="text2"),
+                    TextContent(text="text3"),
+                ]
+            ),
         ),
     ),
 ]
@@ -655,68 +674,5 @@ ERROR_TEST_CASES: list[tuple[str, StuffContentOrData, str | None, str, list[str]
         ["test_domain"],
         Exception,
         "not compatible",
-    ),
-    # DictStuff with wrong number of keys - should fail
-    (
-        "error-dict-stuff-wrong-keys",
-        {
-            "stuff_code": "code",
-            "concept": "Text",
-            "content": "text",
-            "extra": "key",
-            "another": "key",
-        },
-        "stuff_name",
-        "stuff_code",
-        None,
-        Exception,
-        "correct keys",
-    ),
-    # DictStuff with missing concept - should fail
-    (
-        "error-dict-stuff-missing-concept",
-        {
-            "stuff_code": "code",
-            "stuff_name": "name",
-            "content": {"field": "value"},
-        },
-        "stuff_name",
-        "stuff_code",
-        None,
-        Exception,
-        "'concept' key",
-    ),
-    # DictStuff with concept not found - should fail
-    (
-        "error-dict-stuff-concept-not-found",
-        {
-            "stuff_code": "code",
-            "concept": "NonExistentConcept",
-            "content": {"field": "value"},
-        },
-        "stuff_name",
-        "stuff_code",
-        None,
-        Exception,
-        "not found",
-    ),
-    # DictStuff with mismatched stuff_name - should fail
-    (
-        "error-dict-stuff-name-mismatch",
-        {
-            "stuff_code": "code",
-            "stuff_name": "name_in_dict",
-            "concept": "test_domain.MyConcept",
-            "content": {
-                "arg1": "arg1",
-                "arg2": 1,
-                "arg3": {"arg4": "arg4"},
-            },
-        },
-        "different_name",  # Does not match "name_in_dict"
-        "stuff_code",
-        ["test_domain"],
-        Exception,
-        "does not match",
     ),
 ]

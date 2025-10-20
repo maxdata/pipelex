@@ -11,7 +11,7 @@ from pipelex.core.concepts.concept_library import ConceptLibraryConceptNotFoundE
 from pipelex.core.concepts.concept_native import NativeConceptCode
 from pipelex.core.stuffs.list_content import ListContent
 from pipelex.core.stuffs.structured_content import StructuredContent
-from pipelex.core.stuffs.stuff import Stuff
+from pipelex.core.stuffs.stuff import DictStuff, Stuff
 from pipelex.core.stuffs.stuff_content import StuffContent
 from pipelex.core.stuffs.text_content import TextContent
 from pipelex.exceptions import PipelexException
@@ -140,7 +140,7 @@ class StuffFactory:
         Note: StructuredContent (1.3) and ListContent (1.5) are separate cases at the same level.
               Both inherit from StuffContent but handle different content types.
 
-        Case 2: Dict with 'concept' AND 'content' keys
+        Case 2: Dict with 'concept' AND 'content' keys (can be plain dict or DictStuff instance)
             2.1/2.1b: {"concept": "Text"/"native.Text", "content": str} → TextContent with Text concept
             2.1c: {"concept": "domain.Concept", "content": str} → TextContent with that concept (if compatible)
             2.2/2.2b: {"concept": "...", "content": list[str]} → ListContent[TextContent]
@@ -148,8 +148,6 @@ class StuffFactory:
             2.4: {"concept": "...", "content": list[StuffContent]} → ListContent[StuffContent]
             2.5: {"concept": "...", "content": dict} → Create StuffContent from dict
             2.6: {"concept": "...", "content": list[dict]} → ListContent[StuffContent] from dicts
-            2.7: DictStuff (full stuff dict with stuff_code, stuff_name, concept, content) → Create Stuff from all fields
-                 Note: If both stuff_name in dict and name argument are provided, they must match exactly
         """
         concept_library = get_concept_library()
 
@@ -315,6 +313,10 @@ class StuffFactory:
                     raise StuffFactoryError(msg)
 
         # ==================== CASE 2: Dict with 'concept' AND 'content' keys ====================
+        # Convert DictStuff instance to plain dict if needed
+        if isinstance(stuff_content_or_data, DictStuff):
+            stuff_content_or_data = stuff_content_or_data.model_dump()
+
         if not isinstance(stuff_content_or_data, dict):
             msg = f"Unexpected type for stuff_content_or_data: {type(stuff_content_or_data)}.Type should be {StuffContentOrData}."
             raise StuffFactoryError(msg)
@@ -328,55 +330,7 @@ class StuffFactory:
             msg = f"Trying to create a Stuff '{name}' from a dict that should represent a StuffContentOrData but does not have a 'content' key."
             raise StuffFactoryError(msg)
 
-        # Case 2.7: DictStuff - full stuff dict with stuff_code, stuff_name, concept, content
-        if "stuff_code" in stuff_content_or_data:
-            # This is a DictStuff - it has all the fields of a Stuff
-            if len(stuff_content_or_data) not in (3, 4):  # 3 if no stuff_name, 4 if stuff_name present
-                msg = (
-                    f"Trying to create a Stuff '{name}' from a DictStuff but it does not have the correct keys. "
-                    "Expected keys: 'stuff_code', 'concept', 'content', and optionally 'stuff_name'."
-                )
-                raise StuffFactoryError(msg)
-
-            concept_string = stuff_content_or_data.concept
-            content = stuff_content_or_data.content
-
-            # Get the concept from the library
-            try:
-                concept = concept_library.get_required_concept_from_concept_string_or_code(
-                    concept_string_or_code=concept_string, search_domains=search_domains
-                )
-            except ConceptLibraryConceptNotFoundError as exc:
-                msg = f"Trying to create a Stuff from a DictStuff but the concept of name '{concept_string}' is not found in the library"
-                raise StuffFactoryError(msg) from exc
-
-            # Handle content based on type (similar to Case 2.5 for dict content)
-            if isinstance(content, dict):
-                the_class = get_class_registry().get_class(name=concept.structure_class_name)
-                if the_class is None:
-                    msg = (
-                        f"Trying to create a Stuff from a DictStuff but the concept of name '{concept_string}' is not compatible with a dict content"
-                    )
-                    raise StuffFactoryError(msg)
-
-                return cls.make_stuff(
-                    name=name,
-                    concept=concept,
-                    content=the_class.model_validate(obj=content),
-                )
-            else:
-                # Content might be other types (str, list, etc.) - handle recursively
-                stuff_content = StuffContentFactory.make_stuff_content_from_concept_with_fallback(
-                    concept=concept,
-                    value=content,
-                )
-                return cls.make_stuff(
-                    name=name,
-                    concept=concept,
-                    content=stuff_content,
-                )
-
-        # ReducedDictStuff - only concept and content
+        # All Case 2 variants - dict with concept and content
         if len(stuff_content_or_data) != 2:
             msg = (
                 f"Trying to create a Stuff '{name}' from a dict that should represent a StuffContentOrData but does not have "

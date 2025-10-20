@@ -202,4 +202,4 @@ class DictStuff(CustomBaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
     concept: str
-    content: dict[str, Any]
+    content: Any

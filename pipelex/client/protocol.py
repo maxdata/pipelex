@@ -25,14 +25,15 @@ from pipelex.types import StrEnum
 #   - 2.3: {"concept": str, "content": StuffContent}
 #   - 2.4: {"concept": str, "content": Sequence[StuffContent]}
 #   - 2.5: {"concept": str, "content": dict[str, Any]}
-#   - 2.6: {"concept": str, "content": Sequence[dict[str, Any]]}
-#   - 2.7: DictStuff {"concept": str, "content": Any}
+#   - 2.6: {"concept": str, "content": Sequence[dict[str, Any]}
+#   Note: Case 2 formats can be provided as plain dict or DictStuff instance
 StuffContentOrData = (
     str  # Case 1.1
     | Sequence[str]  # Case 1.2
     | StuffContent  # Case 1.3 (also covers Case 1.5 as ListContent is a StuffContent)
     | Sequence[StuffContent]  # Case 1.4 (covariant - accepts list[TextContent], etc.)
-    | dict[str, Any]  # Case 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7 (both plain dicts and DictStuff format)
+    | dict[str, Any]  # Case 2.1-2.7 - plain dicts with {"concept": str, "content": Any} structure
+    | DictStuff  # Case 2.7 - DictStuff instances (same structure as dict but as Pydantic model)
 )
 PipelineInputs = dict[str, StuffContentOrData]  # Can include both dict and StuffContent
 
