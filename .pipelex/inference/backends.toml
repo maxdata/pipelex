@@ -1,5 +1,4 @@
 [pipelex_inference]
-enabled = true
 endpoint = "https://inference.pipelex.com/v1"
 api_key = "${PIPELEX_INFERENCE_API_KEY}"
 
@@ -37,21 +36,21 @@ enabled = true
 api_key = "${MISTRAL_API_KEY}"
 
 [xai]
-enabled = true
+enabled = false
 endpoint = "https://api.x.ai/v1"
 api_key = "${XAI_API_KEY}"
 
 [ollama]
-enabled = true
+enabled = false
 endpoint = "http://localhost:11434/v1"
 
 [blackboxai]
-enabled = true
+enabled = false
 endpoint = "https://api.blackbox.ai/v1"
 api_key = "${BLACKBOX_API_KEY}"
 
 [fal]
-enabled = true
+enabled = false
 api_key = "${FAL_API_KEY}"
 
 [internal] # software-only backend, runs internally, without AI
