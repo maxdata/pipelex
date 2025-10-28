@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.14.1] - 2025-10-27
+
+### Added
+
+- Tutorial GIF on the README.md file.
+
 ## [v0.14.0] - 2025-10-27
 
 ### Added
