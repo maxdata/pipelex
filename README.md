@@ -31,7 +31,6 @@ Write business logic, not API calls.</p>
 
 ![Pipelex Tutorial](https://raw.githubusercontent.com/Pipelex/pipelex/dev/.github/assets/pipelex-tutorial-v2.gif)
 
-<div>
 
 # 🚀 Quick start
 
