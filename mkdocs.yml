@@ -157,6 +157,8 @@ nav:
       - Inference Backend: pages/configuration/config-technical/inference-backend-config.md
       - Library: pages/configuration/config-technical/library-config.md
       - Feature: pages/configuration/config-advanced/feature-config.md
+  - Architecture:
+    - Codebase Architecture: pages/architecture/codebase-architecture.md
   - Development:
     - Changelog: changelog.md
     - Tools:
